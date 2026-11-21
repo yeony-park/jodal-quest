@@ -183,3 +183,22 @@
     animation: none;
   }
 }
+
+.submission-active,
+.submission-bag {
+  border: 3px solid #fff2a6;
+  outline: 3px solid #172f35;
+  background: #294b43;
+}
+.submission-bag {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  margin: 18px 0;
+}
+.submission-bag .inventory-slot { flex-shrink: 0; }
+.submission-bag .inventory-slot:disabled { opacity: 0.45; }
+.submission-bag .inventory-slot:focus-visible { outline: 3px solid #fff2a6; }
+#submission-hint { min-height: 3em; }

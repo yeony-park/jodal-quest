@@ -1,10 +1,10 @@
 # Developer handoff
 
-Updated 2026-11-21. This build expands the existing four quests to six, retains save version 1, and adds a second floor reached through an elevator.
+Updated 2026-11-21. This build has six quests, two floors, recorded rookie replies, document submission, and consequence/recovery achievements. Save version 1 remains compatible.
 
 ## Build and repository rules
 
-Use Node 22+, `npm ci`, then `npm test`. The test command rebuilds `dist` and runs 63 game checks plus distribution checks. `npm run dev` serves the game at http://127.0.0.1:8765. For offline play, open `dist/index.html` and keep the entire distribution folder together.
+Use Node 22+, `npm ci`, then `npm test`. The test command rebuilds `dist` and runs 75 game checks plus distribution checks. `npm run dev` serves the game at http://127.0.0.1:8765. For offline play, open `dist/index.html` and keep the entire distribution folder together.
 
 Edit source in `src`; regenerate `dist` with `npm run build`. Keep the CSS import order in `src/styles/index.css`. Later rules in `ending.css` override mobile inventory rules in `pixel-theme.css`; check both when changing the HUD. No new dependencies, external images, or fonts were added. The owner-supplied processed rookie voice bank is included.
 
@@ -25,6 +25,9 @@ The existing supplier recording and Gaegu font remain included with the font lic
 | Map data, floor partitions, destinations | `src/data/world.js` |
 | Sprites and projection/depth order | `src/world/characters.js`, `render.js` |
 | Movement and floor-aware routing | `src/world/navigation.js` |
+| Submission matrix and gates | `docs/ITEM_SUBMISSIONS.md`, `src/game/submission.js` |
+| Recovery content and progression | `src/data/recovery.js`, `src/game/recovery.js` |
+| Outline colors and contrast calculation | `src/world/contrast.js` |
 | Save migration | `src/core/storage.js`, `src/data/initial-state.js` |
 | Voice registration and effects | `src/audio/sound.js` |
 
@@ -60,6 +63,9 @@ Keep key `jodal-master-v1` and version 1. `loadGame` validates the old required 
 
 New saved fields :
 
+- `recoveries` : completed recovery IDs, default `[]`; IDs are unique and validated.
+- `pendingRecovery` : a recovery ID for the current stage, default `null`; Continue restores its consequence screen.
+
 - `floor` : 0 or 1; absent old saves default to 0.
 - `awardBrief` : 3F officer explanation completed.
 - `openingChecked` : player confirmed that the price was determined before bidding.
@@ -69,6 +75,8 @@ New saved fields :
 Old stage-4 saves continue into the contract quest, with five items and these flags false. The new final stage is 6. Existing history strings remain intact. Session-only state includes the active floor mirror (`runtime.floor`), camera, coordinates, dialogue, modal, touch key, and mock portal login. Resuming restores the saved floor and starts beside the elevator on 3F or at the desk on 5F; it does not persist precise coordinates. New game resets floor, movement target, progression, and login.
 
 ## Sprite fixes
+
+Topological depth ordering resolves unconstrained candidates by the footprint front edge (`x1 + y1`). Tests cover four front/back cells for every furniture instance on both floors (80 placements). A real Chromium canvas check compared 17,528 opaque overlap pixels across the same 80 placements with zero mismatches.
 
 Each character/pose is rasterized once into a 16×24 offscreen canvas. One `drawImage` call draws the full sprite at integer device pixels with smoothing disabled. This removes fractional cell seams. Walking lifts one foot rather than shifting legs downward; all four poses remain connected. People, wide desks, and partitions use their geometric behind/in-front relation for drawing order. The floor target marker is drawn before furniture and characters so it cannot appear across a body.
 
@@ -80,13 +88,13 @@ The owner's recording is now registered as the production `rookie` voice, indepe
 
 The coordinator prepared these grains from the owner's 5.67-second AAC recording using a 90Hz highpass, 7.5kHz lowpass, loudness normalization, peak leveling, and 6ms fades. Only the processed bank is included; the raw recording stays outside the repository and distribution.
 
-`loadVoiceBank(role, bytes, offsets, segment = 0.085)` validates decoded ranges and registers an independent `rookie` or `supplier` bank. `loadRookieVoice()` stores `runtime.rookieVoiceReady`; both banks load after audio initialization. The build embeds both WAV files as base64 for offline play. A failed decode falls back to synthesized syllables. Sound settings provide separate rookie and supplier previews. Other characters retain their existing synthetic voices.
+`loadVoiceBank(role, bytes, offsets, segment = 0.085)` validates decoded ranges and registers an independent `rookie` or `supplier` bank. `loadRookieVoice()` stores `runtime.rookieVoiceReady`; both banks load after audio initialization. The build embeds both WAV files as base64 for offline play. A failed decode falls back to synthesized syllables. Every non-rookie conversation adds a short stage-specific rookie reply before its completion callback. Both recordings use a 1.4 base playback rate plus the existing character-derived variation; only the synthetic rookie fallback uses 1.7. Sound settings retain both preview buttons and one master volume. Other characters retain their existing synthetic voices.
 
 Tests verify both production banks, nonempty voiced windows, rookie dialogue playback, independence, decode fallback, and invalid-range rejection. The distribution suite checks both embedded banks and excludes raw M4A recordings. No upload UI or external voice service was added.
 
 ## Evidence and remaining work
 
-`npm test` currently passes 63 checks plus the distribution suite. See `docs/검증기록.txt` for browser results and limits. No commit, push, PR, or deployment was performed by this worker.
+`npm test` currently passes 75 checks plus the distribution suite. See `docs/검증기록.txt` for browser results and limits. No commit, push, PR, or deployment was performed by this worker.
 
 Official reference content was supplied to the worker from a 2026-11-21 fetch :
 
@@ -94,3 +102,31 @@ Official reference content was supplied to the worker from a 2026-11-21 fetch :
 - Floor reference : https://www.pps.go.kr/kor/content.do?key=00139
 - G2B : https://www.g2b.go.kr/
 - Ending recruitment link : https://www.pps.go.kr/kor/bbs/list.do?key=00645
+
+## Bag and recovery flow
+
+Read `docs/ITEM_SUBMISSIONS.md` for the matrix written before the bag implementation. The seven items are reusable; the request and specification become available as drafts before their first submission. Target actions request an item before opening the task. The modal contains a highlighted bag with keyboard-accessible buttons because the world is inert behind an open modal. Wrong items leave the request pending and change no score or progress. A session-only `submittedSteps` set avoids duplicate prompts within a local step and resets on Continue/new game; it adds no save fields.
+
+Wrong decisions now open a consequence screen, then a corrective task with one action that rejoins the existing storyline. Nine scenes include both mutually exclusive specification errors. Official procedure step references are stored beside each scene. Notice quantity recovery restores the draft form before setting its value; the dialog replaces the old form in the browser DOM.
+
+Ending titles use completed recovery count, with legacy mistake count retained for older saves : zero = 정파, one or two = 정파 · 수습을 배운 신입, three or more = 사파. Completed recoveries appear in the achievements list. No alternative full storyline was added.
+
+## Outline verification
+
+Interactable NPC sprites use a cached bright silhouette and dark outer edge; interactive monitors, phone, and documents use the same two colors. Other floor colors are one tone darker. Only the next hotspot pulses, with `prefers-reduced-motion` disabling animation. The goal floor marker uses the same two-color outline.
+
+WCAG 2.2 SC 1.4.11 requires 3:1 for meaningful non-text information against adjacent colors. The measured outline pair `#fff2a6` / `#172f35` is 12.3815:1. The dark edge against the darkest tested desk side `#92724e` is 3.1712:1; against the darker floor `#899e92`, 4.9312:1. Calculation uses sRGB linearization and relative luminance, with unrounded values tested against 3.
+
+Sources checked 2026-11-21 : [official procedure](https://www.pps.go.kr/kor/content.do?key=00179), [WCAG non-text contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html).
+
+Artifacts for this worker are in `/tmp/jodal-run2/`. Full-room depth screenshots use a temporary harness importing the production renderer; proper and recovery playthroughs use the shipped bundle and visible UI controls.
+
+## Follow-up 1 : review fixes
+
+The current suite passes 75 checks plus distribution checks. Recovery IDs must be strings before any property-key lookup; malformed pending IDs and nested completed-ID arrays reject the save and leave Continue unavailable. Valid pending recovery strings still resume and finish.
+
+`drawFurniture` outlines only active spots, so stage 3 shows document/terminal cues and leaves the disabled phone unoutlined. `positionLabels` uses screen-space silhouette bounds, label dimensions, existing labels, and visible HUD rectangles to place clickable labels without covering actors or active furniture. The same placement applies on both floors and adapts to viewport/camera changes.
+
+The ground goal cue is an isometric diamond. `floorMarkerBounds` conservatively suppresses the whole cue if any scene silhouette might clip it. At the reviewed mentor approach, the foreground partition suppresses the cue; the highlighted name and minimap continue to show the next goal.
+
+Regression tests cover malformed recovery values, active-only furnishing outlines, desktop/mobile label placement on both floors, and complete suppression of clipped ground markers. Chromium measurements and four new screenshots are in `/tmp/jodal-run2/fix1-*`; the detailed result is appended to `core-report.md`.

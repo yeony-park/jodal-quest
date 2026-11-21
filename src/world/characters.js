@@ -126,6 +126,27 @@ export function walkPose(moving) {
   return moving ? [1, 2, 3, 2][Math.floor(runtime.walk / 1.6) % 4] : 0;
 }
 
+export function outlinedSprite(kind, pose) {
+  const key = "outline" + kind + pose;
+  if (!sheets.has(key)) {
+    const sheet = document.createElement("canvas");
+    sheet.width = 20; sheet.height = 28;
+    const g = sheet.getContext("2d"), palette = pixelPalette(kind);
+    const cells = spriteCells(kind).map(([x,y,c]) => {
+      const dy = y > 19 ? ((pose === 1 && x < 8) || (pose === 3 && x >= 8) ? -1 : 0) : pose === 2 ? 1 : 0;
+      return [x+2,y+2+dy,c];
+    });
+    for (const [radius,color] of [[2,"#172f35"],[1,"#fff2a6"],[0,null]]) {
+      for (const [x,y,c] of cells) {
+        g.fillStyle = color || palette[c];
+        g.fillRect(x-radius,y-radius,1+radius*2,1+radius*2);
+      }
+    }
+    sheets.set(key,sheet);
+  }
+  return sheets.get(key);
+}
+
 // 스프라이트 한 장을 화면 픽셀에 맞춰 그려 칸 사이로 배경이 비치지 않게 합니다.
 export function pixelPerson(x, y, kind, moving = false) {
   const p = project(x, y),
@@ -139,6 +160,8 @@ export function pixelPerson(x, y, kind, moving = false) {
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(spriteSheet(kind, walkPose(moving)), left, top, width, height);
+  const npc = kind !== "rookie" && !(kind === "supplier" && runtime.state.stage === 3);
+  const pad = npc ? Math.round(4 * k) : 0;
+  ctx.drawImage(npc ? outlinedSprite(kind, walkPose(moving)) : spriteSheet(kind, walkPose(moving)), left-pad, top-pad, width+pad*2, height+pad*2);
   ctx.restore();
 }

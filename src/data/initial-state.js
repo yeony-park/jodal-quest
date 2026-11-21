@@ -14,5 +14,7 @@ export const fresh = () => ({
   product: false,
   eligibility: false,
   mistakes: 0,
+  recoveries: [],
+  pendingRecovery: null,
   history: [],
 });

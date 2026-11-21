@@ -1,3 +1,4 @@
+import { recoveryScenes } from "../data/recovery.js";
 import { fresh } from "../data/initial-state.js";
 import { LAST_STAGE } from "../data/quests.js";
 import { runtime } from "./runtime.js";
@@ -11,6 +12,17 @@ export function loadGame() {
     if (
       s &&
       s.version === 1 &&
+      (s.recoveries === undefined || (
+        Array.isArray(s.recoveries) &&
+        s.recoveries.length <= Object.keys(recoveryScenes).length &&
+        s.recoveries.every(id => typeof id === "string" && Object.hasOwn(recoveryScenes,id)) &&
+        new Set(s.recoveries).size === s.recoveries.length
+      )) &&
+      (s.pendingRecovery === undefined || s.pendingRecovery === null || (
+        typeof s.pendingRecovery === "string" &&
+        Object.hasOwn(recoveryScenes,s.pendingRecovery) &&
+        recoveryScenes[s.pendingRecovery].stage === s.stage
+      )) &&
       Number.isInteger(s.stage) &&
       s.stage >= 0 &&
       s.stage <= LAST_STAGE &&

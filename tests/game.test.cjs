@@ -311,6 +311,168 @@ async function main() {
     assert.ok(b.drawEvents.indexOf("target") >= 0);
     assert.ok(b.drawEvents.indexOf("target") < b.drawEvents.indexOf("sprite"));
   });
+  check("Malformed recovery IDs cannot enable Continue or trap a resumed game", () => {
+    for(const fields of [{pendingRecovery:['spec-brand']},{recoveries:[['spec-brand']]},{pendingRecovery:{id:'spec-brand'}},{recoveries:[null]},{recoveries:[1]}]) {
+      const saved=JSON.parse(b.run('JSON.stringify(fresh())'));
+      Object.assign(saved,{stage:1,started:true,brief:true},fields);
+      const c=boot(JSON.stringify(saved));
+      assert.equal(c.run('loaded'),false,JSON.stringify(fields));
+      c.run('actions.continue()');
+      assert.notEqual(c.run('modalKind'),'recovery');
+      assert.equal(c.run('state.pendingRecovery'),null);
+    }
+    const saved=JSON.parse(b.run('JSON.stringify(fresh())'));
+    Object.assign(saved,{stage:1,started:true,brief:true,pendingRecovery:'spec-brand'});
+    const c=boot(JSON.stringify(saved));c.run('actions.continue();recover()');c.finish();c.run('finishRecovery()');
+    assert.equal(c.run('state.stage'),2);
+    assert.equal(c.run('state.pendingRecovery'),null);
+  });
+  check("Supplier furnishings outline only the active desk and terminal", () => {
+    const c=boot();c.run('state.stage=3');
+    const counts={};
+    for(const id of ['phone','doc','terminal']) {
+      c.drawEvents.length=0;
+      c.run(`drawFurniture(floors[0].furnishings.find(o=>o.spot==='${id}'))`);
+      counts[id]=c.drawEvents.filter(e=>e==='target').length;
+    }
+    assert.equal(counts.phone,0);assert.ok(counts.doc>0);assert.ok(counts.terminal>0);
+    c.run('state.stage=1');c.drawEvents.length=0;
+    c.run("drawFurniture(floors[0].furnishings.find(o=>o.spot==='phone'))");
+    assert.ok(c.drawEvents.includes('target'));
+  });
+  check("Mentor and monitor labels clear silhouettes and each other at desktop and phone sizes", () => {
+    const c=boot();
+    for(const [w,h] of [[1280,720],[390,844]]) for(const [stage,floor] of [[1,0],[3,0],[4,1]]) {
+      c.window.innerWidth=w;c.window.innerHeight=h;
+      c.run(`state.stage=${stage};runtime.floor=${floor};state.brief=true;player.x=448;player.y=112;resizeWorld();camera();updateMap()`);
+      const visuals=c.run('labelVisuals()'), placed=[];
+      for(const id of ['mentor','doc','terminal','phone','supplier','elevator','officer','bidroom']) {
+        const el=c.el('spot-'+id);if(el.hidden)continue;
+        const rect={x:parseFloat(el.style.left)-65,y:parseFloat(el.style.top)-17,w:130,h:34};
+        assert.ok(rect.x>=0&&rect.x+rect.w<=w&&rect.y>=0&&rect.y+rect.h<=h);
+        for(const other of [...visuals,...placed]) assert.ok(!(rect.x<other.x+other.w&&rect.x+rect.w>other.x&&rect.y<other.y+other.h&&rect.y+rect.h>other.y),`${w} stage ${stage} ${id} overlaps a silhouette/label`);
+        placed.push(rect);
+      }
+    }
+  });
+  check("Occluded goal markers disappear whole while an open floor marker remains a diamond", () => {
+    const c=boot();
+    assert.equal(c.run('floorMarkerBounds(spots.mentor)'),null);
+    assert.equal(c.run('drawFloorMarker(spots.mentor,sceneItems(false))'),false);
+    const open=c.run(`(() => {for(let x=16;x<MAP_W*TILE;x+=32)for(let y=16;y<MAP_H*TILE;y+=32)if(canWalk(x,y)&&floorMarkerBounds({x,y}))return {x,y};})()`);
+    assert.ok(open);
+    assert.equal(c.run(`drawFloorMarker(${JSON.stringify(open)},sceneItems(false))`),true);
+  });
+  check("Both floors order every furnishing type before front cells and after rear cells", () => {
+    const c = boot();
+    const count = c.run(`(() => {
+      let count = 0;
+      for (let f=0; f<2; f++) for (const o of floors[f].furnishings) {
+        for (const [x,y,front] of [
+          [o.x+o.w/2,o.y+o.h+0.5,true],
+          [o.x+o.w+0.5,o.y+o.h/2,true],
+          [o.x+o.w/2,o.y-0.5,false],
+          [o.x-0.5,o.y+o.h/2,false],
+        ]) {
+          runtime.floor=f; player.x=x*TILE; player.y=y*TILE;
+          const items=paintOrder(sceneItems(false));
+          const person=items.findIndex(i=>i.actor==='rookie');
+          const furnishing=items.findIndex(i=>i.furniture===o);
+          if ((person>furnishing)!==front) throw Error(f+':'+o.type+':'+x+','+y);
+          count++;
+        }
+      }
+      return count;
+    })()`);
+    assert.equal(count, 80);
+  });
+  check("All 77 item and step pairs submit only the matching document without score loss", () => {
+    const config={intake:[0,true,true,false,false,false,false,false,false],specification:[1,true,true,true,false,false,false,false,false],notice:[2,true,true,true,false,false,false,false,false],approval:[2,true,true,true,true,false,false,false,false],product:[3,true,true,true,true,false,false,false,false],bid:[3,true,true,true,true,true,false,false,false],award:[4,true,true,true,true,true,false,false,false],price:[4,true,true,true,true,true,true,false,false],contract:[4,true,true,true,true,true,true,true,false],delivery:[5,true,true,true,true,true,true,true,false],payment:[5,true,true,true,true,true,true,true,true]};
+    const required={intake:1,specification:2,notice:2,approval:2,product:3,bid:3,award:4,price:4,contract:4,delivery:5,payment:5};
+    let pairs=0;
+    for (const [step,values] of Object.entries(config)) for(let item=0;item<7;item++) {
+      const c=boot();
+      const [stage,brief,contact,specAdvice,noticeChecked,product,awardBrief,openingChecked,inspectionChecked]=values;
+      c.run(`Object.assign(state,${JSON.stringify({stage,brief,contact,specAdvice,noticeChecked,product,awardBrief,openingChecked,inspectionChecked})});runtime.floor=${stage===4?1:0};requestSubmission(submissionSteps['${step}'].target,()=>state.history.push('submitted'))`);
+      assert.equal(c.run("pendingSubmission.step"),step);
+      const expected=required[step]===item;
+      assert.equal(c.run(`submitItem(${item})`),expected,step+':'+item);
+      assert.equal(c.run("state.mistakes"),0);
+      assert.equal(c.run("state.stage"),stage);
+      assert.equal(c.run("state.history.length"),expected?1:0);
+      if(!expected) assert.equal(c.run("pendingSubmission.step"),step);
+      pairs++;
+    }
+    assert.equal(pairs,77);
+  });
+  check("Interactable outline contrast exceeds WCAG non-text 3 to 1", () => {
+    assert.ok(b.run("contrastRatio(interactableColors.bright,interactableColors.edge)")>=3);
+    for(const surface of ['#9da99b','#a9b3a3','#899e92','#96aa9c','#dfc695','#ad8c68','#92724e'])
+      assert.ok(b.run(`contrastRatio(interactableColors.edge,'${surface}')`)>=3,surface);
+    assert.match(css,/prefers-reduced-motion/);
+    assert.match(css,/goal-glow/);
+  });
+  check("Each recovery teaches a corrective step and rejoins one storyline exactly once", () => {
+    for(const id of b.run("Object.keys(recoveryScenes)")) {
+      const c=boot();
+      c.run(`Object.assign(state,{stage:recoveryScenes['${id}'].stage,brief:true,contact:true,specAdvice:true,noticeChecked:false,product:false,awardBrief:true,openingChecked:true,deliveryIssueReported:true,inspectionChecked:true});runtime.floor=state.stage===4?1:0;beginRecovery('${id}')`);
+      const originalStage=c.run("state.stage");
+      assert.equal(c.run("state.pendingRecovery"),id);
+      assert.equal(c.run("state.mistakes"),1);
+      assert.doesNotMatch(c.el("modal").innerHTML,/다시 검토하기|다시 고르/);
+      const resumed=boot(c.store.get('jodal-master-v1'));
+      resumed.run('actions.continue()');
+      assert.equal(resumed.run('modalKind'),'recovery');
+      c.run('recover()');c.finish();
+      assert.match(c.el('modal').innerHTML,/key=00179/);
+      c.run('finishRecovery()');c.finish();
+      assert.equal(c.run('state.pendingRecovery'),null);
+      assert.equal(c.run('state.recoveries.length'),1);
+      assert.equal(c.run('state.mistakes'),1);
+      assert.ok(c.run('state.stage')>=originalStage);
+      c.run('finishRecovery()');
+      assert.equal(c.run('state.recoveries.length'),1);
+    }
+  });
+  check("Version one stages zero through six load with safe new defaults", () => {
+    for(let stage=0;stage<=6;stage++) {
+      const old=JSON.parse(b.run('JSON.stringify(fresh())')); old.stage=stage;old.started=true;
+      delete old.recoveries;delete old.pendingRecovery;
+      const c=boot(JSON.stringify(old));
+      assert.equal(c.run('state.stage'),stage);
+      assert.equal(c.run('state.recoveries.length'),0);
+      assert.equal(c.run('state.pendingRecovery'),null);
+    }
+    for(const fields of [{recoveries:['unknown']},{recoveries:['intake','intake']},{pendingRecovery:'payment'},{recoveries:'intake'}]) {
+      const old=JSON.parse(b.run('JSON.stringify(fresh())'));old.started=true;Object.assign(old,fields);
+      assert.equal(boot(JSON.stringify(old)).run('loaded'),false);
+    }
+  });
+  check("Ending titles and achievement lists distinguish proper and recovered runs", () => {
+    const c=boot();
+    c.run('state.stage=6;result()');
+    assert.match(c.el('modal').innerHTML,/<h2 id="modal-title">정파<\/h2>/);
+    c.run("state.recoveries=['intake','spec-empty','payment'];result()");
+    assert.match(c.el('modal').innerHTML,/<h2 id="modal-title">사파<\/h2>/);
+    assert.match(c.el('modal').innerHTML,/빈 규격서 수습/);
+    assert.equal(c.run("endingTitle([],3)"),"사파");
+    assert.equal(c.run("endingTitle([],1)"),"정파 · 수습을 배운 신입");
+  });
+  check("All choice buttons contain only their decision text", () => {
+    const c=boot();
+    for(const stage of [0,1,3]) {
+      c.run(`state.stage=${stage};documentDesk()`);
+      assert.doesNotMatch(c.el('modal').innerHTML,/<button class="choice"[^>]*>[^]*?<small>/);
+    }
+  });
+  check("Every conversation replies in the rookie recording before its callback", () => {
+    const c=boot();
+    c.run(`speak('김주문',['확인해 주세요.'],()=>{state.brief=true;});revealLine();nextLine()`);
+    assert.equal(c.run("talkState.role"), "rookie");
+    assert.equal(c.run("state.brief"), false);
+    c.finish();
+    assert.equal(c.run("state.brief"), true);
+  });
   b.run("actions.new()");
   await b.run("Promise.all([supplierVoiceReady,rookieVoiceReady])");
   check("Automatic tutorial starts with five lines", () =>
@@ -330,7 +492,7 @@ async function main() {
   });
   b.finish();
   check("Tutorial awards badge and opens ruled notebook", () => {
-    assert.equal(b.run("ownedItems().filter(Boolean).length"), 1);
+    assert.equal(b.run("ownedItems().filter(Boolean).length"), 2);
     assert.equal(b.el("quest-panel").hidden, false);
     assert.match(css, /repeating-linear-gradient/);
     assert.match(css, /Gaegu-Regular/);
@@ -376,18 +538,18 @@ async function main() {
   check("Wrong request choice explains issue and preserves stage", () => {
     b.run("actions['intake-bad']()");
     assert.equal(b.run("state.stage"), 0);
-    assert.match(b.el("modal").innerHTML, /임의로 정하지/);
+    assert.match(b.el("modal").innerHTML, /원래 요청한 일정/);
   });
   check("Request completion saves checkpoint and inventory before advance", () => {
-    b.run("actions['intake-good']()");
+    b.run("finishRecovery()");
     assert.equal(JSON.parse(b.store.get("jodal-master-v1")).stage, 1);
-    assert.equal(b.run("ownedItems().filter(Boolean).length"), 2);
+    assert.equal(b.run("ownedItems().filter(Boolean).length"), 3);
   });
   check("Continue restores completed quest and inventory", () => {
     const c = boot(b.store.get("jodal-master-v1"));
     c.run("actions.continue()");
     assert.equal(c.run("state.stage"), 1);
-    assert.equal(c.run("ownedItems().filter(Boolean).length"), 2);
+    assert.equal(c.run("ownedItems().filter(Boolean).length"), 3);
   });
   check("Specification requires mentor information", () => {
     b.run("actions.advance();actions['spec-good']()");
@@ -397,7 +559,7 @@ async function main() {
     assert.equal(b.run("state.specAdvice"), true);
   });
   check("Bad specification can be corrected", () => {
-    b.run("actions['spec-bad']();actions['spec-empty']();actions['spec-good']()");
+    b.run("actions['spec-bad']();recover();while(talkState){revealLine();nextLine();}finishRecovery()");
     assert.equal(b.run("state.stage"), 2);
     b.run("actions.advance()");
   });
@@ -423,7 +585,7 @@ async function main() {
   });
   check("Wrong quantity cannot be saved or published", () => {
     b.el("portal-quantity").value = "2";
-    b.run("savePortalDraft();close();mentor()");
+    b.run("savePortalDraft()");
     b.finish();
     assert.equal(b.run("state.noticeChecked"), false);
     assert.equal(b.run("state.stage"), 2);
@@ -431,7 +593,7 @@ async function main() {
   check("Correct quantity persists without independent publication", () => {
     b.run("terminal();portalWork()");
     b.el("portal-quantity").value = "20";
-    b.run("savePortalDraft()");
+    b.run("finishRecovery()");
     assert.equal(b.run("state.noticeChecked"), true);
     assert.equal(b.run("state.stage"), 2);
     assert.match(b.el("modal").innerHTML, /아직 공고 전/);
@@ -467,7 +629,7 @@ async function main() {
   });
   check("Wrong product preserves progress and correct product unlocks form", () => {
     b.run(
-      "close();actions['product-bad']();actions['product-good']();close();terminal();portalDetail();portalBid()",
+      "close();actions['product-bad']();finishRecovery();close();terminal();portalDetail();portalBid()",
     );
     assert.match(b.el("modal").innerHTML, /18,400,000/);
     assert.match(b.el("modal").innerHTML, /id="eligible"/);
@@ -542,10 +704,10 @@ async function main() {
     b.finish();
     b.run("bidroom();actions['opening-bad']()");
     assert.equal(b.run("state.openingChecked"), false);
-    assert.match(b.el("modal").innerHTML, /입찰 전에 결정/);
-    b.run("actions['opening-good']();officer();actions['contract-bad']()");
+    assert.match(b.el("modal").innerHTML, /순서 오류/);
+    b.run("finishRecovery();officer();actions['contract-bad']()");
     assert.equal(b.run("state.stage"), 4);
-    b.run("officer();actions['contract-good']()");
+    b.run("finishRecovery()");
     assert.equal(b.run("state.stage"), 5);
     assert.equal(b.run("state.history.length"), 5);
     assert.equal(b.run("ownedItems().filter(Boolean).length"), 6);
@@ -555,22 +717,22 @@ async function main() {
     b.run("actions['delivery-report']();actions['delivery-good']();actions['payment-good']()");
     assert.equal(b.run("state.deliveryIssueReported"), false);
     assert.equal(b.run("state.stage"), 5);
-    b.run("actions.advance();actions['floor-0']();actions.terminal()");
+    b.run("actions.advance();actions['floor-0']();actions.terminal();if(pendingSubmission)submitItem(submissionSteps[pendingSubmission.step].item)");
     assert.match(b.el("modal").innerHTML, /납품 자료/);
-    b.run("actions['payment-good']();actions.phone();actions['delivery-bad']()");
+    b.run("actions['payment-good']();actions.phone();if(pendingSubmission)submitItem(submissionSteps[pendingSubmission.step].item);actions['delivery-bad']()");
     assert.equal(b.run("state.inspectionChecked"), false);
-    b.run("actions['delivery-report']()");
+    b.run("finishRecovery()");
     b.finish();
-    b.run("actions.phone()");
+    b.run("actions.phone();if(pendingSubmission)submitItem(submissionSteps[pendingSubmission.step].item)");
     assert.match(b.el("modal").innerHTML, /20대 · 부족분 보완/);
     b.run("actions['delivery-good']()");
     assert.equal(b.run("state.inspectionChecked"), true);
     assert.equal(b.run("nextTarget()"), "terminal");
   });
   check("Payment completion saves six quests and seven items before the ending", () => {
-    b.run("actions.terminal();actions['payment-bad']()");
+    b.run("actions.terminal();if(pendingSubmission)submitItem(submissionSteps[pendingSubmission.step].item);actions['payment-bad']()");
     assert.equal(b.run("state.stage"), 5);
-    b.run("actions.terminal();actions['payment-good']()");
+    b.run("actions.terminal();if(pendingSubmission)submitItem(submissionSteps[pendingSubmission.step].item);finishRecovery()");
     assert.equal(JSON.parse(b.store.get("jodal-master-v1")).stage, 6);
     assert.equal(b.run("state.history.length"), 6);
     assert.equal(b.run("ownedItems().filter(Boolean).length"), 7);
@@ -637,6 +799,7 @@ async function main() {
     b.run("speak('조달달',['안녕하세요'],()=>{},'rookie')");
     assert.equal(b.nodes.at(-1).buffer, b.run("voiceClips.get('rookie').buffer"));
     assert.equal(b.nodes.at(-1).args[2], 0.085);
+    assert.equal(b.nodes.at(-1).playbackRate.value, 1.4 + ("안".codePointAt(0)%7)*0.045);
     b.finish();
   });
   const fallback = boot();
@@ -737,7 +900,7 @@ async function main() {
   });
   check("Glossary cites the official procedure and completed ending reviews all six lessons", () => {
     b.run("result()");
-    assert.equal((b.el("modal").innerHTML.match(/<li>/g) || []).length, 6);
+    assert.equal((b.el("modal").innerHTML.match(/<li><strong>/g) || []).length, 6);
     assert.match(b.el("modal").innerHTML, /이번 업무|여섯 업무/);
     b.run("openGlossary()");
     assert.match(b.el("modal").innerHTML, /예정가격/);

@@ -1,3 +1,4 @@
+import { beginRecovery } from "../game/recovery.js";
 import { runtime } from "../core/runtime.js";
 import { face } from "../world/characters.js";
 import { show, toast } from "./modal.js";
@@ -240,9 +241,7 @@ export function portalBid() {
 export function savePortalDraft() {
   if (runtime.state.stage !== 2) return;
   if (Number($("portal-quantity").value) !== 20) {
-    runtime.state.mistakes++;
-    save();
-    $("portal-error").textContent = "요청서는 20대입니다. 수량을 맞춘 뒤 검토본을 저장하세요.";
+    beginRecovery("notice");
     return;
   }
   runtime.state.noticeChecked = true;

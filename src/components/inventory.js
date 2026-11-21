@@ -46,7 +46,9 @@ export const inventoryItems = [
 
 export function ownedItems() {
   return inventoryItems.map((_, i) =>
-    i === 0 ? runtime.state.brief || runtime.state.stage > 0 : runtime.state.stage >= i,
+    i === 0 ? runtime.state.brief || runtime.state.stage > 0 :
+      i === 1 ? runtime.state.brief || runtime.state.stage >= 1 :
+      i === 2 ? runtime.state.stage >= 1 : runtime.state.stage >= i,
   );
 }
 
@@ -62,6 +64,7 @@ export function itemIcon(i) {
 
 export function renderInventory() {
   const owned = ownedItems();
+  $("bag").classList.toggle("submission-active", !!runtime.pendingSubmission);
   $("inventory-slots").innerHTML = inventoryItems
     .map(
       (item, i) =>
@@ -89,7 +92,7 @@ export function inspectItem(i) {
   show(
     inventoryItems[i].name,
     /* HTML */ `<div class="large-item">${itemIcon(i)}</div>
-      <p>${inventoryItems[i].description}</p>
+      <p>${i===1 && runtime.state.stage===0 ? "수요기관에 납기와 장소를 확인해 보완할 요청서 초안. 가상 구매 : 모니터 20대." : i===2 && runtime.state.stage===1 ? "성능 기준으로 수정할 규격서 초안. 선배에게 조건을 확인하세요." : inventoryItems[i].description}</p>
       ${buttons([["close", "가방 닫기"]])}`,
     "item",
   );

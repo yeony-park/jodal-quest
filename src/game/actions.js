@@ -1,3 +1,5 @@
+import { recover, finishRecovery } from "./recovery.js";
+import { requestSubmission, submitItem } from "./submission.js";
 import { openGlossary } from "../components/learning.js";
 import { buttons, close, help, show } from "../components/modal.js";
 import { startGame } from "../components/title.js";
@@ -31,6 +33,9 @@ import { elevator, travelTo, officer, bidroom, openingGood, contractGood, delive
 import { inventoryItems, inspectItem } from "../components/inventory.js";
 
 export const actions = {
+  recover,
+  "recover-finish": finishRecovery,
+  "recovered-notice": () => { openPortal("draft"); $("portal-quantity").value=20; savePortalDraft(); },
   close,
   help,
   glossary: openGlossary,
@@ -153,6 +158,7 @@ export const actions = {
     wrong(
       "규격을 모두 없애면 목적에 맞지 않는 물품이 올 수 있어요. 필요한 성능은 명확히 남겨야 해요.",
       "doc",
+      "spec-empty",
     ),
   "product-good": () => {
     if (runtime.state.stage !== 3) return;
@@ -192,4 +198,9 @@ Object.assign(actions, {
   "portal-save-draft": savePortalDraft,
 });
 
-for (let i = 0; i < inventoryItems.length; i++) actions["item-" + i] = () => inspectItem(i);
+for (const target of ["mentor","doc","terminal","phone","officer","bidroom"]) {
+  const original=actions[target];
+  actions[target]=()=>requestSubmission(target, original);
+}
+for (let i = 0; i < inventoryItems.length; i++) actions["item-" + i] = () =>
+  runtime.pendingSubmission ? submitItem(i) : inspectItem(i);

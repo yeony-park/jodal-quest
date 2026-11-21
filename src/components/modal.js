@@ -28,6 +28,8 @@ export function show(title, body, kind = "", closable = true) {
 }
 
 export function close() {
+  runtime.pendingSubmission=null;
+  $("bag").classList.remove("submission-active");
   stopSounds();
   $("game-shell").inert = runtime.titleVisible;
   runtime.modalOpen = false;
@@ -61,7 +63,7 @@ export function help() {
         때마다 브라우저에 저장합니다.
       </p>
       <p>
-        <strong>사운드:</strong> 소리 버튼에서 음량을 조절하거나 욘 대리의 녹음 목소리를 들어 볼 수
+        <strong>사운드:</strong> 소리 버튼에서 마스터 음량을 조절하거나 두 녹음 목소리를 들어 볼 수
         있어요. 대화 중 소리 버튼을 누르면 음소거를 전환합니다.
       </p>
       <p>
@@ -69,12 +71,12 @@ export function help() {
         이름을 클릭·터치하면 자동으로 이동해 대화합니다.
       </p>
       <p>
-        <strong>다음 목표로 이동:</strong> 현재 해야 할 일을 바로 찾아갑니다. 다른 층의 목표는 엘리베이터로 안내해요. 용어 수첩에서 배운 말을 다시 읽어 보세요. 잘못 선택해도 설명을
-        읽고 다시 시도할 수 있습니다.
+        <strong>다음 목표로 이동:</strong> 현재 해야 할 일을 바로 찾아갑니다. 다른 층의 목표는 엘리베이터로 안내해요. 용어 수첩에서 배운 말을 다시 읽어 보세요. 잘못 선택하면 결과를
+        확인하고 수습 업무로 올바른 절차를 배웁니다.
       </p>
       <p>
-        <strong>인벤토리:</strong> 하단 7칸에 사원증과 완료한 업무의 문서가 쌓입니다. 물건을 눌러
-        내용을 다시 볼 수 있어요.
+        <strong>인벤토리:</strong> 하단 7칸에 사원증과 업무 문서가 쌓입니다. 제출 요청이 뜨면
+        가방의 서류를 눌러 제출하세요. 다른 서류를 내면 힌트를 받고 다시 고릅니다.
       </p>
       <p>
         <strong>업무용 모니터:</strong> 모니터를 사용할 때만 나라장터 체험 화면이 열립니다. 초안

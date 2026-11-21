@@ -4,6 +4,7 @@ import { player, runtime } from "../core/runtime.js";
 import { pixelPerson } from "./characters.js";
 import { nextTarget } from "../game/quests.js";
 import { guideTarget, spotActive } from "./navigation.js";
+import { outlineRect } from "./contrast.js";
 import { $ } from "../core/dom.js";
 
 export function project(x, y, z = 0) {
@@ -72,11 +73,13 @@ export function drawFurniture(o) {
   if (o.type === "table") return;
   const p = project((o.x + 0.5) * TILE, (o.y + 0.5) * TILE, 21);
   if (o.type === "phone") {
+    if (o.spot && spotActive(o.spot)) outlineRect(p.x - 14, p.y - 14, 28, 17);
     ctx.fillStyle = "#2f5356";
     ctx.fillRect(p.x - 9, p.y - 8, 18, 9);
     ctx.fillRect(p.x - 12, p.y - 12, 24, 5);
     return;
   }
+  if (o.spot && spotActive(o.spot)) outlineRect(p.x - 14, p.y - 24, 28, 25);
   ctx.fillStyle = "#263e4d";
   ctx.fillRect(p.x - 12, p.y - 22, 24, 19);
   ctx.fillStyle = "#87c4c3";
@@ -89,6 +92,7 @@ export function drawFurniture(o) {
   ctx.fillRect(p.x - 8, p.y + 1, 16, 3);
   if (o.w > 1) {
     const q = project((o.x + 1.45) * TILE, (o.y + 0.6) * TILE, 21);
+    if (o.spot && spotActive(o.spot)) outlineRect(q.x - 10, q.y - 10, 20, 14);
     ctx.fillStyle = "#fff1c8";
     ctx.fillRect(q.x - 8, q.y - 8, 16, 10);
     ctx.fillStyle = "#b1ad8a";
@@ -151,7 +155,7 @@ export function paintOrder(items) {
     for (const free of [true, false]) {
       for (let i = 0; i < n; i++) {
         if (used[i] || (free && waiting[i])) continue;
-        if (pick < 0 || items[i].x0 + items[i].y0 < items[pick].x0 + items[pick].y0) pick = i;
+        if (pick < 0 || items[i].x1 + items[i].y1 < items[pick].x1 + items[pick].y1) pick = i;
       }
       if (pick >= 0) break;
     }
@@ -164,6 +168,7 @@ export function paintOrder(items) {
 
 function person(x, y, kind, moving) {
   return {
+    actor: kind,
     x0: x / TILE,
     y0: y / TILE,
     x1: x / TILE,
@@ -178,6 +183,7 @@ export function sceneItems(moving) {
   for (const p of floor.partitions) {
     if (p.axis === "v")
       items.push({
+        height: p.z,
         x0: p.at,
         y0: p.from,
         x1: p.at + 0.18,
@@ -188,6 +194,7 @@ export function sceneItems(moving) {
       for (let x = p.from; x < p.to; x++)
         if (!p.doors.includes(x))
           items.push({
+            height: p.z,
             x0: x,
             y0: p.at,
             x1: x + 1,
@@ -196,7 +203,7 @@ export function sceneItems(moving) {
           });
   }
   for (const o of floor.furnishings)
-    items.push({ x0: o.x, y0: o.y, x1: o.x + o.w, y1: o.y + o.h, draw: () => drawFurniture(o) });
+    items.push({ furniture: o, x0: o.x, y0: o.y, x1: o.x + o.w, y1: o.y + o.h, draw: () => drawFurniture(o) });
   if (runtime.state.stage !== 3) {
     if (runtime.floor === 0) {
       items.push(person(spots.mentor.npcX, spots.mentor.npcY, "mentor"));
@@ -232,21 +239,16 @@ export function draw(t, moving) {
       tile(
         x,
         y,
-        corridor ? ((x + y) % 2 ? "#b8c6bb" : "#c0cec2") : (x + y) % 2 ? "#d6d9c7" : "#dcdccc",
+        corridor ? ((x + y) % 2 ? "#899e92" : "#96aa9c") : (x + y) % 2 ? "#9da99b" : "#a9b3a3",
       );
     }
   box(0, 0, 18, 0.12, 37, "#e0e5d0", "#b6c2b2", "#9cae9f");
   box(0, 0, 0.12, 14, 37, "#e0e5d0", "#b6c2b2", "#9cae9f");
   if (runtime.state.stage !== 3) drawElevator();
   for (const [label, x, y] of floor.labels) roomLabel(label, x, y);
-  const dest = spots[guideTarget(nextTarget())];
-  if (dest && !runtime.modalOpen && !runtime.talkState) {
-    const p = project(dest.x, dest.y);
-    ctx.strokeStyle = "#ffe58a";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(Math.round(p.x - 15), Math.round(p.y - 7), 30, 11);
-  }
-  for (const item of paintOrder(sceneItems(moving))) item.draw();
+  const items = sceneItems(moving), dest = spots[guideTarget(nextTarget())];
+  if (dest && !runtime.modalOpen && !runtime.talkState) drawFloorMarker(dest, items);
+  for (const item of paintOrder(items)) item.draw();
   const p = project(player.x, player.y);
   ctx.fillStyle = "#fff4d7";
   ctx.fillRect(Math.round(p.x - 28), Math.round(p.y + 7), 56, 15);
@@ -322,44 +324,88 @@ export function miniLayout() {
   );
 }
 
+export function intersects(a, b, gap = 0) {
+  return a.x < b.x + b.w + gap && a.x + a.w + gap > b.x &&
+    a.y < b.y + b.h + gap && a.y + a.h + gap > b.y;
+}
+
+// Canvas-space envelopes include the full sprite and furniture silhouette.
+export function sceneItemBounds(item) {
+  if (item.actor) {
+    const p = project(item.x0 * TILE, item.y0 * TILE);
+    return { x: p.x - 20, y: p.y - 54, w: 40, h: 58 };
+  }
+  const height = item.height ?? ({ shelf: 41, plant: 40, table: 19, phone: 35 }[item.furniture?.type] ?? 46);
+  const corners = [[item.x0,item.y0],[item.x1,item.y0],[item.x1,item.y1],[item.x0,item.y1]]
+    .map(([x,y]) => project(x*TILE,y*TILE));
+  const xs = corners.map(p=>p.x), ys = corners.map(p=>p.y);
+  return { x: Math.min(...xs)-3, y: Math.min(...ys)-height-3,
+    w: Math.max(...xs)-Math.min(...xs)+6, h: Math.max(...ys)-Math.min(...ys)+height+6 };
+}
+
+export function floorMarkerBounds(dest, items = sceneItems(false)) {
+  const p = project(dest.x,dest.y), rect = { x:p.x-14, y:p.y-7, w:28, h:14 };
+  // Suppress the whole marker when any foreground silhouette could clip it.
+  return items.some(item => intersects(rect,sceneItemBounds(item))) ? null : rect;
+}
+
+export function drawFloorMarker(dest, items) {
+  const r = floorMarkerBounds(dest,items);
+  if (!r) return false;
+  const x=r.x+r.w/2, y=r.y+r.h/2;
+  ctx.beginPath();ctx.moveTo(x,y-4);ctx.lineTo(x+11,y);ctx.lineTo(x,y+4);ctx.lineTo(x-11,y);ctx.closePath();
+  ctx.lineWidth=6;ctx.strokeStyle="#172f35";ctx.stroke();
+  ctx.lineWidth=2;ctx.strokeStyle="#fff2a6";ctx.stroke();
+  return true;
+}
+
+export function labelVisuals() {
+  const scale=runtime.view.scale, screen=r=>({x:(r.x-runtime.view.x)*scale,y:(r.y-runtime.view.y)*scale,w:r.w*scale,h:r.h*scale});
+  const visuals=sceneItems(false).filter(item=>item.actor || (item.furniture?.spot && spotActive(item.furniture.spot)))
+    .map(item=>({id:item.furniture?.spot || Object.keys(spots).find(id=>spots[id].npcX/TILE===item.x0 && spots[id].npcY/TILE===item.y0),...screen(sceneItemBounds(item))}));
+  return visuals;
+}
+
+export function placeLabel(anchor, size, obstacles) {
+  const margin=8, maxX=Math.max(margin,runtime.view.width-size.w-margin), maxY=Math.max(margin,runtime.view.height-size.h-margin);
+  const preferred={x:Math.max(margin,Math.min(maxX,anchor.x-size.w/2)),y:Math.max(margin,Math.min(maxY,anchor.y-size.h))};
+  let best=null, score=Infinity;
+  const rect={...preferred,...size};
+  const consider=(x,y)=>{
+    rect.x=x;rect.y=y;
+    let hits=0;for(const obstacle of obstacles)if(intersects(rect,obstacle,6))hits++;
+    const value=hits*1e8+(x-preferred.x)**2+(y-preferred.y)**2;
+    if(value<score){score=value;best={...rect};}
+  };
+  consider(preferred.x,preferred.y);
+  if(score===0)return best;
+  for(let y=margin;y<=maxY;y+=20) for(let x=margin;x<=maxX;x+=20) consider(x,y);
+  return best;
+}
+
+export function positionLabels() {
+  const visuals=labelVisuals(), obstacles=[...visuals];
+  for(const el of document.querySelectorAll?.(".minimap,.goal-bar,.top-controls,.inventory,.bottom-controls,.mobile-controls") || []) {
+    const r=el.getBoundingClientRect();if(r.width&&r.height)obstacles.push({x:r.x,y:r.y,w:r.width,h:r.height});
+  }
+  const target=guideTarget(nextTarget()), ids=Object.keys(spots).sort((a,b)=>(a===target?-1:b===target?1:0));
+  for(const id of ids) {
+    const el=$("spot-"+id), s=spots[id];el.hidden=!spotActive(id);if(el.hidden)continue;
+    const p=project(s.npcX??s.x,s.npcY??s.y), own=visuals.find(v=>v.id===id);
+    const anchor={x:(p.x-runtime.view.x)*runtime.view.scale,y:own?own.y-10:(p.y-65-runtime.view.y)*runtime.view.scale};
+    if(own)anchor.x=own.x+own.w/2;
+    const r=placeLabel(anchor,{w:el.offsetWidth||130,h:el.offsetHeight||34},obstacles);
+    el.style.left=r.x+r.w/2+"px";el.style.top=r.y+r.h/2+"px";
+    obstacles.push(r);
+  }
+}
+
 export function updateMap() {
   if ($("mini-layout").dataset?.floor !== String(runtime.floor)) {
     $("mini-layout").innerHTML = miniLayout();
     $("mini-layout").setAttribute("data-floor", runtime.floor);
   }
-  for (const [id, s] of Object.entries(spots)) {
-    const el = $("spot-" + id),
-      p = project(s.npcX ?? s.x, s.npcY ?? s.y, id === "doc" ? 88 : 65);
-    if (id === "mentor" || id === "officer") {
-      p.y += 7;
-    }
-    if (id === "elevator") p.y += 12;
-    el.hidden = !spotActive(id);
-    el.style.left = (p.x - runtime.view.x) * runtime.view.scale + "px";
-    el.style.top = (p.y - runtime.view.y) * runtime.view.scale + "px";
-  }
-  // Keep the officer's name clear of the player's head and the nearby task label.
-  const officer = $("spot-officer");
-  if (!officer.hidden) {
-    const scale = runtime.view.scale,
-      feet = project(player.x, player.y),
-      head = { x: (feet.x - runtime.view.x) * scale, y: (feet.y - 36 - runtime.view.y) * scale, w: 36 * scale, h: 28 * scale },
-      bidroom = $("spot-bidroom"),
-      task = { x: parseFloat(bidroom.style.left), y: parseFloat(bidroom.style.top), w: bidroom.offsetWidth || 130, h: bidroom.offsetHeight || 32 },
-      guide = $("quick-guide").parentElement?.getBoundingClientRect(),
-      obstacles = [head, task];
-    if (guide) obstacles.push({ x: guide.x + guide.width / 2, y: guide.y + guide.height / 2, w: guide.width, h: guide.height });
-    const width = officer.offsetWidth || 120, height = officer.offsetHeight || 32,
-      baseX = parseFloat(officer.style.left), baseY = parseFloat(officer.style.top);
-    for (const [dx, dy] of [[0, 0], [0, -40], [0, -80], [70, 0], [-70, 0]]) {
-      const x = Math.max(width / 2 + 8, Math.min(runtime.view.width - width / 2 - 8, baseX + dx)),
-        y = Math.max(height / 2 + 8, baseY + dy);
-      if (obstacles.some(o => Math.abs(x - o.x) < (width + o.w) / 2 + 6 && Math.abs(y - o.y) < (height + o.h) / 2 + 6)) continue;
-      officer.style.left = x + "px";
-      officer.style.top = y + "px";
-      break;
-    }
-  }
+  positionLabels();
   $("mini-player").setAttribute("cx", miniX(player.x / TILE));
   $("mini-player").setAttribute("cy", miniY(player.y / TILE));
   const next = spots[guideTarget(nextTarget())];

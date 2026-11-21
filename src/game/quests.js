@@ -1,3 +1,4 @@
+import { beginRecovery } from "./recovery.js";
 import { lessonCard } from "../components/learning.js";
 import { runtime } from "../core/runtime.js";
 import { save } from "../core/storage.js";
@@ -19,17 +20,9 @@ export function nextTarget() {
   return "result";
 }
 
-export function wrong(text, back) {
-  runtime.state.mistakes++;
-  save();
-  show(
-    "잠깐, 한 번 더 확인해요",
-    /* HTML */ `<div class="alert">${text}</div>
-      <p>아직 제출되지 않았어요. 자료를 다시 확인하고 수정할 수 있어요.</p>
-      ${buttons([[back, "다시 검토하기"]])}`,
-    "feedback",
-    false,
-  );
+export function wrong(text, back, id) {
+  const ids = ["intake", "spec-brand", "notice", "product", back === "bidroom" ? "opening" : "contract", back === "phone" ? "delivery" : "payment"];
+  beginRecovery(id || ids[runtime.state.stage]);
 }
 
 export function complete(title, body) {
@@ -139,7 +132,7 @@ export function documentDesk() {
   if (runtime.state.stage === 0) {
     show(
       "첫 요청서를 검토하세요",
-      `${requestDoc()}<p>접수 준비를 마치려면 어떻게 해야 할까요?</p><div class="choices"><button class="choice" data-action="intake-good">확인한 납기를 보완하고 검토를 요청한다<small>수요기관 확인 내용으로 빈칸을 채웁니다.</small></button><button class="choice" data-action="intake-bad">급하니 납기를 임의로 7일로 적는다<small>빠른 처리를 위해 내가 정합니다.</small></button></div>`,
+      `${requestDoc()}<p>접수 준비를 마치려면 어떻게 해야 할까요?</p><div class="choices"><button class="choice" data-action="intake-good">확인한 납기를 보완하고 검토를 요청한다</button><button class="choice" data-action="intake-bad">급하니 납기를 임의로 7일로 적는다</button></div>`,
     );
   } else if (runtime.state.stage === 1) {
     show(
@@ -149,7 +142,7 @@ export function documentDesk() {
         ["사용 목적", "문서 및 자료 열람"],
         ["필요 성능", "24형 이상 · FHD 이상 · HDMI 연결"],
         ["수량", "20대"],
-      ])}<p>검토 의견으로 가장 알맞은 것은?</p><div class="choices"><button class="choice" data-action="spec-bad">기존 브랜드와 모델명 제한을 그대로 유지한다</button><button class="choice" data-action="spec-good">협의한 성능 기준으로 수정안을 작성한다<small>브랜드 제한 대신 크기·해상도·연결 조건을 명시합니다.</small></button><button class="choice" data-action="spec-empty">경쟁이 쉬워지도록 모든 규격을 삭제한다</button></div>`,
+      ])}<p>검토 의견으로 가장 알맞은 것은?</p><div class="choices"><button class="choice" data-action="spec-bad">기존 브랜드와 모델명 제한을 그대로 유지한다</button><button class="choice" data-action="spec-good">협의한 성능 기준으로 수정안을 작성한다</button><button class="choice" data-action="spec-empty">경쟁이 쉬워지도록 모든 규격을 삭제한다</button></div>`,
     );
   } else if (runtime.state.stage === 3) {
     show(
@@ -158,7 +151,10 @@ export function documentDesk() {
         ["구매 수량", "20대"],
         ["필요 성능", "24형 이상 · FHD 이상 · HDMI 연결"],
         ["납품기한", "계약일로부터 30일 이내"],
-      ])}<div class="choices"><button class="choice" data-action="product-good">새봄 M24 · 24형 / FHD / HDMI<small>20대 공급 가능 · 계약 후 20일 내 납품 가능</small></button><button class="choice" data-action="product-bad">새봄 C22 · 22형 / FHD / HDMI<small>20대 공급 가능 · 저렴하지만 화면 크기가 부족합니다.</small></button></div>`,
+      ])}${doc("제품 자료 (가상)", [
+        ["새봄 M24", "24형 / FHD / HDMI · 20대 공급 · 계약 후 20일 내 납품"],
+        ["새봄 C22", "22형 / FHD / HDMI · 20대 공급 · 계약 후 20일 내 납품"],
+      ])}<div class="choices"><button class="choice" data-action="product-good">새봄 M24 · 24형 / FHD / HDMI</button><button class="choice" data-action="product-bad">새봄 C22 · 22형 / FHD / HDMI</button></div>`,
     );
   } else show("확인한 구매 요청서", `${requestDoc()}${buttons([["close", "확인 완료"]])}`);
 }

@@ -1,3 +1,4 @@
+import { showRecovery } from "../game/recovery.js";
 import { LAST_STAGE } from "../data/quests.js";
 import { keys, player, runtime } from "../core/runtime.js";
 import { $ } from "../core/dom.js";
@@ -23,6 +24,8 @@ export function intro() {
 export function startGame(isNew) {
   unlockAudio();
   stopTalk();
+  runtime.pendingSubmission=null;
+  runtime.submittedSteps.clear();
   close();
   if (isNew) {
     runtime.state = fresh();
@@ -47,6 +50,7 @@ export function startGame(isNew) {
   $("game-shell").inert = false;
   setNotebook(false);
   render();
-  if (runtime.state.stage === 0 && !runtime.state.brief) tutorial();
+  if (runtime.state.pendingRecovery) showRecovery();
+  else if (runtime.state.stage === 0 && !runtime.state.brief) tutorial();
   else if (runtime.state.stage === LAST_STAGE) result();
 }

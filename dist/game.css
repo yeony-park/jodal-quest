@@ -1331,6 +1331,35 @@ a {
     bottom: 8px;
   }
 }
+.hotspot {
+  border-color: #fff2a6;
+  outline: 2px solid #172f35;
+  background: #294b43;
+  color: #fffbea;
+}
+.hotspot.target {
+  background: #ffdd78;
+  color: #172f35;
+  animation: goal-glow 1.4s steps(2, end) infinite;
+}
+@keyframes goal-glow {
+  50% {
+    box-shadow: 0 0 0 4px #172f35, 0 0 0 7px #fff2a6;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hotspot.target {
+    animation: none;
+  }
+}
+.hotspot:hover {
+  background: #355f52;
+  color: #fffbea;
+}
+.hotspot.target:hover {
+  background: #ffdd78;
+  color: #172f35;
+}
 
 /* src/styles/portal.css */
 .modal.portal-modal {
@@ -1897,6 +1926,32 @@ a {
   .level-progress i {
     animation: none;
   }
+}
+.submission-active,
+.submission-bag {
+  border: 3px solid #fff2a6;
+  outline: 3px solid #172f35;
+  background: #294b43;
+}
+.submission-bag {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  margin: 18px 0;
+}
+.submission-bag .inventory-slot {
+  flex-shrink: 0;
+}
+.submission-bag .inventory-slot:disabled {
+  opacity: 0.45;
+}
+.submission-bag .inventory-slot:focus-visible {
+  outline: 3px solid #fff2a6;
+}
+#submission-hint {
+  min-height: 3em;
 }
 
 /* src/styles/index.css */

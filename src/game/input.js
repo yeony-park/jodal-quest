@@ -22,7 +22,7 @@ export function handleKey(e) {
     return;
   }
   if (runtime.modalOpen) {
-    if (e.key === "Escape" && !["advance", "feedback"].includes(runtime.modalKind)) close();
+    if (e.key === "Escape" && !["advance", "feedback", "recovery"].includes(runtime.modalKind)) close();
     if (e.key === "Tab") {
       const list = [...$("modal").querySelectorAll("button,a,input,select")].filter(
           (el) => !el.disabled,

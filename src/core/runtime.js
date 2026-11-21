@@ -6,6 +6,8 @@ export const player = { x: 464, y: 144 };
 
 export const runtime = {
   state: fresh(),
+  pendingSubmission: null,
+  submittedSteps: new Set(),
   floor: 0,
   storageOK: true,
   loaded: false,

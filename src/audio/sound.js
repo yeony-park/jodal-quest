@@ -90,7 +90,7 @@ export function playSyllable(letter, role = "mentor", delay = 0) {
     return;
   const clip = voiceClips.get(role),
     code = letter.codePointAt(0) || 0,
-    rate = (role === "rookie" ? 1.7 : 1.4) + (code % 7) * 0.045;
+    rate = (!clip && role === "rookie" ? 1.7 : 1.4) + (code % 7) * 0.045;
   const source = runtime.audioCtx.createBufferSource(),
     gain = runtime.audioCtx.createGain();
   let offset = 0,
@@ -176,14 +176,14 @@ export function soundSettings() {
         여성 기업 담당자 욘 대리는 팀원의 실제 녹음을 짧게 잘라 웅얼거리는 목소리로 말합니다.
       </p>
       <div class="sound-row">
-        <label for="volume">음량</label
+        <label for="volume">마스터 음량</label
         ><input
           id="volume"
           type="range"
           min="0"
           max="70"
           value="${Math.round(runtime.volume * 100)}"
-          aria-label="음량"
+          aria-label="마스터 음량 · 모든 소리"
         />
       </div>
       <p>조달달은 사용자가 제공한 녹음의 발성 조각을 사용합니다. 김주문과 다른 인물은 기본 합성 목소리를 사용합니다.</p>

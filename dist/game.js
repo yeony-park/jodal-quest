@@ -1,4 +1,93 @@
 (() => {
+  // src/data/recovery.js
+  var recoveryScenes = {
+    intake: {
+      stage: 0,
+      title: "급한 납기 초안 수습",
+      action: "intake-good",
+      consequence: "7일로 적은 초안을 본 도서관 담당자가 원래 요청한 일정과 다르다며 검토를 멈췄어요.",
+      correction: "수요기관에 납기와 장소를 확인해요. 이 가상 의뢰의 납기는 계약 후 30일 이내, 장소는 도서관 2층 자료실이에요. 확인한 내용으로 요청서를 보완해 검토를 받아요.",
+      button: "확인한 납기와 장소로 요청서 보완",
+      source: "2. 조달요청 · 납기 등 요청 내용 기재"
+    },
+    "spec-brand": {
+      stage: 1,
+      title: "브랜드 제한 초안 수습",
+      action: "spec-good",
+      consequence: "특정 브랜드만 적은 초안을 본 선배가 경쟁 가능한 규격인지 재검토를 요청했어요.",
+      correction: "일반경쟁에 맞는 규격을 검토해요. 이 사례는 문서 열람에 필요한 24형 이상·FHD 이상·HDMI 조건으로 수정하고 선배 검토를 받아요.",
+      button: "협의한 성능 기준으로 규격 수정",
+      source: "4. 규격검토 · 경쟁 가능한 규격"
+    },
+    "spec-empty": {
+      stage: 1,
+      title: "빈 규격서 수습",
+      action: "spec-good",
+      consequence: "규격을 지운 초안으로는 도서관에서 필요한 성능을 확인하기 어려워 검토가 멈췄어요.",
+      correction: "사용 목적에 필요한 성능을 명시해 경쟁 가능한 규격으로 검토해요. 협의한 24형 이상·FHD 이상·HDMI 조건을 복원하고 검토를 받아요.",
+      button: "필요한 성능 조건 복원",
+      source: "4. 규격검토 · 경쟁 가능한 규격"
+    },
+    notice: {
+      stage: 2,
+      title: "수량이 다른 공고 초안 수습",
+      action: "recovered-notice",
+      consequence: "초안의 수량이 요청서 20대와 달라 검토본 저장이 멈췄어요.",
+      correction: "구매결의와 입찰공고의 물품 내용을 확인해요. 요청서와 규격서를 대조해 20대로 바로잡은 뒤 선배 검토와 담당자 결재를 받아요.",
+      button: "요청서와 대조해 20대로 바로잡기",
+      source: "5. 구매결의 · 수량 / 6. 입찰공고"
+    },
+    product: {
+      stage: 3,
+      title: "작은 모니터 준비 수습",
+      action: "product-good",
+      consequence: "22형 제품을 준비하려다 공고의 24형 이상 조건에 미달한 것을 발견해 입찰 준비가 멈췄어요.",
+      correction: "입찰은 공고한 조건에 맞춰 준비해요. 규격과 납기를 대조해 이 사례의 24형·FHD·HDMI 제품으로 바꾼 뒤 참가 조건을 확인해요.",
+      button: "공고 조건에 맞는 M24로 변경",
+      source: "6. 입찰공고 · 조건 / 8. 입찰"
+    },
+    opening: {
+      stage: 4,
+      title: "예정가격 순서 수습",
+      action: "opening-good",
+      consequence: "입찰 뒤 가격을 정하자는 메모를 본 담당자가 순서 오류를 찾아 확인을 멈췄어요.",
+      correction: "예정가격은 입찰 전에 결정해요. 지금은 입찰 전에 결정해 둔 기록을 확인하고 공고한 선정방식에 따른 심사로 이어가요.",
+      button: "입찰 전에 결정한 가격 기록 확인",
+      source: "7. 예정가격결정 → 8. 입찰"
+    },
+    contract: {
+      stage: 4,
+      title: "접수와 계약 혼동 수습",
+      action: "contract-good",
+      consequence: "접수증만 보고 계약 완료라고 쓴 초안이 반려됐어요. 담당자가 심사·전자계약 기록을 요청했어요.",
+      correction: "입찰 뒤 공고한 선정방식에 따른 심사를 확인해요. 이 가상 사례는 심사를 마쳤으므로 권한 있는 담당자가 낙찰예정자와 전자계약을 체결해요.",
+      button: "심사 확인 후 담당자가 전자계약 체결",
+      source: "8. 입찰 → 9. 낙찰자선정 및 계약체결"
+    },
+    delivery: {
+      stage: 5,
+      title: "부족한 한 대 수습",
+      action: "delivery-report",
+      consequence: "19대가 도착했는데 20대라고 적은 초안을 검사 담당자가 대조해 인수를 멈췄어요.",
+      correction: "계약 조건과 실제 납품을 대조해요. 수요기관·계약상대자에게 한 대 보완을 요청한 뒤 20대의 검사·검수와 물품인수를 진행해요.",
+      button: "부족분 보완 요청 후 검사 자료 받기",
+      source: "11. 납품준비 ~ 14. 검사 검수 및 물품인수"
+    },
+    payment: {
+      stage: 5,
+      title: "빠진 지급 서류 수습",
+      action: "payment-good",
+      consequence: "입찰서만 붙인 지급 초안에 납품 서류가 빠져 담당자가 처리를 멈췄어요.",
+      correction: "검사·검수와 물품인수 후 영수증·납품 서류를 확인해요. 서류 하자를 확인하고 계약종결 서류를 작성한 뒤 담당자가 대금 지급 절차를 진행해요.",
+      button: "영수증·납품 서류 확인 후 지급 절차",
+      source: "14. 검사 검수 및 물품인수 ~ 17. 계약종결"
+    }
+  };
+  function endingTitle(recoveries, mistakes = 0) {
+    const count = Math.max(recoveries.length, mistakes);
+    return count === 0 ? "정파" : count >= 3 ? "사파" : "정파 · 수습을 배운 신입";
+  }
+
   // src/data/initial-state.js
   var fresh = () => ({
     version: 1,
@@ -16,6 +105,8 @@
     product: false,
     eligibility: false,
     mistakes: 0,
+    recoveries: [],
+    pendingRecovery: null,
     history: []
   });
 
@@ -72,6 +163,8 @@
   var player = { x: 464, y: 144 };
   var runtime = {
     state: fresh(),
+    pendingSubmission: null,
+    submittedSteps: /* @__PURE__ */ new Set(),
     floor: 0,
     storageOK: true,
     loaded: false,
@@ -104,7 +197,7 @@
   function loadGame() {
     try {
       const s = JSON.parse(localStorage.getItem(KEY));
-      if (s && s.version === 1 && Number.isInteger(s.stage) && s.stage >= 0 && s.stage <= LAST_STAGE && (s.floor === void 0 || s.floor === 0 || s.floor === 1) && ["awardBrief", "openingChecked", "deliveryIssueReported", "inspectionChecked"].every(
+      if (s && s.version === 1 && (s.recoveries === void 0 || Array.isArray(s.recoveries) && s.recoveries.length <= Object.keys(recoveryScenes).length && s.recoveries.every((id) => typeof id === "string" && Object.hasOwn(recoveryScenes, id)) && new Set(s.recoveries).size === s.recoveries.length) && (s.pendingRecovery === void 0 || s.pendingRecovery === null || typeof s.pendingRecovery === "string" && Object.hasOwn(recoveryScenes, s.pendingRecovery) && recoveryScenes[s.pendingRecovery].stage === s.stage) && Number.isInteger(s.stage) && s.stage >= 0 && s.stage <= LAST_STAGE && (s.floor === void 0 || s.floor === 0 || s.floor === 1) && ["awardBrief", "openingChecked", "deliveryIssueReported", "inspectionChecked"].every(
         (k) => s[k] === void 0 || typeof s[k] === "boolean"
       ) && [
         "started",
@@ -175,12 +268,12 @@
         { type: "desk", x: 2, y: 3, w: 2, h: 1 },
         { type: "desk", x: 7, y: 2, w: 2, h: 1 },
         { type: "shelf", x: 9, y: 1, w: 1, h: 2 },
-        { type: "desk", x: 13, y: 2, w: 2, h: 1 },
+        { type: "desk", spot: "doc", x: 13, y: 2, w: 2, h: 1 },
         { type: "desk", x: 16, y: 2, w: 1, h: 1 },
-        { type: "phone", x: 2, y: 11, w: 2, h: 1 },
+        { type: "phone", spot: "phone", x: 2, y: 11, w: 2, h: 1 },
         { type: "shelf", x: 1, y: 12, w: 1, h: 1 },
         { type: "table", x: 7, y: 11, w: 3, h: 1 },
-        { type: "terminal", x: 13, y: 11, w: 3, h: 1 },
+        { type: "terminal", spot: "terminal", x: 13, y: 11, w: 3, h: 1 },
         { type: "plant", x: 17, y: 12, w: 1, h: 1 }
       ]
     },
@@ -204,7 +297,7 @@
         { type: "shelf", x: 1, y: 1, w: 3, h: 1 },
         { type: "table", x: 5, y: 2, w: 2, h: 1 },
         { type: "plant", x: 8, y: 1, w: 1, h: 1 },
-        { type: "terminal", x: 12, y: 2, w: 3, h: 1 },
+        { type: "terminal", spot: "bidroom", x: 12, y: 2, w: 3, h: 1 },
         { type: "shelf", x: 16, y: 1, w: 1, h: 2 },
         { type: "table", x: 3, y: 11, w: 3, h: 1 },
         { type: "plant", x: 1, y: 12, w: 1, h: 1 },
@@ -256,6 +349,158 @@
   var canvas = $("world");
   var ctx = canvas.getContext("2d");
 
+  // src/components/inventory.js
+  var inventoryItems = [
+    {
+      name: "사원증",
+      description: "새봄지방조달청 신입 9급 주무관 조달달의 사원증. 김주문에게 첫 업무를 받은 증표입니다.",
+      color: "#72a3ad"
+    },
+    {
+      name: "요청서",
+      description: "수요기관에 확인한 납기와 장소를 보완한 요청서. 모니터 20대, 계약일로부터 30일 이내입니다.",
+      color: "#bd9f64"
+    },
+    {
+      name: "규격서",
+      description: "수요기관과 협의하고 선배가 검토한 성능 중심 규격서. 24형 이상, FHD 이상, HDMI 연결입니다.",
+      color: "#789c72"
+    },
+    {
+      name: "공고문",
+      description: "담당자 검토·결재 후 게시된 모의 공고문. 수량은 요청서와 같은 20대입니다.",
+      color: "#728dc3"
+    },
+    {
+      name: "접수증",
+      description: "새봄테크의 모의 입찰서가 접수되었습니다. 제출은 낙찰이나 계약 체결이 아닙니다.",
+      color: "#b686b7"
+    },
+    {
+      name: "계약서",
+      description: "공고한 선정방식에 따른 심사를 마치고 권한 있는 담당자가 체결한 가상 전자계약. 모니터 20대, 계약 후 30일 이내 납품입니다.",
+      color: "#c58e62"
+    },
+    {
+      name: "완료철",
+      description: "검사·검수와 물품인수, 영수증 및 납품 서류 확인을 마치고 대금 지급까지 진행한 가상 업무 기록입니다.",
+      color: "#76a395"
+    }
+  ];
+  function ownedItems() {
+    return inventoryItems.map(
+      (_, i) => i === 0 ? runtime.state.brief || runtime.state.stage > 0 : i === 1 ? runtime.state.brief || runtime.state.stage >= 1 : i === 2 ? runtime.state.stage >= 1 : runtime.state.stage >= i
+    );
+  }
+  function itemIcon(i) {
+    const color = inventoryItems[i].color;
+    return (
+      /* HTML */
+      `<svg viewBox="0 0 24 28" shape-rendering="crispEdges" aria-hidden="true">
+    <path d="M5 2H16V5H20V26H5Z" fill="#252c30" />
+    <path d="M6 3H15V7H19V25H6Z" fill="#efe3ba" />
+    <path d="M7 8H18V11H7Z" fill="${color}" />
+    ${i === 0 ? '<path d="M9 13H15V19H9Z" fill="#609092"/><path d="M8 21H16V23H8Z" fill="#9b987c"/>' : '<path d="M8 14H17V16H8ZM8 18H16V20H8Z" fill="#a6a18b"/>'}${i === 4 ? '<path d="M14 20H20V25H14Z" fill="#b57aa0"/>' : ""}
+  </svg>`
+    );
+  }
+  function renderInventory() {
+    const owned = ownedItems();
+    $("bag").classList.toggle("submission-active", !!runtime.pendingSubmission);
+    $("inventory-slots").innerHTML = inventoryItems.map(
+      (item, i) => (
+        /* HTML */
+        `<button
+          class="inventory-slot ${owned[i] ? "owned" : ""}"
+          data-action="item-${i}"
+          aria-label="${i + 1}번 칸 · ${owned[i] ? item.name : "빈칸"}"
+          title="${owned[i] ? item.name : "아직 얻지 못한 물건"}"
+        >
+          <span class="slot-number">${i + 1}</span
+          >${owned[i] ? itemIcon(i) : '<span class="slot-empty">·</span>'}<span class="slot-name"
+            >${owned[i] ? item.name : "빈칸"}</span
+          >
+        </button>`
+      )
+    ).join("");
+    $("level-badge").textContent = runtime.state.stage === LAST_STAGE ? "Lv. 2" : "Lv. 1";
+  }
+  function inspectItem(i) {
+    if (!ownedItems()[i]) {
+      toast("퀘스트를 마치면 물건이 이 칸에 들어와요.");
+      return;
+    }
+    show(
+      inventoryItems[i].name,
+      /* HTML */
+      `<div class="large-item">${itemIcon(i)}</div>
+      <p>${i === 1 && runtime.state.stage === 0 ? "수요기관에 납기와 장소를 확인해 보완할 요청서 초안. 가상 구매 : 모니터 20대." : i === 2 && runtime.state.stage === 1 ? "성능 기준으로 수정할 규격서 초안. 선배에게 조건을 확인하세요." : inventoryItems[i].description}</p>
+      ${buttons([["close", "가방 닫기"]])}`,
+      "item"
+    );
+  }
+
+  // src/game/submission.js
+  var submissionSteps = {
+    intake: { item: 1, target: "doc", stage: 0 },
+    specification: { item: 2, target: "doc", stage: 1 },
+    notice: { item: 2, target: "terminal", stage: 2 },
+    approval: { item: 2, target: "mentor", stage: 2 },
+    product: { item: 3, target: "doc", stage: 3 },
+    bid: { item: 3, target: "terminal", stage: 3 },
+    award: { item: 4, target: "officer", stage: 4 },
+    price: { item: 4, target: "bidroom", stage: 4 },
+    contract: { item: 4, target: "officer", stage: 4 },
+    delivery: { item: 5, target: "phone", stage: 5 },
+    payment: { item: 5, target: "terminal", stage: 5 }
+  };
+  function submissionStep(target) {
+    const s = runtime.state;
+    if (s.stage === 0 && s.brief && s.contact && target === "doc") return "intake";
+    if (s.stage === 1 && s.specAdvice && target === "doc") return "specification";
+    if (s.stage === 2 && target === "terminal" && !s.noticeChecked) return "notice";
+    if (s.stage === 2 && target === "mentor" && s.noticeChecked) return "approval";
+    if (s.stage === 3 && target === "doc" && !s.product) return "product";
+    if (s.stage === 3 && target === "terminal" && s.product) return "bid";
+    if (s.stage === 4 && target === "officer") return s.openingChecked ? "contract" : !s.awardBrief ? "award" : null;
+    if (s.stage === 4 && target === "bidroom" && s.awardBrief && !s.openingChecked) return "price";
+    if (s.stage === 5 && target === "phone" && !s.inspectionChecked) return "delivery";
+    if (s.stage === 5 && target === "terminal" && s.inspectionChecked) return "payment";
+    return null;
+  }
+  function matchesSubmission(step, item) {
+    return submissionSteps[step]?.item === item;
+  }
+  function requestSubmission(target, onSubmit) {
+    const step = submissionStep(target);
+    if (!step || runtime.submittedSteps.has(step)) {
+      onSubmit();
+      return;
+    }
+    const owned = ownedItems(), expected = inventoryItems[submissionSteps[step].item].name;
+    show("가방에서 서류를 제출해 주세요", `<p>담당자 : 이번 업무의 ${expected}를 보여 주세요.</p>
+    <p id="submission-hint" role="status">가방의 물건을 눌러 제출하세요.</p>
+    <div class="submission-bag" aria-label="제출할 가방 물건">${inventoryItems.map((item, i) => `<button class="inventory-slot ${owned[i] ? "owned" : ""}" data-action="item-${i}" ${owned[i] ? "" : "disabled"} aria-label="${owned[i] ? item.name : "아직 없는 " + item.name}">${owned[i] ? itemIcon(i) : ""}<span class="slot-name">${item.name}</span></button>`).join("")}</div>
+    ${buttons([["close", "서류를 나중에 제출하기", true]])}`, "submission");
+    runtime.pendingSubmission = { step, onSubmit };
+    renderInventory();
+  }
+  function submitItem(item) {
+    const pending = runtime.pendingSubmission;
+    if (!pending || runtime.modalKind !== "submission") return false;
+    if (!matchesSubmission(pending.step, item) || !ownedItems()[item]) {
+      const name = inventoryItems[submissionSteps[pending.step].item].name;
+      $("submission-hint").textContent = `김주문 : 지금은 ${name}에 적힌 내용을 대조할 차례예요. 가방에서 다시 찾아봐요.`;
+      return false;
+    }
+    runtime.submittedSteps.add(pending.step);
+    runtime.pendingSubmission = null;
+    close();
+    renderInventory();
+    pending.onSubmit();
+    return true;
+  }
+
   // src/components/title.js
   function intro() {
     runtime.titleVisible = true;
@@ -268,6 +513,8 @@
   function startGame(isNew) {
     unlockAudio();
     stopTalk();
+    runtime.pendingSubmission = null;
+    runtime.submittedSteps.clear();
     close();
     if (isNew) {
       runtime.state = fresh();
@@ -292,7 +539,8 @@
     $("game-shell").inert = false;
     setNotebook(false);
     render();
-    if (runtime.state.stage === 0 && !runtime.state.brief) tutorial();
+    if (runtime.state.pendingRecovery) showRecovery();
+    else if (runtime.state.stage === 0 && !runtime.state.brief) tutorial();
     else if (runtime.state.stage === LAST_STAGE) result();
   }
 
@@ -535,9 +783,7 @@
   function savePortalDraft() {
     if (runtime.state.stage !== 2) return;
     if (Number($("portal-quantity").value) !== 20) {
-      runtime.state.mistakes++;
-      save();
-      $("portal-error").textContent = "요청서는 20대입니다. 수량을 맞춘 뒤 검토본을 저장하세요.";
+      beginRecovery("notice");
       return;
     }
     runtime.state.noticeChecked = true;
@@ -683,98 +929,15 @@
     speak("김주문", ["스무 대가 모두 도착했는지 끝까지 확인했군요. 납품 서류를 확인하고 담당자가 대금 지급 절차를 마쳤어요.", "요청서부터 계약과 납품까지, 오늘 배운 절차를 다시 떠올려 봐요."], ending);
   }
 
-  // src/components/inventory.js
-  var inventoryItems = [
-    {
-      name: "사원증",
-      description: "새봄지방조달청 신입 9급 주무관 조달달의 사원증. 김주문에게 첫 업무를 받은 증표입니다.",
-      color: "#72a3ad"
-    },
-    {
-      name: "요청서",
-      description: "수요기관에 확인한 납기와 장소를 보완한 요청서. 모니터 20대, 계약일로부터 30일 이내입니다.",
-      color: "#bd9f64"
-    },
-    {
-      name: "규격서",
-      description: "수요기관과 협의하고 선배가 검토한 성능 중심 규격서. 24형 이상, FHD 이상, HDMI 연결입니다.",
-      color: "#789c72"
-    },
-    {
-      name: "공고문",
-      description: "담당자 검토·결재 후 게시된 모의 공고문. 수량은 요청서와 같은 20대입니다.",
-      color: "#728dc3"
-    },
-    {
-      name: "접수증",
-      description: "새봄테크의 모의 입찰서가 접수되었습니다. 제출은 낙찰이나 계약 체결이 아닙니다.",
-      color: "#b686b7"
-    },
-    {
-      name: "계약서",
-      description: "공고한 선정방식에 따른 심사를 마치고 권한 있는 담당자가 체결한 가상 전자계약. 모니터 20대, 계약 후 30일 이내 납품입니다.",
-      color: "#c58e62"
-    },
-    {
-      name: "완료철",
-      description: "검사·검수와 물품인수, 영수증 및 납품 서류 확인을 마치고 대금 지급까지 진행한 가상 업무 기록입니다.",
-      color: "#76a395"
-    }
-  ];
-  function ownedItems() {
-    return inventoryItems.map(
-      (_, i) => i === 0 ? runtime.state.brief || runtime.state.stage > 0 : runtime.state.stage >= i
-    );
-  }
-  function itemIcon(i) {
-    const color = inventoryItems[i].color;
-    return (
-      /* HTML */
-      `<svg viewBox="0 0 24 28" shape-rendering="crispEdges" aria-hidden="true">
-    <path d="M5 2H16V5H20V26H5Z" fill="#252c30" />
-    <path d="M6 3H15V7H19V25H6Z" fill="#efe3ba" />
-    <path d="M7 8H18V11H7Z" fill="${color}" />
-    ${i === 0 ? '<path d="M9 13H15V19H9Z" fill="#609092"/><path d="M8 21H16V23H8Z" fill="#9b987c"/>' : '<path d="M8 14H17V16H8ZM8 18H16V20H8Z" fill="#a6a18b"/>'}${i === 4 ? '<path d="M14 20H20V25H14Z" fill="#b57aa0"/>' : ""}
-  </svg>`
-    );
-  }
-  function renderInventory() {
-    const owned = ownedItems();
-    $("inventory-slots").innerHTML = inventoryItems.map(
-      (item, i) => (
-        /* HTML */
-        `<button
-          class="inventory-slot ${owned[i] ? "owned" : ""}"
-          data-action="item-${i}"
-          aria-label="${i + 1}번 칸 · ${owned[i] ? item.name : "빈칸"}"
-          title="${owned[i] ? item.name : "아직 얻지 못한 물건"}"
-        >
-          <span class="slot-number">${i + 1}</span
-          >${owned[i] ? itemIcon(i) : '<span class="slot-empty">·</span>'}<span class="slot-name"
-            >${owned[i] ? item.name : "빈칸"}</span
-          >
-        </button>`
-      )
-    ).join("");
-    $("level-badge").textContent = runtime.state.stage === LAST_STAGE ? "Lv. 2" : "Lv. 1";
-  }
-  function inspectItem(i) {
-    if (!ownedItems()[i]) {
-      toast("퀘스트를 마치면 물건이 이 칸에 들어와요.");
-      return;
-    }
-    show(
-      inventoryItems[i].name,
-      /* HTML */
-      `<div class="large-item">${itemIcon(i)}</div>
-      <p>${inventoryItems[i].description}</p>
-      ${buttons([["close", "가방 닫기"]])}`,
-      "item"
-    );
-  }
-
   // src/game/actions.js
   var actions = {
+    recover,
+    "recover-finish": finishRecovery,
+    "recovered-notice": () => {
+      openPortal("draft");
+      $("portal-quantity").value = 20;
+      savePortalDraft();
+    },
     close,
     help,
     glossary: openGlossary,
@@ -896,7 +1059,8 @@
     ),
     "spec-empty": () => wrong(
       "규격을 모두 없애면 목적에 맞지 않는 물품이 올 수 있어요. 필요한 성능은 명확히 남겨야 해요.",
-      "doc"
+      "doc",
+      "spec-empty"
     ),
     "product-good": () => {
       if (runtime.state.stage !== 3) return;
@@ -933,7 +1097,50 @@
     "portal-bid": portalBid,
     "portal-save-draft": savePortalDraft
   });
-  for (let i = 0; i < inventoryItems.length; i++) actions["item-" + i] = () => inspectItem(i);
+  for (const target of ["mentor", "doc", "terminal", "phone", "officer", "bidroom"]) {
+    const original = actions[target];
+    actions[target] = () => requestSubmission(target, original);
+  }
+  for (let i = 0; i < inventoryItems.length; i++) actions["item-" + i] = () => runtime.pendingSubmission ? submitItem(i) : inspectItem(i);
+
+  // src/game/recovery.js
+  function showRecovery(id = runtime.state.pendingRecovery) {
+    const scene = recoveryScenes[id];
+    if (!scene || scene.stage !== runtime.state.stage) return;
+    show(scene.title, `<div class="alert">${scene.consequence}</div>
+    <p>조달달 : 초안에서 발견했으니 근거를 확인하고 수습할게요.</p>
+    ${buttons([["recover", "수습 절차 확인"]])}`, "recovery", false);
+  }
+  function beginRecovery(id) {
+    const scene = recoveryScenes[id];
+    if (!scene || scene.stage !== runtime.state.stage || runtime.state.pendingRecovery) return;
+    runtime.state.mistakes++;
+    runtime.state.pendingRecovery = id;
+    save();
+    showRecovery(id);
+  }
+  function recover() {
+    const scene = recoveryScenes[runtime.state.pendingRecovery];
+    if (!scene || scene.stage !== runtime.state.stage) return;
+    speak("조달달", ["기록을 바로잡고 올바른 절차로 이어갈게요."], () => {
+      show("수습 업무 · " + scene.title, `<p>${scene.correction}</p>
+      <p class="source-note">근거 : 조달청 총액계약 업무처리절차 · ${scene.source} · <a href="https://www.pps.go.kr/kor/content.do?key=00179" target="_blank" rel="noopener">원문</a></p>
+      ${buttons([["recover-finish", scene.button]])}`, "recovery", false);
+    }, "rookie");
+  }
+  function finishRecovery() {
+    const id = runtime.state.pendingRecovery, scene = recoveryScenes[id];
+    if (!scene || scene.stage !== runtime.state.stage) return;
+    if (id === "intake") {
+      runtime.state.brief = true;
+      runtime.state.contact = true;
+    }
+    if (id.startsWith("spec-")) runtime.state.specAdvice = true;
+    if (!runtime.state.recoveries.includes(id)) runtime.state.recoveries.push(id);
+    runtime.state.pendingRecovery = null;
+    save();
+    actions[scene.action]();
+  }
 
   // src/game/quests.js
   function nextTarget() {
@@ -946,18 +1153,9 @@
     if (runtime.state.stage === 5) return !runtime.state.inspectionChecked ? "phone" : "terminal";
     return "result";
   }
-  function wrong(text, back) {
-    runtime.state.mistakes++;
-    save();
-    show(
-      "잠깐, 한 번 더 확인해요",
-      /* HTML */
-      `<div class="alert">${text}</div>
-      <p>아직 제출되지 않았어요. 자료를 다시 확인하고 수정할 수 있어요.</p>
-      ${buttons([[back, "다시 검토하기"]])}`,
-      "feedback",
-      false
-    );
+  function wrong(text, back, id) {
+    const ids = ["intake", "spec-brand", "notice", "product", back === "bidroom" ? "opening" : "contract", back === "phone" ? "delivery" : "payment"];
+    beginRecovery(id || ids[runtime.state.stage]);
   }
   function complete(title, body) {
     const completed = runtime.state.stage;
@@ -1063,7 +1261,7 @@
     if (runtime.state.stage === 0) {
       show(
         "첫 요청서를 검토하세요",
-        `${requestDoc()}<p>접수 준비를 마치려면 어떻게 해야 할까요?</p><div class="choices"><button class="choice" data-action="intake-good">확인한 납기를 보완하고 검토를 요청한다<small>수요기관 확인 내용으로 빈칸을 채웁니다.</small></button><button class="choice" data-action="intake-bad">급하니 납기를 임의로 7일로 적는다<small>빠른 처리를 위해 내가 정합니다.</small></button></div>`
+        `${requestDoc()}<p>접수 준비를 마치려면 어떻게 해야 할까요?</p><div class="choices"><button class="choice" data-action="intake-good">확인한 납기를 보완하고 검토를 요청한다</button><button class="choice" data-action="intake-bad">급하니 납기를 임의로 7일로 적는다</button></div>`
       );
     } else if (runtime.state.stage === 1) {
       show(
@@ -1073,7 +1271,7 @@
           ["사용 목적", "문서 및 자료 열람"],
           ["필요 성능", "24형 이상 · FHD 이상 · HDMI 연결"],
           ["수량", "20대"]
-        ])}<p>검토 의견으로 가장 알맞은 것은?</p><div class="choices"><button class="choice" data-action="spec-bad">기존 브랜드와 모델명 제한을 그대로 유지한다</button><button class="choice" data-action="spec-good">협의한 성능 기준으로 수정안을 작성한다<small>브랜드 제한 대신 크기·해상도·연결 조건을 명시합니다.</small></button><button class="choice" data-action="spec-empty">경쟁이 쉬워지도록 모든 규격을 삭제한다</button></div>`
+        ])}<p>검토 의견으로 가장 알맞은 것은?</p><div class="choices"><button class="choice" data-action="spec-bad">기존 브랜드와 모델명 제한을 그대로 유지한다</button><button class="choice" data-action="spec-good">협의한 성능 기준으로 수정안을 작성한다</button><button class="choice" data-action="spec-empty">경쟁이 쉬워지도록 모든 규격을 삭제한다</button></div>`
       );
     } else if (runtime.state.stage === 3) {
       show(
@@ -1082,7 +1280,10 @@
           ["구매 수량", "20대"],
           ["필요 성능", "24형 이상 · FHD 이상 · HDMI 연결"],
           ["납품기한", "계약일로부터 30일 이내"]
-        ])}<div class="choices"><button class="choice" data-action="product-good">새봄 M24 · 24형 / FHD / HDMI<small>20대 공급 가능 · 계약 후 20일 내 납품 가능</small></button><button class="choice" data-action="product-bad">새봄 C22 · 22형 / FHD / HDMI<small>20대 공급 가능 · 저렴하지만 화면 크기가 부족합니다.</small></button></div>`
+        ])}${doc("제품 자료 (가상)", [
+          ["새봄 M24", "24형 / FHD / HDMI · 20대 공급 · 계약 후 20일 내 납품"],
+          ["새봄 C22", "22형 / FHD / HDMI · 20대 공급 · 계약 후 20일 내 납품"]
+        ])}<div class="choices"><button class="choice" data-action="product-good">새봄 M24 · 24형 / FHD / HDMI</button><button class="choice" data-action="product-bad">새봄 C22 · 22형 / FHD / HDMI</button></div>`
       );
     } else show("확인한 구매 요청서", `${requestDoc()}${buttons([["close", "확인 완료"]])}`);
   }
@@ -1159,6 +1360,17 @@
     ]);
   }
 
+  // src/world/contrast.js
+  var interactableColors = { bright: "#fff2a6", edge: "#172f35" };
+  function outlineRect(x, y, w, h) {
+    ctx.strokeStyle = interactableColors.edge;
+    ctx.lineWidth = 6;
+    ctx.strokeRect(Math.round(x), Math.round(y), w, h);
+    ctx.strokeStyle = interactableColors.bright;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(Math.round(x), Math.round(y), w, h);
+  }
+
   // src/world/render.js
   function project(x, y, z = 0) {
     return { x: 426 + (x - y) / TILE * 22, y: 102 + (x + y) / TILE * 11 - z };
@@ -1218,11 +1430,13 @@
     if (o.type === "table") return;
     const p = project((o.x + 0.5) * TILE, (o.y + 0.5) * TILE, 21);
     if (o.type === "phone") {
+      if (o.spot && spotActive(o.spot)) outlineRect(p.x - 14, p.y - 14, 28, 17);
       ctx.fillStyle = "#2f5356";
       ctx.fillRect(p.x - 9, p.y - 8, 18, 9);
       ctx.fillRect(p.x - 12, p.y - 12, 24, 5);
       return;
     }
+    if (o.spot && spotActive(o.spot)) outlineRect(p.x - 14, p.y - 24, 28, 25);
     ctx.fillStyle = "#263e4d";
     ctx.fillRect(p.x - 12, p.y - 22, 24, 19);
     ctx.fillStyle = "#87c4c3";
@@ -1235,6 +1449,7 @@
     ctx.fillRect(p.x - 8, p.y + 1, 16, 3);
     if (o.w > 1) {
       const q = project((o.x + 1.45) * TILE, (o.y + 0.6) * TILE, 21);
+      if (o.spot && spotActive(o.spot)) outlineRect(q.x - 10, q.y - 10, 20, 14);
       ctx.fillStyle = "#fff1c8";
       ctx.fillRect(q.x - 8, q.y - 8, 16, 10);
       ctx.fillStyle = "#b1ad8a";
@@ -1284,7 +1499,7 @@
       for (const free of [true, false]) {
         for (let i = 0; i < n; i++) {
           if (used[i] || free && waiting[i]) continue;
-          if (pick < 0 || items[i].x0 + items[i].y0 < items[pick].x0 + items[pick].y0) pick = i;
+          if (pick < 0 || items[i].x1 + items[i].y1 < items[pick].x1 + items[pick].y1) pick = i;
         }
         if (pick >= 0) break;
       }
@@ -1296,6 +1511,7 @@
   }
   function person(x, y, kind, moving) {
     return {
+      actor: kind,
       x0: x / TILE,
       y0: y / TILE,
       x1: x / TILE,
@@ -1308,6 +1524,7 @@
     for (const p of floor.partitions) {
       if (p.axis === "v")
         items.push({
+          height: p.z,
           x0: p.at,
           y0: p.from,
           x1: p.at + 0.18,
@@ -1318,6 +1535,7 @@
         for (let x = p.from; x < p.to; x++)
           if (!p.doors.includes(x))
             items.push({
+              height: p.z,
               x0: x,
               y0: p.at,
               x1: x + 1,
@@ -1326,7 +1544,7 @@
             });
     }
     for (const o of floor.furnishings)
-      items.push({ x0: o.x, y0: o.y, x1: o.x + o.w, y1: o.y + o.h, draw: () => drawFurniture(o) });
+      items.push({ furniture: o, x0: o.x, y0: o.y, x1: o.x + o.w, y1: o.y + o.h, draw: () => drawFurniture(o) });
     if (runtime.state.stage !== 3) {
       if (runtime.floor === 0) {
         items.push(person(spots.mentor.npcX, spots.mentor.npcY, "mentor"));
@@ -1361,21 +1579,16 @@
         tile(
           x,
           y,
-          corridor ? (x + y) % 2 ? "#b8c6bb" : "#c0cec2" : (x + y) % 2 ? "#d6d9c7" : "#dcdccc"
+          corridor ? (x + y) % 2 ? "#899e92" : "#96aa9c" : (x + y) % 2 ? "#9da99b" : "#a9b3a3"
         );
       }
     box(0, 0, 18, 0.12, 37, "#e0e5d0", "#b6c2b2", "#9cae9f");
     box(0, 0, 0.12, 14, 37, "#e0e5d0", "#b6c2b2", "#9cae9f");
     if (runtime.state.stage !== 3) drawElevator();
     for (const [label, x, y] of floor.labels) roomLabel(label, x, y);
-    const dest = spots[guideTarget(nextTarget())];
-    if (dest && !runtime.modalOpen && !runtime.talkState) {
-      const p2 = project(dest.x, dest.y);
-      ctx.strokeStyle = "#ffe58a";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(Math.round(p2.x - 15), Math.round(p2.y - 7), 30, 11);
-    }
-    for (const item of paintOrder(sceneItems(moving))) item.draw();
+    const items = sceneItems(moving), dest = spots[guideTarget(nextTarget())];
+    if (dest && !runtime.modalOpen && !runtime.talkState) drawFloorMarker(dest, items);
+    for (const item of paintOrder(items)) item.draw();
     const p = project(player.x, player.y);
     ctx.fillStyle = "#fff4d7";
     ctx.fillRect(Math.round(p.x - 28), Math.round(p.y + 7), 56, 15);
@@ -1432,34 +1645,98 @@
       (o) => `<rect x="${r(miniX(o.x))}" y="${r(miniY(o.y))}" width="${r(o.w / MAP_W * 168)}" height="${r(o.h / MAP_H * 96)}"/>`
     ).join("")}</g><rect x="6" y="${r(miniY(6.6))}" width="6" height="${r(1.8 / MAP_H * 96)}" fill="#4c6268"/>`;
   }
+  function intersects(a, b, gap = 0) {
+    return a.x < b.x + b.w + gap && a.x + a.w + gap > b.x && a.y < b.y + b.h + gap && a.y + a.h + gap > b.y;
+  }
+  function sceneItemBounds(item) {
+    if (item.actor) {
+      const p = project(item.x0 * TILE, item.y0 * TILE);
+      return { x: p.x - 20, y: p.y - 54, w: 40, h: 58 };
+    }
+    const height = item.height ?? ({ shelf: 41, plant: 40, table: 19, phone: 35 }[item.furniture?.type] ?? 46);
+    const corners = [[item.x0, item.y0], [item.x1, item.y0], [item.x1, item.y1], [item.x0, item.y1]].map(([x, y]) => project(x * TILE, y * TILE));
+    const xs = corners.map((p) => p.x), ys = corners.map((p) => p.y);
+    return {
+      x: Math.min(...xs) - 3,
+      y: Math.min(...ys) - height - 3,
+      w: Math.max(...xs) - Math.min(...xs) + 6,
+      h: Math.max(...ys) - Math.min(...ys) + height + 6
+    };
+  }
+  function floorMarkerBounds(dest, items = sceneItems(false)) {
+    const p = project(dest.x, dest.y), rect = { x: p.x - 14, y: p.y - 7, w: 28, h: 14 };
+    return items.some((item) => intersects(rect, sceneItemBounds(item))) ? null : rect;
+  }
+  function drawFloorMarker(dest, items) {
+    const r = floorMarkerBounds(dest, items);
+    if (!r) return false;
+    const x = r.x + r.w / 2, y = r.y + r.h / 2;
+    ctx.beginPath();
+    ctx.moveTo(x, y - 4);
+    ctx.lineTo(x + 11, y);
+    ctx.lineTo(x, y + 4);
+    ctx.lineTo(x - 11, y);
+    ctx.closePath();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#172f35";
+    ctx.stroke();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#fff2a6";
+    ctx.stroke();
+    return true;
+  }
+  function labelVisuals() {
+    const scale = runtime.view.scale, screen = (r) => ({ x: (r.x - runtime.view.x) * scale, y: (r.y - runtime.view.y) * scale, w: r.w * scale, h: r.h * scale });
+    const visuals = sceneItems(false).filter((item) => item.actor || item.furniture?.spot && spotActive(item.furniture.spot)).map((item) => ({ id: item.furniture?.spot || Object.keys(spots).find((id) => spots[id].npcX / TILE === item.x0 && spots[id].npcY / TILE === item.y0), ...screen(sceneItemBounds(item)) }));
+    return visuals;
+  }
+  function placeLabel(anchor, size, obstacles) {
+    const margin = 8, maxX = Math.max(margin, runtime.view.width - size.w - margin), maxY = Math.max(margin, runtime.view.height - size.h - margin);
+    const preferred = { x: Math.max(margin, Math.min(maxX, anchor.x - size.w / 2)), y: Math.max(margin, Math.min(maxY, anchor.y - size.h)) };
+    let best = null, score = Infinity;
+    const rect = { ...preferred, ...size };
+    const consider = (x, y) => {
+      rect.x = x;
+      rect.y = y;
+      let hits = 0;
+      for (const obstacle of obstacles) if (intersects(rect, obstacle, 6)) hits++;
+      const value = hits * 1e8 + (x - preferred.x) ** 2 + (y - preferred.y) ** 2;
+      if (value < score) {
+        score = value;
+        best = { ...rect };
+      }
+    };
+    consider(preferred.x, preferred.y);
+    if (score === 0) return best;
+    for (let y = margin; y <= maxY; y += 20) for (let x = margin; x <= maxX; x += 20) consider(x, y);
+    return best;
+  }
+  function positionLabels() {
+    const visuals = labelVisuals(), obstacles = [...visuals];
+    for (const el of document.querySelectorAll?.(".minimap,.goal-bar,.top-controls,.inventory,.bottom-controls,.mobile-controls") || []) {
+      const r = el.getBoundingClientRect();
+      if (r.width && r.height) obstacles.push({ x: r.x, y: r.y, w: r.width, h: r.height });
+    }
+    const target = guideTarget(nextTarget()), ids = Object.keys(spots).sort((a, b) => a === target ? -1 : b === target ? 1 : 0);
+    for (const id of ids) {
+      const el = $("spot-" + id), s = spots[id];
+      el.hidden = !spotActive(id);
+      if (el.hidden) continue;
+      const p = project(s.npcX ?? s.x, s.npcY ?? s.y), own = visuals.find((v) => v.id === id);
+      const anchor = { x: (p.x - runtime.view.x) * runtime.view.scale, y: own ? own.y - 10 : (p.y - 65 - runtime.view.y) * runtime.view.scale };
+      if (own) anchor.x = own.x + own.w / 2;
+      const r = placeLabel(anchor, { w: el.offsetWidth || 130, h: el.offsetHeight || 34 }, obstacles);
+      el.style.left = r.x + r.w / 2 + "px";
+      el.style.top = r.y + r.h / 2 + "px";
+      obstacles.push(r);
+    }
+  }
   function updateMap() {
     if ($("mini-layout").dataset?.floor !== String(runtime.floor)) {
       $("mini-layout").innerHTML = miniLayout();
       $("mini-layout").setAttribute("data-floor", runtime.floor);
     }
-    for (const [id, s] of Object.entries(spots)) {
-      const el = $("spot-" + id), p = project(s.npcX ?? s.x, s.npcY ?? s.y, id === "doc" ? 88 : 65);
-      if (id === "mentor" || id === "officer") {
-        p.y += 7;
-      }
-      if (id === "elevator") p.y += 12;
-      el.hidden = !spotActive(id);
-      el.style.left = (p.x - runtime.view.x) * runtime.view.scale + "px";
-      el.style.top = (p.y - runtime.view.y) * runtime.view.scale + "px";
-    }
-    const officer2 = $("spot-officer");
-    if (!officer2.hidden) {
-      const scale = runtime.view.scale, feet = project(player.x, player.y), head = { x: (feet.x - runtime.view.x) * scale, y: (feet.y - 36 - runtime.view.y) * scale, w: 36 * scale, h: 28 * scale }, bidroom2 = $("spot-bidroom"), task = { x: parseFloat(bidroom2.style.left), y: parseFloat(bidroom2.style.top), w: bidroom2.offsetWidth || 130, h: bidroom2.offsetHeight || 32 }, guide = $("quick-guide").parentElement?.getBoundingClientRect(), obstacles = [head, task];
-      if (guide) obstacles.push({ x: guide.x + guide.width / 2, y: guide.y + guide.height / 2, w: guide.width, h: guide.height });
-      const width = officer2.offsetWidth || 120, height = officer2.offsetHeight || 32, baseX = parseFloat(officer2.style.left), baseY = parseFloat(officer2.style.top);
-      for (const [dx, dy] of [[0, 0], [0, -40], [0, -80], [70, 0], [-70, 0]]) {
-        const x = Math.max(width / 2 + 8, Math.min(runtime.view.width - width / 2 - 8, baseX + dx)), y = Math.max(height / 2 + 8, baseY + dy);
-        if (obstacles.some((o) => Math.abs(x - o.x) < (width + o.w) / 2 + 6 && Math.abs(y - o.y) < (height + o.h) / 2 + 6)) continue;
-        officer2.style.left = x + "px";
-        officer2.style.top = y + "px";
-        break;
-      }
-    }
+    positionLabels();
     $("mini-player").setAttribute("cx", miniX(player.x / TILE));
     $("mini-player").setAttribute("cy", miniY(player.y / TILE));
     const next = spots[guideTarget(nextTarget())];
@@ -1586,6 +1863,27 @@
   function walkPose(moving) {
     return moving ? [1, 2, 3, 2][Math.floor(runtime.walk / 1.6) % 4] : 0;
   }
+  function outlinedSprite(kind, pose) {
+    const key = "outline" + kind + pose;
+    if (!sheets.has(key)) {
+      const sheet = document.createElement("canvas");
+      sheet.width = 20;
+      sheet.height = 28;
+      const g = sheet.getContext("2d"), palette = pixelPalette(kind);
+      const cells = spriteCells(kind).map(([x, y, c]) => {
+        const dy = y > 19 ? pose === 1 && x < 8 || pose === 3 && x >= 8 ? -1 : 0 : pose === 2 ? 1 : 0;
+        return [x + 2, y + 2 + dy, c];
+      });
+      for (const [radius, color] of [[2, "#172f35"], [1, "#fff2a6"], [0, null]]) {
+        for (const [x, y, c] of cells) {
+          g.fillStyle = color || palette[c];
+          g.fillRect(x - radius, y - radius, 1 + radius * 2, 1 + radius * 2);
+        }
+      }
+      sheets.set(key, sheet);
+    }
+    return sheets.get(key);
+  }
   function pixelPerson(x, y, kind, moving = false) {
     const p = project(x, y), k = runtime.view.dpr * runtime.view.scale, left = Math.round((p.x - 16 - runtime.view.x) * k), top = Math.round((p.y - 48 - runtime.view.y) * k), width = Math.max(16, Math.round(32 * k)), height = Math.max(24, Math.round(48 * k));
     ctx.fillStyle = "#263e4d30";
@@ -1593,7 +1891,9 @@
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(spriteSheet(kind, walkPose(moving)), left, top, width, height);
+    const npc = kind !== "rookie" && !(kind === "supplier" && runtime.state.stage === 3);
+    const pad = npc ? Math.round(4 * k) : 0;
+    ctx.drawImage(npc ? outlinedSprite(kind, walkPose(moving)) : spriteSheet(kind, walkPose(moving)), left - pad, top - pad, width + pad * 2, height + pad * 2);
     ctx.restore();
   }
 
@@ -1613,7 +1913,19 @@
     keys.clear();
     runtime.target = null;
     setNotebook(false);
-    runtime.talkState = { name, lines, onDone, role, index: 0, revealed: 0 };
+    const done = role === "rookie" ? onDone : () => {
+      const replies = [
+        "납기와 장소는 수요기관에 확인하고 요청서를 보완할게요.",
+        "필요한 성능은 남기고 경쟁할 수 있는 규격으로 검토할게요.",
+        "수량과 조건을 대조한 뒤 검토와 담당자 결재를 받을게요.",
+        "기업도 같은 공고를 읽고 규격과 참가 조건을 확인하는군요.",
+        "입찰 전에 정한 예정가격과 심사를 확인하고 전자계약으로 이어갈게요.",
+        "계약한 수량을 채우고 검사·검수와 납품 서류를 확인할게요.",
+        "확인한 절차를 다음 업무에서도 기억할게요."
+      ];
+      speak("조달달", [replies[runtime.state.stage] || replies[6]], onDone, "rookie");
+    };
+    runtime.talkState = { name, lines, onDone: done, role, index: 0, revealed: 0 };
     $("speech").hidden = false;
     document.body.classList.add("talking");
     $("speech-name").textContent = name;
@@ -1691,14 +2003,20 @@
     if (runtime.state.stage !== LAST_STAGE) return;
     const score = Math.max(60, 100 - runtime.state.mistakes * 5);
     show(
-      "이제 나도... 조달의 왕이야!",
+      endingTitle(runtime.state.recoveries, runtime.state.mistakes),
       /* HTML */
       `<div class="level-up-tag">LEVEL UP!</div>
       <div class="level-up-hero">
         ${face("rookie")}<strong>Lv. 1 <span>〉</span> Lv. 2</strong>
       </div>
       <div class="level-progress"><i></i></div>
-      <p class="center">첫 의뢰 완료 · 조달의 왕을 향한 첫걸음</p>
+      <p class="center">이제 나도... 조달의 왕이야!</p>
+      <section class="achievements" aria-label="획득한 업적"><h3>획득한 업적</h3><ul>
+        <li>여섯 업무 완주 · 계약부터 대금 지급까지</li>
+        ${runtime.state.recoveries.length === 0 && runtime.state.mistakes === 0 ? "<li>정파 · 모든 선택을 올바른 절차로 완료</li>" : `<li>${Math.max(runtime.state.recoveries.length, runtime.state.mistakes) >= 3 ? "사파 · 수습 달인" : "수습을 배운 신입"} · ${runtime.state.recoveries.length}개 수습 완료</li>`}
+        ${runtime.state.mistakes > runtime.state.recoveries.length ? `<li>이전 선택 확인 기록 · ${runtime.state.mistakes - runtime.state.recoveries.length}회</li>` : ""}
+        ${runtime.state.recoveries.map((id) => `<li>${recoveryScenes[id].title}</li>`).join("")}
+        </ul><p>칭호 기준 : 수습 0개는 정파, 1~2개는 정파 · 수습을 배운 신입, 3개 이상은 사파예요. 수습은 잘못된 초안을 고치고 공식 절차를 마친 기록이에요. 이전 저장은 기존 오답 횟수도 칭호에 반영해요.</p></section>
       <div class="stats">
         <div class="stat"><strong>6 / 6</strong><small>퀘스트</small></div>
         <div class="stat"><strong>7 / 7</strong><small>획득한 물건</small></div>
@@ -1951,6 +2269,8 @@
     $("modal").focus();
   }
   function close() {
+    runtime.pendingSubmission = null;
+    $("bag").classList.remove("submission-active");
     stopSounds();
     $("game-shell").inert = runtime.titleVisible;
     runtime.modalOpen = false;
@@ -1994,7 +2314,7 @@
         때마다 브라우저에 저장합니다.
       </p>
       <p>
-        <strong>사운드:</strong> 소리 버튼에서 음량을 조절하거나 욘 대리의 녹음 목소리를 들어 볼 수
+        <strong>사운드:</strong> 소리 버튼에서 마스터 음량을 조절하거나 두 녹음 목소리를 들어 볼 수
         있어요. 대화 중 소리 버튼을 누르면 음소거를 전환합니다.
       </p>
       <p>
@@ -2002,12 +2322,12 @@
         이름을 클릭·터치하면 자동으로 이동해 대화합니다.
       </p>
       <p>
-        <strong>다음 목표로 이동:</strong> 현재 해야 할 일을 바로 찾아갑니다. 다른 층의 목표는 엘리베이터로 안내해요. 용어 수첩에서 배운 말을 다시 읽어 보세요. 잘못 선택해도 설명을
-        읽고 다시 시도할 수 있습니다.
+        <strong>다음 목표로 이동:</strong> 현재 해야 할 일을 바로 찾아갑니다. 다른 층의 목표는 엘리베이터로 안내해요. 용어 수첩에서 배운 말을 다시 읽어 보세요. 잘못 선택하면 결과를
+        확인하고 수습 업무로 올바른 절차를 배웁니다.
       </p>
       <p>
-        <strong>인벤토리:</strong> 하단 7칸에 사원증과 완료한 업무의 문서가 쌓입니다. 물건을 눌러
-        내용을 다시 볼 수 있어요.
+        <strong>인벤토리:</strong> 하단 7칸에 사원증과 업무 문서가 쌓입니다. 제출 요청이 뜨면
+        가방의 서류를 눌러 제출하세요. 다른 서류를 내면 힌트를 받고 다시 고릅니다.
       </p>
       <p>
         <strong>업무용 모니터:</strong> 모니터를 사용할 때만 나라장터 체험 화면이 열립니다. 초안
@@ -2110,7 +2430,7 @@
   function playSyllable(letter, role = "mentor", delay = 0) {
     if (runtime.muted || !runtime.audioCtx || runtime.audioCtx.state !== "running" || /\s|[.,!?…·]/.test(letter))
       return;
-    const clip = voiceClips.get(role), code = letter.codePointAt(0) || 0, rate = (role === "rookie" ? 1.7 : 1.4) + code % 7 * 0.045;
+    const clip = voiceClips.get(role), code = letter.codePointAt(0) || 0, rate = (!clip && role === "rookie" ? 1.7 : 1.4) + code % 7 * 0.045;
     const source = runtime.audioCtx.createBufferSource(), gain = runtime.audioCtx.createGain();
     let offset = 0, segment = 0.085;
     if (clip) {
@@ -2182,14 +2502,14 @@
         여성 기업 담당자 욘 대리는 팀원의 실제 녹음을 짧게 잘라 웅얼거리는 목소리로 말합니다.
       </p>
       <div class="sound-row">
-        <label for="volume">음량</label
+        <label for="volume">마스터 음량</label
         ><input
           id="volume"
           type="range"
           min="0"
           max="70"
           value="${Math.round(runtime.volume * 100)}"
-          aria-label="음량"
+          aria-label="마스터 음량 · 모든 소리"
         />
       </div>
       <p>조달달은 사용자가 제공한 녹음의 발성 조각을 사용합니다. 김주문과 다른 인물은 기본 합성 목소리를 사용합니다.</p>
@@ -2229,7 +2549,7 @@
       return;
     }
     if (runtime.modalOpen) {
-      if (e.key === "Escape" && !["advance", "feedback"].includes(runtime.modalKind)) close();
+      if (e.key === "Escape" && !["advance", "feedback", "recovery"].includes(runtime.modalKind)) close();
       if (e.key === "Tab") {
         const list = [...$("modal").querySelectorAll("button,a,input,select")].filter(
           (el) => !el.disabled

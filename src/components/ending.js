@@ -1,3 +1,4 @@
+import { endingTitle, recoveryScenes } from "../data/recovery.js";
 import { learningReview } from "./learning.js";
 import { LAST_STAGE } from "../data/quests.js";
 import { player, runtime } from "../core/runtime.js";
@@ -28,13 +29,19 @@ export function result() {
   if (runtime.state.stage !== LAST_STAGE) return;
   const score = Math.max(60, 100 - runtime.state.mistakes * 5);
   show(
-    "이제 나도... 조달의 왕이야!",
+    endingTitle(runtime.state.recoveries,runtime.state.mistakes),
     /* HTML */ `<div class="level-up-tag">LEVEL UP!</div>
       <div class="level-up-hero">
         ${face("rookie")}<strong>Lv. 1 <span>〉</span> Lv. 2</strong>
       </div>
       <div class="level-progress"><i></i></div>
-      <p class="center">첫 의뢰 완료 · 조달의 왕을 향한 첫걸음</p>
+      <p class="center">이제 나도... 조달의 왕이야!</p>
+      <section class="achievements" aria-label="획득한 업적"><h3>획득한 업적</h3><ul>
+        <li>여섯 업무 완주 · 계약부터 대금 지급까지</li>
+        ${runtime.state.recoveries.length===0 && runtime.state.mistakes===0 ? '<li>정파 · 모든 선택을 올바른 절차로 완료</li>' : `<li>${Math.max(runtime.state.recoveries.length,runtime.state.mistakes)>=3?'사파 · 수습 달인':'수습을 배운 신입'} · ${runtime.state.recoveries.length}개 수습 완료</li>`}
+        ${runtime.state.mistakes>runtime.state.recoveries.length?`<li>이전 선택 확인 기록 · ${runtime.state.mistakes-runtime.state.recoveries.length}회</li>`:""}
+        ${runtime.state.recoveries.map(id=>`<li>${recoveryScenes[id].title}</li>`).join('')}
+        </ul><p>칭호 기준 : 수습 0개는 정파, 1~2개는 정파 · 수습을 배운 신입, 3개 이상은 사파예요. 수습은 잘못된 초안을 고치고 공식 절차를 마친 기록이에요. 이전 저장은 기존 오답 횟수도 칭호에 반영해요.</p></section>
       <div class="stats">
         <div class="stat"><strong>6 / 6</strong><small>퀘스트</small></div>
         <div class="stat"><strong>7 / 7</strong><small>획득한 물건</small></div>
