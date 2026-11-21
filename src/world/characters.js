@@ -29,15 +29,19 @@ export const spriteRows = [
   "....XXXX.XXXX...",
 ];
 
+const hair = { supplier: "#49384d", mentor: "#605049", officer: "#2f3a4f" };
+
+const jacket = { supplier: "#956ba5", mentor: "#c29458", officer: "#5f7f63" };
+
 export function pixelPalette(kind) {
   return {
-    H: kind === "supplier" ? "#49384d" : kind === "mentor" ? "#605049" : "#243a43",
+    H: hair[kind] || "#243a43",
     S: "#efba8d",
     X: "#26373d",
     M: "#a76557",
-    J: kind === "supplier" ? "#956ba5" : kind === "mentor" ? "#c29458" : "#3b7c91",
+    J: jacket[kind] || "#3b7c91",
     W: "#f9edcf",
-    A: kind === "supplier" ? "#f0cb7a" : "#bd6e4b",
+    A: kind === "supplier" ? "#f0cb7a" : kind === "officer" ? "#e3d9a8" : "#bd6e4b",
     P: kind === "supplier" ? "#654b73" : "#3a4e54",
   };
 }
@@ -53,6 +57,7 @@ export function spriteCells(kind) {
     for (let y = 6; y < 15; y++) for (const x of [2, 3, 12, 13]) cells.push([x, y, "H"]);
     cells.push([12, 5, "A"], [13, 5, "A"], [12, 6, "A"]);
   }
+  if (kind === "officer") cells.push([4, 3, "A"], [5, 3, "A"], [6, 2, "A"]);
   if (kind === "mentor")
     for (const [x, y] of [
       [4, 6],
@@ -92,16 +97,48 @@ export function face(kind = "rookie") {
   </svg>`;
 }
 
+// 자세: 0 서 있기, 1 왼발 들기, 2 지나가는 자세, 3 오른발 들기.
+// 발은 위로만 올려 몸통과 떨어지지 않게 하고, 지나가는 자세에서는 상체가 한 칸 내려옵니다.
+const sheets = new Map();
+
+export function spriteSheet(kind, pose = 0) {
+  const key = kind + pose;
+  if (!sheets.has(key)) {
+    const sheet = document.createElement("canvas");
+    sheet.width = 16;
+    sheet.height = 24;
+    const g = sheet.getContext("2d"),
+      palette = pixelPalette(kind);
+    for (const [x, y, c] of spriteCells(kind)) {
+      let dy = 0;
+      if (y > 19) {
+        if ((pose === 1 && x < 8) || (pose === 3 && x >= 8)) dy = -1;
+      } else if (pose === 2) dy = 1;
+      g.fillStyle = palette[c];
+      g.fillRect(x, y + dy, 1, 1);
+    }
+    sheets.set(key, sheet);
+  }
+  return sheets.get(key);
+}
+
+export function walkPose(moving) {
+  return moving ? [1, 2, 3, 2][Math.floor(runtime.walk / 1.6) % 4] : 0;
+}
+
+// 스프라이트 한 장을 화면 픽셀에 맞춰 그려 칸 사이로 배경이 비치지 않게 합니다.
 export function pixelPerson(x, y, kind, moving = false) {
   const p = project(x, y),
-    s = 2,
-    bob = moving ? Math.round(Math.sin(runtime.walk) * 1) : 0;
+    k = runtime.view.dpr * runtime.view.scale,
+    left = Math.round((p.x - 16 - runtime.view.x) * k),
+    top = Math.round((p.y - 48 - runtime.view.y) * k),
+    width = Math.max(16, Math.round(32 * k)),
+    height = Math.max(24, Math.round(48 * k));
   ctx.fillStyle = "#263e4d30";
   ctx.fillRect(Math.round(p.x - 13), Math.round(p.y - 3), 26, 6);
-  const palette = pixelPalette(kind);
-  for (const [cx, cy, c] of spriteCells(kind)) {
-    let step = cy > 19 && moving ? Math.round(Math.sin(runtime.walk) * (cx < 8 ? 1 : -1)) : 0;
-    ctx.fillStyle = palette[c];
-    ctx.fillRect(Math.round(p.x - 16 + cx * s), Math.round(p.y - 48 + cy * s + bob + step), s, s);
-  }
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(spriteSheet(kind, walkPose(moving)), left, top, width, height);
+  ctx.restore();
 }

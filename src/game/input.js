@@ -82,7 +82,7 @@ export function bindInput() {
       else if (actions[a]) actions[a]();
     }
     const m = e.target.closest("[data-move]");
-    if (m && !runtime.modalOpen && !runtime.talkState && !runtime.titleVisible) {
+    if (m && e.detail === 0 && !runtime.modalOpen && !runtime.talkState && !runtime.titleVisible) {
       runtime.target = null;
       const d = { left: [-18, 18], right: [18, -18], up: [-18, -18], down: [18, 18] }[
         m.dataset.move
@@ -90,6 +90,23 @@ export function bindInput() {
       stepPlayer(d[0], d[1]);
     }
   });
+  const releaseTouch = () => {
+    if (runtime.touchKey) keys.delete(runtime.touchKey);
+    runtime.touchKey = null;
+  };
+  document.addEventListener("pointerdown", (e) => {
+    const control = e.target.closest("[data-move]");
+    if (!control || runtime.modalOpen || runtime.talkState || runtime.titleVisible) return;
+    e.preventDefault();
+    releaseTouch();
+    runtime.target = null;
+    runtime.touchKey = { left: "arrowleft", right: "arrowright", up: "arrowup", down: "arrowdown" }[control.dataset.move];
+    keys.add(runtime.touchKey);
+    control.setPointerCapture?.(e.pointerId);
+  });
+  document.addEventListener("pointerup", releaseTouch);
+  document.addEventListener("pointercancel", releaseTouch);
+  document.addEventListener("lostpointercapture", releaseTouch);
   document.addEventListener("change", (e) => {
     if (e.target.id === "eligible") {
       runtime.state.eligibility = e.target.checked;
@@ -107,6 +124,7 @@ export function bindInput() {
   document.addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
   window.addEventListener("blur", () => {
     keys.clear();
+    releaseTouch();
     revealLine();
     stopSounds();
   });
@@ -114,6 +132,7 @@ export function bindInput() {
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       keys.clear();
+      releaseTouch();
       revealLine();
       stopSounds();
     }

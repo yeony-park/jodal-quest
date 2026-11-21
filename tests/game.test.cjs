@@ -52,9 +52,21 @@ function boot(saved = null, blocked = false, realCanvas = null, productionOnly =
     listeners = {};
   let timerId = 0,
     doc;
+  const drawCalls = [], drawEvents = [];
   const drawing = realCanvas
     ? realCanvas.getContext("2d")
-    : new Proxy({}, { get: (t, k) => t[k] ?? (() => {}), set: (t, k, v) => ((t[k] = v), true) });
+    : new Proxy({ drawImage(...args) { drawCalls.push(args); drawEvents.push("sprite"); }, strokeRect() { drawEvents.push("target"); } }, { get: (t, k) => t[k] ?? (() => {}), set: (t, k, v) => ((t[k] = v), true) });
+  function offscreen() {
+    const pixels = new Map();
+    const g = {
+      fillStyle: "",
+      fillRect(x, y, w, h) {
+        for (let yy = y; yy < y + h; yy++)
+          for (let xx = x; xx < x + w; xx++) pixels.set(xx + "," + yy, g.fillStyle);
+      },
+    };
+    return { width: 0, height: 0, pixels, getContext: () => g };
+  }
   function el(id) {
     if (!elements.has(id)) {
       const attrs = {};
@@ -111,6 +123,9 @@ function boot(saved = null, blocked = false, realCanvas = null, productionOnly =
     return elements.get(id);
   }
   doc = {
+    createElement: (tag) => tag === "canvas"
+      ? offscreen()
+      : el("created-" + ++timerId),
     getElementById: (id) => elements.get(id) || null,
     addEventListener(k, fn) {
       (listeners[k] ??= []).push(fn);
@@ -227,6 +242,8 @@ function boot(saved = null, blocked = false, realCanvas = null, productionOnly =
     doc,
     timers,
     nodes,
+    drawCalls,
+    drawEvents,
     finish,
     listeners,
     context: c,
@@ -247,8 +264,55 @@ async function main() {
     assert.equal(b.run("titleVisible"), true);
     assert.equal(b.el("game-shell").inert, true);
   });
+  check("Cached sprites have solid body pixels and attached legs in every walk pose", () => {
+    for (const kind of ["rookie", "mentor", "supplier", "officer"])
+      for (let pose = 0; pose < 4; pose++) {
+        const sheet = b.run(`spriteSheet('${kind}',${pose})`);
+        assert.equal(sheet, b.run(`spriteSheet('${kind}',${pose})`));
+        assert.equal(sheet.width, 16);
+        assert.equal(sheet.height, 24);
+        const pixels = sheet.pixels, seen = new Set(), queue = [pixels.keys().next().value];
+        for (let i = 0; i < queue.length; i++) {
+          const key = queue[i];
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const [x, y] = key.split(",").map(Number);
+          for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+            const next = (x + dx) + "," + (y + dy);
+            if (pixels.has(next) && !seen.has(next)) queue.push(next);
+          }
+        }
+        assert.equal(seen.size, pixels.size, `${kind} pose ${pose} has detached pixels`);
+        for (let y = 13; y <= 19; y++)
+          for (let x = 5; x <= 11; x++) assert.ok(pixels.has(x + "," + y));
+      }
+  });
+  check("Sprites draw once at integer device pixels under fractional camera scales", () => {
+    for (const [w, h, dpr] of [[1280,720,1],[390,844,2],[844,390,1.25]]) {
+      b.window.innerWidth = w;
+      b.window.innerHeight = h;
+      b.window.devicePixelRatio = dpr;
+      b.run("resizeWorld();camera();pixelPerson(464.3,144.7,'rookie',true)");
+      const args = b.drawCalls.at(-1);
+      assert.equal(args.length, 5);
+      assert.ok(args.slice(1).every(Number.isInteger));
+      assert.ok(args[3] >= 16 && args[4] >= 24);
+    }
+    b.window.innerWidth = 1280;
+    b.window.innerHeight = 720;
+    b.window.devicePixelRatio = 1;
+    b.run("resizeWorld()");
+  });
+  check("Furniture and floor target markers are painted behind characters", () => {
+    const order = b.run("paintOrder([{id:'person',x0:13.5,y0:12.5,x1:13.5,y1:12.5},{id:'desk',x0:13,y0:11,x1:16,y1:12}]).map(x=>x.id).join(',')");
+    assert.equal(order, "desk,person");
+    b.drawEvents.length = 0;
+    b.run("draw(1,false)");
+    assert.ok(b.drawEvents.indexOf("target") >= 0);
+    assert.ok(b.drawEvents.indexOf("target") < b.drawEvents.indexOf("sprite"));
+  });
   b.run("actions.new()");
-  await b.run("supplierVoiceReady");
+  await b.run("Promise.all([supplierVoiceReady,rookieVoiceReady])");
   check("Automatic tutorial starts with five lines", () =>
     assert.equal(b.run("talkState.lines.length"), 5),
   );
@@ -272,12 +336,12 @@ async function main() {
     assert.match(css, /Gaegu-Regular/);
     assert.match(html, /김주문 씀/);
   });
-  check("Exactly five visible inventory slots", () =>
-    assert.equal((b.el("inventory-slots").innerHTML.match(/data-action="item-/g) || []).length, 5),
+  check("Exactly seven visible inventory slots", () =>
+    assert.equal((b.el("inventory-slots").innerHTML.match(/data-action="item-/g) || []).length, 7),
   );
   check("All map destinations reachable without crossing walls or furniture", () => {
-    for (const start of ["doc", "mentor", "phone", "terminal", "supplier"])
-      for (const end of ["doc", "mentor", "phone", "terminal", "supplier"]) {
+    for (const start of ["doc", "mentor", "phone", "terminal", "supplier", "elevator"])
+      for (const end of ["doc", "mentor", "phone", "terminal", "supplier", "elevator"]) {
         b.run(`player.x=spots.${start}.x;player.y=spots.${start}.y`);
         const path = b.run(`routeTo('${end}')`);
         assert.ok(path.length, `${start}->${end}`);
@@ -289,6 +353,19 @@ async function main() {
     assert.equal(b.run("canWalk(2.5*TILE,11.5*TILE)"), false);
     b.run("player.x=16;player.y=16;stepPlayer(-32,0)");
     assert.equal(b.run("player.x"), 16);
+  });
+  check("NPCs stand beside reachable interaction positions without occupying furniture", () => {
+    for (const id of ["mentor", "supplier", "officer"]) {
+      const spot = b.run(`spots.${id}`);
+      assert.equal(b.run(`cellBlocked(Math.floor(${spot.npcX}/TILE),Math.floor(${spot.npcY}/TILE),${spot.floor})`), false);
+      assert.ok(Math.hypot(spot.x - spot.npcX, spot.y - spot.npcY) < 55);
+      const stop = b.run(`project(${spot.x},${spot.y})`), npc = b.run(`project(${spot.npcX},${spot.npcY})`);
+      assert.ok(Math.abs(stop.x - npc.x) >= 32, `${id} overlaps the arriving player`);
+      if (id === "officer") {
+        const otherStop = b.run("project(spots.bidroom.x,spots.bidroom.y)");
+        assert.ok(Math.abs(otherStop.x - npc.x) >= 32, "officer overlaps the bidroom arrival");
+      }
+    }
   });
   check("Target button actually walks to NPC and opens dialogue", () => {
     b.run('player.x=464;player.y=144;go("phone")');
@@ -408,6 +485,96 @@ async function main() {
     assert.equal(JSON.parse(b.store.get("jodal-master-v1")).stage, 4);
     assert.equal(b.run("ownedItems().filter(Boolean).length"), 5);
   });
+  b.finish();
+  check("Bid receipt teaches the distinction between submission and contract", () => {
+    assert.equal(b.run("modalKind"), "advance");
+    assert.match(b.el("modal").innerHTML, /이번 업무에서 배운 것/);
+    b.run("actions['return-rookie']()");
+    b.finish();
+  });
+  check("Bid receipt returns to rookie and routes the next objective through the elevator", () => {
+    assert.equal(b.run("state.stage"), 4);
+    assert.equal(b.run("modalKind"), "");
+    assert.equal(b.run("nextTarget()"), "officer");
+    assert.equal(b.run("guideTarget(nextTarget())"), "elevator");
+    assert.equal(b.run("spotActive('officer')"), false);
+    assert.equal(b.run("spotActive('elevator')"), true);
+  });
+  check("Legacy version-one stage-four saves continue into the new quests", () => {
+    const old = JSON.parse(b.store.get("jodal-master-v1"));
+    for (const key of ["floor", "awardBrief", "openingChecked", "deliveryIssueReported", "inspectionChecked"]) delete old[key];
+    const c = boot(JSON.stringify(old));
+    c.run("actions.continue()");
+    assert.equal(c.run("state.stage"), 4);
+    assert.equal(c.run("state.awardBrief"), false);
+    assert.equal(c.run("floor"), 0);
+    assert.equal(c.run("modalKind"), "");
+  });
+  check("Elevator travels to 3F, updates hotspots and persists its floor", () => {
+    b.run("actions.elevator();actions['floor-1']();updateMap()");
+    assert.equal(b.run("floor"), 1);
+    assert.equal(b.el("spot-doc").hidden, true);
+    assert.equal(b.el("spot-officer").hidden, false);
+    assert.equal(b.el("spot-elevator").hidden, false);
+    assert.equal(JSON.parse(b.store.get("jodal-master-v1")).floor, 1);
+    assert.match(b.el("location").textContent, /3층/);
+    assert.equal(b.el("mini-layout").innerHTML, b.run("miniLayout()"));
+    const c = boot(b.store.get("jodal-master-v1"));
+    c.run("actions.continue()");
+    assert.equal(c.run("floor"), 1);
+    assert.equal(c.run("canWalk(player.x,player.y)"), true);
+    assert.equal(c.run("player.x"), 48);
+  });
+  check("Every 3F destination is reachable without crossing partitions", () => {
+    for (const start of ["elevator", "officer", "bidroom"])
+      for (const end of ["elevator", "officer", "bidroom"]) {
+        b.run(`player.x=spots.${start}.x;player.y=spots.${start}.y`);
+        const route = b.run(`routeTo('${end}')`);
+        assert.ok(route.length, `${start}->${end}`);
+        for (const p of route) assert.equal(b.run(`canWalk(${p.x},${p.y})`), true);
+      }
+  });
+  check("Contract requires the briefing and confirmation of the already determined price", () => {
+    b.run("actions['contract-good']();actions['opening-good']()");
+    assert.equal(b.run("state.stage"), 4);
+    assert.equal(b.run("state.openingChecked"), false);
+    b.run("officer()");
+    b.finish();
+    b.run("bidroom();actions['opening-bad']()");
+    assert.equal(b.run("state.openingChecked"), false);
+    assert.match(b.el("modal").innerHTML, /입찰 전에 결정/);
+    b.run("actions['opening-good']();officer();actions['contract-bad']()");
+    assert.equal(b.run("state.stage"), 4);
+    b.run("officer();actions['contract-good']()");
+    assert.equal(b.run("state.stage"), 5);
+    assert.equal(b.run("state.history.length"), 5);
+    assert.equal(b.run("ownedItems().filter(Boolean).length"), 6);
+    assert.equal(b.run("guideTarget(nextTarget())"), "elevator");
+  });
+  check("Payment and inspection cannot skip delivery correction or the return to 5F", () => {
+    b.run("actions['delivery-report']();actions['delivery-good']();actions['payment-good']()");
+    assert.equal(b.run("state.deliveryIssueReported"), false);
+    assert.equal(b.run("state.stage"), 5);
+    b.run("actions.advance();actions['floor-0']();actions.terminal()");
+    assert.match(b.el("modal").innerHTML, /납품 자료/);
+    b.run("actions['payment-good']();actions.phone();actions['delivery-bad']()");
+    assert.equal(b.run("state.inspectionChecked"), false);
+    b.run("actions['delivery-report']()");
+    b.finish();
+    b.run("actions.phone()");
+    assert.match(b.el("modal").innerHTML, /20대 · 부족분 보완/);
+    b.run("actions['delivery-good']()");
+    assert.equal(b.run("state.inspectionChecked"), true);
+    assert.equal(b.run("nextTarget()"), "terminal");
+  });
+  check("Payment completion saves six quests and seven items before the ending", () => {
+    b.run("actions.terminal();actions['payment-bad']()");
+    assert.equal(b.run("state.stage"), 5);
+    b.run("actions.terminal();actions['payment-good']()");
+    assert.equal(JSON.parse(b.store.get("jodal-master-v1")).stage, 6);
+    assert.equal(b.run("state.history.length"), 6);
+    assert.equal(b.run("ownedItems().filter(Boolean).length"), 7);
+  });
   check("Ending restores rookie and includes exact line and level up", () => {
     b.finish();
     assert.equal(b.run("modalKind"), "result");
@@ -419,17 +586,21 @@ async function main() {
   });
   check("Repeated submit cannot duplicate completed history", () => {
     b.run("finishBid()");
-    assert.equal(b.run("state.history.length"), 4);
+    assert.equal(b.run("state.history.length"), 6);
   });
   check("Completed saved game resumes at level two with full bag", () => {
     const c = boot(b.store.get("jodal-master-v1"));
     c.run("actions.continue()");
     assert.equal(c.run("modalKind"), "result");
-    assert.equal(c.run("ownedItems().filter(Boolean).length"), 5);
+    assert.equal(c.run("ownedItems().filter(Boolean).length"), 7);
   });
-  check("Embedded actual recording is assigned only to female supplier", () => {
+  check("Production banks use the supplied rookie and supplier recordings", () => {
     assert.equal(b.run("voiceClips.has('supplier')"), true);
     assert.equal(b.run("voiceClips.has('mentor')"), false);
+    assert.equal(b.run("voiceClips.has('rookie')"), true);
+    assert.equal(b.run("voiceClips.get('rookie').buffer.duration"), 2.4);
+    assert.equal(b.run("voiceClips.get('rookie').offsets.length"), 24);
+    assert.notDeepEqual(b.run("voiceClips.get('rookie').buffer.getChannelData(0)"), b.run("voiceClips.get('supplier').buffer.getChannelData(0)"));
     assert.equal(b.run("voiceClips.get('supplier').buffer.duration"), 2.4);
     assert.equal(b.run("voiceClips.get('supplier').offsets.length"), 24);
   });
@@ -439,7 +610,8 @@ async function main() {
     assert.ok(b.nodes.at(-1).playbackRate.value > 1);
   });
   check("Every grain is within recording duration and has voiced samples", () => {
-    const clip = b.run("voiceClips.get('supplier')");
+    for (const role of ["rookie", "supplier"]) {
+    const clip = b.run(`voiceClips.get('${role}')`);
     for (const offset of clip.offsets) {
       assert.ok(offset + 0.085 <= clip.buffer.duration);
       assert.ok(
@@ -449,14 +621,49 @@ async function main() {
           .some((x) => Math.abs(x) > 0.01),
       );
     }
+    }
   });
   check("Sound settings no longer contain team voice upload or character picker", () => {
     b.run("soundSettings()");
     assert.match(b.el("modal").innerHTML, /욘 대리 목소리 듣기/);
+    assert.match(b.el("modal").innerHTML, /조달달 목소리 듣기/);
+    assert.match(b.el("modal").innerHTML, /사용자가 제공한 녹음/);
     assert.doesNotMatch(
       production,
       /voice-file|voice-role|voice-clear|importVoice|팀원 목소리 불러오기/,
     );
+  });
+  check("A rookie dialogue line plays the owner's decoded voice bank", () => {
+    b.run("speak('조달달',['안녕하세요'],()=>{},'rookie')");
+    assert.equal(b.nodes.at(-1).buffer, b.run("voiceClips.get('rookie').buffer"));
+    assert.equal(b.nodes.at(-1).args[2], 0.085);
+    b.finish();
+  });
+  const fallback = boot();
+  fallback.window.AudioContext.prototype.decodeAudioData = () => Promise.reject(new Error("unsupported WAV"));
+  fallback.run("unlockAudio()");
+  await fallback.run("Promise.all([supplierVoiceReady,rookieVoiceReady])");
+  check("Recording decode failure keeps rookie dialogue playable with fallback audio", () => {
+    assert.equal(fallback.run("voiceClips.has('rookie')"), false);
+    fallback.run("playSyllable('안','rookie')");
+    assert.ok(fallback.nodes.at(-1).buffer.getChannelData(0).some(x => Math.abs(x) > 0.01));
+  });
+  const supplierBuffer = b.run("voiceClips.get('supplier').buffer");
+  await b.run("loadVoiceBank('rookie',Uint8Array.from(atob(supplierVoiceData),c=>c.charCodeAt(0)).buffer,[0,0.1],0.06)");
+  check("A second processed voice bank uses independent role and segment settings", () => {
+    b.run("playSyllable('안','rookie')");
+    assert.equal(b.nodes.at(-1).buffer, b.run("voiceClips.get('rookie').buffer"));
+    assert.equal(b.nodes.at(-1).args[2], 0.06);
+    assert.equal(b.run("voiceClips.get('supplier').buffer"), supplierBuffer);
+  });
+  const priorRookie = b.run("voiceClips.get('rookie')");
+  for (const args of ["'rookie',[2.39],0.085", "'rookie',[],0.085", "'rookie',[0],0", "'mentor',[0],0.085"]) {
+    // Separate role from the remaining literal arguments without changing array commas.
+    const pos = args.indexOf(",");
+    await assert.rejects(b.run(`loadVoiceBank(${args.slice(0,pos)},Uint8Array.from(atob(supplierVoiceData),c=>c.charCodeAt(0)).buffer,${args.slice(pos+1)})`));
+  }
+  check("Invalid voice segments cannot replace an existing valid recording", () => {
+    assert.equal(b.run("voiceClips.get('rookie')"), priorRookie);
   });
   check("Mute immediately stops all samples", () => {
     b.run("actions.mute()");
@@ -493,6 +700,50 @@ async function main() {
       assert.ok(b.run("view.y") >= 0);
     }
   });
+  check("Touch movement holds until release and cancels without a stuck key", () => {
+    const c = boot();
+    c.run("actions.new()");
+    c.finish();
+    const control = { dataset: { move: "right" }, setPointerCapture() {} };
+    const event = { target: { closest: () => control }, pointerId: 1, preventDefault() {} };
+    c.fire("pointerdown", event);
+    assert.equal(c.run("keys.has('arrowright')"), true);
+    c.fire("pointerup", event);
+    assert.equal(c.run("keys.size"), 0);
+    c.fire("pointerdown", event);
+    c.fire("pointercancel", event);
+    assert.equal(c.run("keys.size"), 0);
+    c.run("speak('김주문',['테스트'])");
+    c.fire("pointerdown", event);
+    assert.equal(c.run("keys.size"), 0);
+  });
+  check("Supplier scene cannot travel to another floor or expose an elevator", () => {
+    const c = boot();
+    c.run("state.stage=3;state.started=true;titleVisible=false;travelTo(1);updateMap()");
+    assert.equal(c.run("floor"), 0);
+    assert.equal(c.el("spot-elevator").hidden, true);
+    assert.equal(c.el("spot-officer").hidden, true);
+    assert.equal(c.run("spotActive('doc')"), true);
+  });
+  check("Invalid new save fields are rejected and valid six-stage saves load", () => {
+    const valid = b.run("JSON.stringify(state)");
+    for (const patch of [{ floor: 4 }, { openingChecked: "yes" }, { stage: 7 }]) {
+      const c = boot(JSON.stringify({ ...JSON.parse(valid), ...patch }));
+      assert.equal(c.run("loaded"), false);
+      assert.equal(c.run("state.stage"), 0);
+    }
+    const c = boot(valid);
+    assert.equal(c.run("state.stage"), 6);
+  });
+  check("Glossary cites the official procedure and completed ending reviews all six lessons", () => {
+    b.run("result()");
+    assert.equal((b.el("modal").innerHTML.match(/<li>/g) || []).length, 6);
+    assert.match(b.el("modal").innerHTML, /이번 업무|여섯 업무/);
+    b.run("openGlossary()");
+    assert.match(b.el("modal").innerHTML, /예정가격/);
+    assert.match(b.el("modal").innerHTML, /key=00179/);
+    assert.match(b.el("modal").innerHTML, /가상 설정/);
+  });
   check("Corrupted save still allows a new game", () => {
     const c = boot("{broken");
     c.run("actions.new()");
@@ -518,7 +769,13 @@ async function main() {
     c.el("eligible").checked = true;
     c.run("finishBid()");
     c.finish();
-    assert.equal(c.run("state.stage"), 4);
+    c.run("travelTo(1);officer()");
+    c.finish();
+    c.run("openingGood();contractGood();actions.advance();travelTo(0);reportDeliveryIssue()");
+    c.finish();
+    c.run("inspectDelivery();finishPayment()");
+    c.finish();
+    assert.equal(c.run("state.stage"), 6);
     assert.equal(c.run("storageOK"), false);
   });
   check("Fresh game resets quest, inventory, level, and portal account", () => {

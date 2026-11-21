@@ -1,3 +1,4 @@
+import { openGlossary } from "../components/learning.js";
 import { buttons, close, help, show } from "../components/modal.js";
 import { startGame } from "../components/title.js";
 import { player, runtime } from "../core/runtime.js";
@@ -5,11 +6,12 @@ import { render, setNotebook } from "../components/hud.js";
 import { $ } from "../core/dom.js";
 import { previewVoice, soundSettings, stopSounds, updateVolume } from "../audio/sound.js";
 import { nextLine, speak } from "../components/dialogue.js";
-import { go } from "../world/navigation.js";
+import { go, interact } from "../world/navigation.js";
 import {
   complete,
   documentDesk,
   finishBid,
+  returnRookie,
   mentor,
   nextTarget,
   phone,
@@ -25,11 +27,15 @@ import {
   terminal,
 } from "../components/portal.js";
 import { save } from "../core/storage.js";
-import { inspectItem } from "../components/inventory.js";
+import { elevator, travelTo, officer, bidroom, openingGood, contractGood, delivery, reportDeliveryIssue, inspectDelivery, payment, finishPayment } from "./procurement.js";
+import { inventoryItems, inspectItem } from "../components/inventory.js";
 
 export const actions = {
   close,
   help,
+  glossary: openGlossary,
+  interact,
+  "return-rookie": returnRookie,
   restart: () =>
     show(
       "처음부터 다시 시작할까요?",
@@ -55,14 +61,29 @@ export const actions = {
     updateVolume();
   },
   "voice-preview": previewVoice,
+  "rookie-voice-preview": () => previewVoice("rookie"),
   guide: () => {
     setNotebook(false);
     go(nextTarget());
   },
   mentor,
-  phone,
+  phone: () => runtime.state.stage === 5 ? delivery() : phone(),
   doc: documentDesk,
-  terminal,
+  terminal: () => runtime.state.stage === 5 ? payment() : terminal(),
+  elevator,
+  "floor-0": () => travelTo(0),
+  "floor-1": () => travelTo(1),
+  officer,
+  bidroom,
+  "opening-good": openingGood,
+  "opening-bad": () => wrong("예정가격은 입찰 전에 결정해 둡니다. 입찰서를 받은 뒤 임의로 바꾸지 않아요.", "bidroom"),
+  "contract-good": contractGood,
+  "contract-bad": () => wrong("입찰서 접수 후 공고한 낙찰자 선정방식에 따른 심사를 거치고, 낙찰예정자와 전자계약을 체결해요.", "officer"),
+  "delivery-report": reportDeliveryIssue,
+  "delivery-good": inspectDelivery,
+  "delivery-bad": () => wrong("계약한 20대와 납품한 19대가 다릅니다. 부족한 수량을 보완한 뒤 검사·검수해야 해요.", "phone"),
+  "payment-good": finishPayment,
+  "payment-bad": () => wrong("검사·검수와 물품인수, 영수증과 납품 서류를 확인하고 대금 청구·지급 절차를 진행해요.", "terminal"),
   approve: () => {
     if (runtime.state.stage === 2 && runtime.state.noticeChecked)
       complete(
@@ -72,8 +93,10 @@ export const actions = {
   },
   advance: () => {
     close();
-    player.x = 464;
-    player.y = 144;
+    if (runtime.state.stage <= 3) {
+      player.x = 464;
+      player.y = 144;
+    }
     runtime.portalSignedIn = false;
     if (runtime.state.stage === 3)
       speak(
@@ -169,4 +192,4 @@ Object.assign(actions, {
   "portal-save-draft": savePortalDraft,
 });
 
-for (let i = 0; i < 5; i++) actions["item-" + i] = () => inspectItem(i);
+for (let i = 0; i < inventoryItems.length; i++) actions["item-" + i] = () => inspectItem(i);

@@ -1,3 +1,4 @@
+import { LAST_STAGE } from "../data/quests.js";
 import { runtime } from "../core/runtime.js";
 import { $ } from "../core/dom.js";
 import { buttons, show, toast } from "./modal.js";
@@ -30,6 +31,16 @@ export const inventoryItems = [
     name: "접수증",
     description: "새봄테크의 모의 입찰서가 접수되었습니다. 제출은 낙찰이나 계약 체결이 아닙니다.",
     color: "#b686b7",
+  },
+  {
+    name: "계약서",
+    description: "공고한 선정방식에 따른 심사를 마치고 권한 있는 담당자가 체결한 가상 전자계약. 모니터 20대, 계약 후 30일 이내 납품입니다.",
+    color: "#c58e62",
+  },
+  {
+    name: "완료철",
+    description: "검사·검수와 물품인수, 영수증 및 납품 서류 확인을 마치고 대금 지급까지 진행한 가상 업무 기록입니다.",
+    color: "#76a395",
   },
 ];
 
@@ -67,7 +78,7 @@ export function renderInventory() {
         </button>`,
     )
     .join("");
-  $("level-badge").textContent = runtime.state.stage === 4 ? "Lv. 2" : "Lv. 1";
+  $("level-badge").textContent = runtime.state.stage === LAST_STAGE ? "Lv. 2" : "Lv. 1";
 }
 
 export function inspectItem(i) {

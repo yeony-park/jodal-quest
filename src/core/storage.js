@@ -1,3 +1,5 @@
+import { fresh } from "../data/initial-state.js";
+import { LAST_STAGE } from "../data/quests.js";
 import { runtime } from "./runtime.js";
 import { $ } from "./dom.js";
 
@@ -11,7 +13,11 @@ export function loadGame() {
       s.version === 1 &&
       Number.isInteger(s.stage) &&
       s.stage >= 0 &&
-      s.stage <= 4 &&
+      s.stage <= LAST_STAGE &&
+      (s.floor === undefined || s.floor === 0 || s.floor === 1) &&
+      ["awardBrief", "openingChecked", "deliveryIssueReported", "inspectionChecked"].every(
+        (k) => s[k] === undefined || typeof s[k] === "boolean",
+      ) &&
       [
         "started",
         "brief",
@@ -26,7 +32,9 @@ export function loadGame() {
       Array.isArray(s.history) &&
       s.history.every((x) => typeof x === "string")
     ) {
-      runtime.state = s;
+      runtime.state = { ...fresh(), ...s };
+      runtime.floor = s.stage === 3 ? 0 : runtime.state.floor;
+      runtime.state.floor = runtime.floor;
       runtime.loaded = s.started;
     }
   } catch (e) {

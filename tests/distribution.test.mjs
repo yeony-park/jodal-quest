@@ -23,11 +23,13 @@ const ids = [...html.matchAll(/id="([^"]+)"/g)].map((m) => m[1]);
 assert.equal(new Set(ids).size, ids.length, "Duplicate static component IDs");
 for (const id of ["world", "quest-panel", "inventory-slots", "title-screen", "speech", "modal"])
   assert.ok(ids.includes(id), id);
-const voice = await readFile(path.join(root, "assets/audio/yon-voice-bank.wav"));
-assert.ok(
-  js.includes(voice.toString("base64")),
-  "Processed voice must be embedded for file:// execution",
-);
+for (const name of ["yon", "jodal"]) {
+  const voice = await readFile(path.join(root, `assets/audio/${name}-voice-bank.wav`));
+  assert.ok(js.includes(voice.toString("base64")), `${name} voice must be embedded for file:// execution`);
+}
+assert.doesNotMatch(js + html, /owner-raw|\.m4a|jodal-voice\//);
+for (const name of await readdir(dist, { recursive: true }))
+  assert.doesNotMatch(name, /owner-raw|\.m4a$/i, "Raw recording must not be distributed");
 const builtFont = (await readdir(path.join(dist, "assets"))).find((n) =>
   n.startsWith("Gaegu-Regular-"),
 );
@@ -41,5 +43,5 @@ assert.ok(
   "Template should not contain the old bundled game",
 );
 console.log(
-  `Distribution checks passed: ${refs.length} local asset references, all HTML components, font and processed voice.`,
+  `Distribution checks passed: ${refs.length} local asset references, all HTML components, font and both processed voice banks.`,
 );

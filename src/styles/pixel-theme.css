@@ -138,3 +138,140 @@
     6px 6px 0 #c3965f,
     10px 10px 0 #17362c60;
 }
+
+/* Always-available guidance keeps off-screen targets reachable on a phone. */
+.goal-bar {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 480px);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+  background: #f9f3dfed;
+  border: 2px solid #fff4d6;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.goal-bar span {
+  width: 100%;
+  text-align: center;
+  color: #355744;
+  font-weight: 700;
+}
+.goal-bar button {
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  background: #e5e4ca;
+  color: #355744;
+}
+.goal-bar #quick-guide {
+  background: #326b54;
+  color: #fffbea;
+}
+.talking .goal-bar,
+.talking .mobile-controls {
+  visibility: hidden;
+}
+.lesson-card {
+  margin-top: 16px;
+  padding: 10px 16px;
+  background: #f4ecd4;
+  border-left: 4px solid #c49a47;
+}
+.lesson-card h3 {
+  font-size: 16px;
+  margin: 6px 0;
+}
+.lesson-card p {
+  margin: 6px 0;
+}
+.glossary details,
+.ending-review {
+  margin: 12px 0;
+  border: 1px solid #d4ddcf;
+  border-radius: 6px;
+  padding: 12px;
+}
+.glossary summary,
+.ending-review summary {
+  cursor: pointer;
+  font-weight: 700;
+  line-height: 1.6;
+}
+.learning-review {
+  padding-left: 22px;
+}
+.learning-review li {
+  margin: 15px 0;
+  font-size: 14px;
+}
+.learning-review p,
+.modal p.source-note {
+  font-size: 13px;
+  line-height: 1.65;
+}
+.mobile-controls button {
+  touch-action: none;
+  user-select: none;
+}
+@media (max-width: 700px) {
+  .inventory {
+    bottom: 52px;
+    max-width: calc(100vw - 16px);
+    padding: 5px;
+  }
+  .inventory-slots { gap: 3px; }
+  .inventory-slot {
+    width: clamp(34px, 11.5vw, 55px);
+    height: 58px;
+    padding: 2px 3px 16px;
+  }
+  .inventory-slot svg { width: 25px; height: 31px; }
+  .slot-name { font-size: 10px; }
+  .bottom-controls {
+    bottom: 8px;
+    max-width: calc(100vw - 140px);
+    gap: 6px;
+    font-size: 10px;
+    padding: 8px;
+  }
+  #player-label { max-width: 145px; }
+  .goal-bar {
+    top: 157px;
+    width: calc(100vw - 24px);
+    max-width: 400px;
+    padding: 6px;
+  }
+  .mobile-controls {
+    bottom: 146px;
+    left: 12px;
+  }
+  .mobile-controls button { min-width: 44px; min-height: 44px; }
+  .speech {
+    bottom: 155px;
+    max-height: calc(100dvh - 190px);
+    overflow-y: auto;
+    padding-top: 38px;
+  }
+  .speech-name { top: 5px; }
+  .speech-text { font-size: 17px; line-height: 1.65; }
+  .notebook { max-height: calc(100dvh - 215px); }
+  .hud #save-status { bottom: 10px; font-size: 9px; max-width: 122px; }
+  .doc-header { flex-wrap: wrap; }
+  .row { grid-template-columns: 75px minmax(0, 1fr); gap: 8px; }
+}
+@media (max-height: 500px) {
+  .goal-bar { top: 80px; left: 235px; width: 250px; transform: none; max-width: calc(100vw - 250px); }
+  .inventory { bottom: 5px; }
+  .inventory-slot { width: 44px; height: 49px; }
+  .inventory-slot svg { width: 23px; height: 26px; }
+  .speech { bottom: 90px; max-height: calc(100dvh - 110px); overflow-y: auto; }
+  .mobile-controls { bottom: 82px; }
+  .bottom-controls { bottom: 8px; }
+}

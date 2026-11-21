@@ -1,20 +1,39 @@
-import { MAP_H, MAP_W, TILE, furnishings, spots } from "../data/world.js";
+import { MAP_H, MAP_W, TILE, floors, spots } from "../data/world.js";
 import { keys, player, runtime } from "../core/runtime.js";
 import { result } from "../components/ending.js";
 import { close, toast } from "../components/modal.js";
 import { setNotebook } from "../components/hud.js";
 import { actions } from "../game/actions.js";
 import { draw, updateMap } from "./render.js";
+import { LAST_STAGE } from "../data/quests.js";
 
-export function cellBlocked(x, y) {
+export function cellBlocked(x, y, floor = runtime.floor) {
   if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H) return true;
-  if ((x === 5 || x === 11) && (y < 6 || y > 8)) return true;
-  if ((y === 5 || y === 9) && ![2, 8, 14].includes(x)) return true;
-  return furnishings.some((o) => x >= o.x && x < o.x + o.w && y >= o.y && y < o.y + o.h);
+  const f = floors[floor];
+  for (const p of f.partitions) {
+    if (p.axis === "h" && y === p.at && x >= p.from && x < p.to && !p.doors.includes(x))
+      return true;
+    if (p.axis === "v" && x === p.at && y >= p.from && y < p.to) return true;
+  }
+  return f.furnishings.some((o) => x >= o.x && x < o.x + o.w && y >= o.y && y < o.y + o.h);
 }
 
 export function canWalk(x, y) {
   return !cellBlocked(Math.floor(x / TILE), Math.floor(y / TILE));
+}
+
+// 기업 단계(욘 대리)는 별도 사무실이라 책상과 모니터만 씁니다.
+export function spotActive(id) {
+  const spot = spots[id];
+  if (!spot) return false;
+  if (runtime.state.stage === 3) return id === "doc" || id === "terminal";
+  return spot.floor === undefined || spot.floor === runtime.floor;
+}
+
+// 목표가 다른 층에 있으면 엘리베이터를 먼저 안내합니다.
+export function guideTarget(id) {
+  const spot = spots[id];
+  return spot && !spotActive(id) && runtime.state.stage !== 3 ? "elevator" : id;
 }
 
 export function routeTo(id) {
@@ -59,13 +78,19 @@ export function routeTo(id) {
 
 export function go(id) {
   if (id === "result") {
-    result();
+    if (runtime.state.stage === LAST_STAGE) result();
     return;
   }
   if (!runtime.state.started || runtime.titleVisible || runtime.talkState) return;
   close();
   setNotebook(false);
   keys.clear();
+  if (!spotActive(id)) {
+    const next = guideTarget(id);
+    if (next === id) return;
+    toast(`${floors[spots[id].floor].level}에 있어요. 엘리베이터로 이동합니다.`);
+    id = next;
+  }
   const path = routeTo(id);
   if (!path.length) {
     toast("복도를 따라 가까이 이동해 주세요.");
@@ -83,7 +108,7 @@ export function interact() {
   let closest = null,
     distance = Infinity;
   for (const [id, p] of Object.entries(spots)) {
-    if (runtime.state.stage === 3 && ["mentor", "phone", "supplier"].includes(id)) continue;
+    if (!spotActive(id)) continue;
     const d = Math.hypot(player.x - p.x, player.y - p.y);
     if (d < distance) {
       distance = d;

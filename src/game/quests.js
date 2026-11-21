@@ -1,3 +1,4 @@
+import { lessonCard } from "../components/learning.js";
 import { runtime } from "../core/runtime.js";
 import { save } from "../core/storage.js";
 import { buttons, close, doc, show, toast } from "../components/modal.js";
@@ -6,7 +7,6 @@ import { chime } from "../audio/sound.js";
 import { speak } from "../components/dialogue.js";
 import { actions } from "./actions.js";
 import { $ } from "../core/dom.js";
-import { ending } from "../components/ending.js";
 
 export function nextTarget() {
   if (runtime.state.stage === 0)
@@ -14,6 +14,8 @@ export function nextTarget() {
   if (runtime.state.stage === 1) return !runtime.state.specAdvice ? "mentor" : "doc";
   if (runtime.state.stage === 2) return !runtime.state.noticeChecked ? "terminal" : "mentor";
   if (runtime.state.stage === 3) return !runtime.state.product ? "doc" : "terminal";
+  if (runtime.state.stage === 4) return !runtime.state.awardBrief ? "officer" : !runtime.state.openingChecked ? "bidroom" : "officer";
+  if (runtime.state.stage === 5) return !runtime.state.inspectionChecked ? "phone" : "terminal";
   return "result";
 }
 
@@ -45,6 +47,7 @@ export function complete(title, body) {
       <p>
         ${completed === 2 ? "검토·결재를 거쳐 공고가 게시됐습니다. 다음 장면에서는 기업 담당자로 전환합니다." : "퀘스트 완료! 진행 상황을 이 브라우저에 저장했습니다."}
       </p>
+      ${lessonCard(completed)}
       ${buttons([["advance", completed === 2 ? "기업 담당자로 전환" : "다음 퀘스트"]])}`,
     "advance",
     false,
@@ -166,7 +169,7 @@ export function tutorial() {
     [
       "반가워요, 조달달 주무관! 새봄지방조달청에 온 걸 환영해요. 첫 업무는 제가 옆에서 알려 줄게요.",
       "방향키나 WASD로 걸어 보세요. 사람이나 책상 이름을 누르면 알아서 찾아가요. 대화는 스페이스바로 넘기면 돼요.",
-      "왼쪽 위 작은 지도에서 내 위치를 볼 수 있어요. 오른쪽 위는 제 업무 노트, 아래 5칸은 물건을 모으는 인벤토리예요.",
+      "왼쪽 위 작은 지도에서 내 위치를 볼 수 있어요. 오른쪽 위는 제 업무 노트, 아래 7칸은 물건을 모으는 인벤토리예요.",
       "우리는 내용을 확인하고 초안을 준비해요. 공고는 검토와 담당자 결재를 거칩니다. 혼자 확정하면 안 돼요.",
       "첫 의뢰는 도서관 모니터 20대예요. 요청서에 납기가 빠졌네요. 연락 데스크에서 확인해 주세요. 노트에도 적어 둘게요.",
     ],
@@ -219,7 +222,20 @@ export function finishBid() {
       "모의 입찰서가 접수됐어요! 공고를 꼼꼼히 읽으니 제출까지 할 수 있었네요.",
       "접수는 낙찰이나 계약 체결이 아니에요. 다음 절차가 남아 있다는 점도 기억할게요.",
     ],
-    ending,
+    () => {
+      runtime.floor = 0;
+      runtime.state.floor = 0;
+      render();
+      show("모의 입찰서 접수 완료", `<div class="success">입찰서가 접수됐어요. 이어서 낙찰자 선정과 계약 절차를 배워요.</div>${lessonCard(3)}${buttons([["return-rookie", "조달달로 돌아가 다음 업무 받기"]])}`, "advance", false);
+    },
     "supplier",
   );
+}
+
+export function returnRookie() {
+  if (runtime.state.stage !== 4) return;
+  speak("김주문", [
+    "조달달 주무관으로 돌아왔어요. 모의 입찰서는 접수됐고, 이제 낙찰자 선정과 계약 절차를 배울 차례예요.",
+    "복도 왼쪽 엘리베이터를 타고 3층 계약 담당자에게 가 보세요. 노트의 다음 목표 버튼도 안내해 줄 거예요.",
+  ]);
 }

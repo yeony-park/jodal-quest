@@ -1,3 +1,5 @@
+import { learningReview } from "./learning.js";
+import { LAST_STAGE } from "../data/quests.js";
 import { player, runtime } from "../core/runtime.js";
 import { TILE } from "../data/world.js";
 import { speak } from "./dialogue.js";
@@ -7,12 +9,14 @@ import { face } from "../world/characters.js";
 export const MORE_QUESTS = "https://www.pps.go.kr/kor/bbs/list.do?key=00645";
 
 export function ending() {
+  runtime.floor = 0;
+  runtime.state.floor = 0;
   player.x = 14.5 * TILE;
   player.y = 4.5 * TILE;
   speak(
     "조달달",
     [
-      "빈칸을 확인하고, 공정한 기준을 세우고, 함께 검토하니 기업의 참여까지 이어졌어. 혼자 서두르는 것보다 중요한 게 있었구나!",
+      "요청서의 빈칸부터 계약, 납품과 대금 지급까지 마쳤어. 공정한 기준과 꼼꼼한 확인을 기억할 거야!",
       "이제 나도... 조달의 왕이야!",
     ],
     result,
@@ -21,6 +25,7 @@ export function ending() {
 }
 
 export function result() {
+  if (runtime.state.stage !== LAST_STAGE) return;
   const score = Math.max(60, 100 - runtime.state.mistakes * 5);
   show(
     "이제 나도... 조달의 왕이야!",
@@ -31,11 +36,12 @@ export function result() {
       <div class="level-progress"><i></i></div>
       <p class="center">첫 의뢰 완료 · 조달의 왕을 향한 첫걸음</p>
       <div class="stats">
-        <div class="stat"><strong>4 / 4</strong><small>퀘스트</small></div>
-        <div class="stat"><strong>5 / 5</strong><small>획득한 물건</small></div>
+        <div class="stat"><strong>6 / 6</strong><small>퀘스트</small></div>
+        <div class="stat"><strong>7 / 7</strong><small>획득한 물건</small></div>
         <div class="stat"><strong>${score}</strong><small>학습 점수</small></div>
       </div>
-      <div class="success">모의 입찰서 접수 완료. 낙찰·계약 체결은 아직 진행하지 않았습니다.</div>
+      <div class="success">가상 구매 완료 · 입찰서 접수 → 심사 확인·전자계약 → 검사·검수 → 대금 지급</div>
+      <details class="ending-review" open><summary>여섯 업무에서 배운 것</summary>${learningReview()}</details>
       <a class="ending-link" href="${MORE_QUESTS}" target="_blank" rel="noopener noreferrer"
         >더 많은 퀘스트를 깨고 싶다면?</a
       >
