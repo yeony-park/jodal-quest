@@ -23,11 +23,13 @@ export function loadGame() {
         Object.hasOwn(recoveryScenes,s.pendingRecovery) &&
         recoveryScenes[s.pendingRecovery].stage === s.stage
       )) &&
+      (s.xp === undefined || (Number.isInteger(s.xp) && s.xp >= s.stage * 100 && s.xp <= s.stage * 125 && s.xp % 25 === 0)) &&
+      (s.questMistakes === undefined || (Number.isInteger(s.questMistakes) && s.questMistakes >= 0 && s.questMistakes <= s.mistakes)) &&
       Number.isInteger(s.stage) &&
       s.stage >= 0 &&
       s.stage <= LAST_STAGE &&
       (s.floor === undefined || s.floor === 0 || s.floor === 1) &&
-      ["awardBrief", "openingChecked", "deliveryIssueReported", "inspectionChecked"].every(
+      ["contractFarewell", "awardBrief", "openingChecked", "deliveryIssueReported", "inspectionChecked"].every(
         (k) => s[k] === undefined || typeof s[k] === "boolean",
       ) &&
       [
@@ -44,7 +46,7 @@ export function loadGame() {
       Array.isArray(s.history) &&
       s.history.every((x) => typeof x === "string")
     ) {
-      runtime.state = { ...fresh(), ...s };
+      runtime.state = { ...fresh(), ...s, xp: s.xp ?? s.stage * 100, questMistakes: s.questMistakes ?? s.mistakes };
       runtime.floor = s.stage === 3 ? 0 : runtime.state.floor;
       runtime.state.floor = runtime.floor;
       runtime.loaded = s.started;

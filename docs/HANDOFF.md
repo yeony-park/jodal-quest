@@ -4,7 +4,7 @@ Updated 2026-11-21. This build has six quests, two floors, recorded rookie repli
 
 ## Build and repository rules
 
-Use Node 22+, `npm ci`, then `npm test`. The test command rebuilds `dist` and runs 76 game checks plus distribution checks. `npm run dev` serves the game at http://127.0.0.1:8765. For offline play, open `dist/index.html` and keep the entire distribution folder together.
+Use Node 22+, `npm ci`, then `npm test`. The test command rebuilds `dist` and runs 87 game checks plus distribution checks. `npm run dev` serves the game at http://127.0.0.1:8765. For offline play, open `dist/index.html` and keep the entire distribution folder together.
 
 Edit source in `src`; regenerate `dist` with `npm run build`. Keep the CSS import order in `src/styles/index.css`. Later rules in `ending.css` override mobile inventory rules in `pixel-theme.css`; check both when changing the HUD. No new dependencies, external images, or fonts were added. The owner-supplied processed rookie voice bank is included.
 
@@ -43,7 +43,7 @@ The existing supplier recording and Gaegu font remain included with the font lic
 | 3 | 기업 입찰 참여 | Supplier role, suitable product, mock login and participation checkbox |
 | 4 | 낙찰과 계약 | Return to rookie; elevator to 3F; officer briefing, confirm the previously determined price, contract |
 | 5 | 납품과 대금 지급 | Return to 5F; request correction of 19 delivered against 20 contracted, inspect corrected delivery, verify receipt/documents, payment |
-| 6 | Ending | Six lessons, seven items, level 2, existing recruitment link |
+| 6 | Ending | Six lessons, seven items, earned final level, existing recruitment link |
 
 Bid receipt completes stage 3 only. It must never be described as award or contract completion. The contract scene assumes a fictional review under the announced selection method is complete; it teaches no scoring formula or lowest-price shortcut. The price was determined before bidding. The later scene confirms that existing record.
 
@@ -51,9 +51,9 @@ A completion saves immediately. The new inspection flow also saves after request
 
 ## Floors and navigation
 
-`floors[0]` is 5F and `floors[1]` is 3F. The original `furnishings` export aliases floor 0 for compatibility. Partitions, doors, labels, and furnishings drive collision, rendering, and minimap layout.
+`floors[0]` is 5F and `floors[1]` is 3F. The original `furnishings` export aliases floor 0 for compatibility. Partitions, doors, and furnishings drive collision, rendering, and minimap layout.
 
-Every spot has a floor except the elevator. NPC spots also carry separate `npcX`/`npcY` render coordinates so arrivals stand beside the NPC rather than on top of it. `spotActive` filters interactions and hotspots. `guideTarget` redirects another floor's target to the elevator; the player chooses the destination and presses the next-goal button again after arrival. `travelTo` clears movement, places the player next to the elevator, updates the floor, and saves. The supplier office permits only its desk and monitor and cannot travel.
+Every spot has a floor except the elevator. Room number/department signs are removed. Minimap captions identify 5F 구매팀, 3F 계약팀, or 새봄테크 영업팀. NPC spots also carry separate `npcX`/`npcY` render coordinates so arrivals stand beside the NPC rather than on top of it. `spotActive` filters interactions and hotspots. `guideTarget` redirects another floor's target to the elevator; the player chooses the destination and presses the next-goal button again after arrival. `travelTo` clears movement, places the player next to the elevator, updates the floor, and saves. The supplier office permits only its desk and monitor and cannot travel.
 
 Floor location and legal procedure are fictionalized for the game. Official headquarters room numbers are visual references, not a claim that those offices perform these fictional tasks.
 
@@ -72,7 +72,9 @@ New saved fields :
 - `deliveryIssueReported` : shortage correction requested; the next delivery screen shows 20.
 - `inspectionChecked` : inspection, acceptance, and receipt completed.
 
-Old stage-4 saves continue into the contract quest, with five items and these flags false. The new final stage is 6. Existing history strings remain intact. Session-only state includes the active floor mirror (`runtime.floor`), camera, coordinates, dialogue, modal, touch key, and mock portal login. Resuming restores the saved floor and starts beside the elevator on 3F or at the desk on 5F; it does not persist precise coordinates. New game resets floor, movement target, progression, and login.
+Old stage-4 saves continue into the contract quest, with five items and these flags false. The new final stage is 6. Existing history strings remain intact. The officer adds a post-price explanation and a send-off after the contract document. The stage-5 goal remains the officer until that dialogue and recorded rookie reply finish; Continue restores that pending send-off on 3F.
+
+Session-only state includes the active floor mirror (`runtime.floor`), camera, coordinates, dialogue, modal, touch key, and mock portal login. Resuming restores the saved floor and starts beside the elevator on 3F or at the desk on 5F; it does not persist precise coordinates. New game resets floor, movement target, progression, and login.
 
 ## Sprite fixes
 
@@ -94,7 +96,7 @@ Tests verify both production banks, nonempty voiced windows, rookie dialogue pla
 
 ## Evidence and remaining work
 
-`npm test` currently passes 76 checks plus the distribution suite. See `docs/검증기록.txt` for browser results and limits. No commit, push, PR, or deployment was performed by this worker.
+`npm test` currently passes 87 checks plus the distribution suite. See `docs/검증기록.txt` for browser results and limits. No commit, push, PR, or deployment was performed by this worker.
 
 Official reference content was supplied to the worker from a 2026-11-21 fetch :
 
@@ -113,7 +115,7 @@ Ending titles use completed recovery count, with legacy mistake count retained f
 
 ## Outline verification
 
-Interactable NPC sprites use a cached bright silhouette and dark outer edge; interactive monitors, phone, and documents use the same two colors. Other floor colors are one tone darker. Only the next hotspot pulses, with `prefers-reduced-motion` disabling animation. The goal floor marker uses the same two-color outline.
+Interactable NPC sprites use a cached bright silhouette and dark outer edge within two tiles of the player; interactive monitors, phone, and documents use the same proximity rule and colors. Nearby names appear within that radius; the current goal name and minimap dot remain visible at any distance. Other floor colors are one tone darker. Only the next hotspot pulses, with `prefers-reduced-motion` disabling animation. The goal floor marker uses the same two-color outline.
 
 WCAG 2.2 SC 1.4.11 requires 3:1 for meaningful non-text information against adjacent colors. The measured outline pair `#fff2a6` / `#172f35` is 12.3815:1. The dark edge against the darkest tested desk side `#92724e` is 3.1712:1; against the darker floor `#899e92`, 4.9312:1. Calculation uses sRGB linearization and relative luminance, with unrounded values tested against 3.
 
@@ -123,10 +125,20 @@ Artifacts for this worker are in `/tmp/jodal-run2/`. Full-room depth screenshots
 
 ## Follow-up 1 : review fixes
 
-The current suite passes 76 checks plus distribution checks. Recovery IDs must be strings before any property-key lookup; malformed pending IDs and nested completed-ID arrays reject the save and leave Continue unavailable. Valid pending recovery strings still resume and finish.
+The current suite passes 87 checks plus distribution checks. Recovery IDs must be strings before any property-key lookup; malformed pending IDs and nested completed-ID arrays reject the save and leave Continue unavailable. Valid pending recovery strings still resume and finish.
 
 `drawFurniture` outlines only active spots, so stage 3 shows document/terminal cues and leaves the disabled phone unoutlined. `positionLabels` uses screen-space silhouette bounds, label dimensions, existing labels, and visible HUD rectangles to place clickable labels without covering actors or active furniture. The same placement applies on both floors and adapts to viewport/camera changes.
 
 The ground goal cue is an isometric diamond. `floorMarkerBounds` conservatively suppresses the whole cue if any scene silhouette might clip it. At the reviewed mentor approach, the foreground partition suppresses the cue; the highlighted name and minimap continue to show the next goal.
 
 Regression tests cover malformed recovery values, active-only furnishing outlines, desktop/mobile label placement on both floors, and complete suppression of clipped ground markers. Chromium measurements and four new screenshots are in `/tmp/jodal-run2/fix1-*`; the detailed result is appended to `core-report.md`.
+
+## Play-test polish (2026-11-21)
+
+- Physical `e.code` handles WASD, Q, and E on both keydown and keyup, including Korean IME jamo/Process values. Arrows remain supported. Manual and automatic movement share `MOVE_SPEED = 145`.
+- The portal draft contains no quantity answer beside the input. Players consult the request. Decision buttons retain plain decision text and the 11 document submissions remain intact.
+- `src/game/progression.js` awards 100 XP per quest plus 25 XP for no recovery on that quest; every 150 XP gives a level. Each completion shows the award and any level-up. The HUD shows current level, progress, and XP; the ending shows total XP and final level (clean run : 750 XP / level 6).
+- Optional saved fields : `xp`, `questMistakes` (mistake count at the prior quest boundary), `contractFarewell`. Loading old version-1 saves awards 100 XP per completed stage and defaults the current mistake baseline. Recovery IDs also suppress the current quest bonus after reload. Save key and version remain unchanged.
+- Removed all player-visible fiction/abbreviation notices, including documents, glossary, help, portal, and dialogue. The title and ending each show one actual-work accuracy note. The clock shows story dates/times. The recruitment button keeps its destination and the separate destination sentence is removed.
+
+`npm test` now runs 87 game checks plus distribution checks. Browser artifacts and item-by-item ownership are in `/tmp/jodal-run3/polish-report.md`.

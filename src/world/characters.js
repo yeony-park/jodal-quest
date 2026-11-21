@@ -1,3 +1,4 @@
+import { spotNearby } from "./navigation.js";
 import { project } from "./render.js";
 import { runtime } from "../core/runtime.js";
 import { ctx } from "./canvas.js";
@@ -160,7 +161,7 @@ export function pixelPerson(x, y, kind, moving = false) {
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.imageSmoothingEnabled = false;
-  const npc = kind !== "rookie" && !(kind === "supplier" && runtime.state.stage === 3);
+  const npc = kind !== "rookie" && !(kind === "supplier" && runtime.state.stage === 3) && spotNearby(kind);
   const pad = npc ? Math.round(4 * k) : 0;
   ctx.drawImage(npc ? outlinedSprite(kind, walkPose(moving)) : spriteSheet(kind, walkPose(moving)), left-pad, top-pad, width+pad*2, height+pad*2);
   ctx.restore();

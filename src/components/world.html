@@ -40,6 +40,7 @@
       ><span class="map-note">초록 · 나 / 노랑 · 다음 목표</span>
     </aside>
     <div class="top-controls">
+      <span id="scene-time" class="scene-clock"></span>
       <button
         class="hud-button quest-toggle"
         id="quest-toggle"
@@ -77,7 +78,7 @@
       <button data-action="glossary" aria-label="조달 용어 수첩 열기">용어 수첩</button>
     </div>
     <div class="bottom-controls">
-      <span id="level-badge">Lv. 1</span><span id="player-label"></span
+      <span id="level-badge">Lv. 1</span><span id="xp-status"><progress id="xp-bar" value="0" max="150" aria-label="다음 레벨까지 경험치"></progress><small id="xp-label">0 / 150 XP</small></span><span id="player-label"></span
       ><span class="key-help"
         ><kbd>WASD</kbd> 이동 · <kbd>Space</kbd> 대화 · <kbd>Q</kbd> 노트</span
       >
@@ -89,6 +90,6 @@
       ><button data-move="right" aria-label="오른쪽 이동">→</button><button data-action="interact" aria-label="가까운 대상과 대화">대화</button>
     </div>
     <span id="save-status" role="status">퀘스트 완료 시 자동 저장</span
-    ><span id="scene-time" class="screen-reader"></span>
+    >
   </div>
 </main>

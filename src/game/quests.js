@@ -1,3 +1,4 @@
+import { awardQuestXP, xpReward } from "./progression.js";
 import { beginRecovery } from "./recovery.js";
 import { lessonCard } from "../components/learning.js";
 import { runtime } from "../core/runtime.js";
@@ -16,6 +17,7 @@ export function nextTarget() {
   if (runtime.state.stage === 2) return !runtime.state.noticeChecked ? "terminal" : "mentor";
   if (runtime.state.stage === 3) return !runtime.state.product ? "doc" : "terminal";
   if (runtime.state.stage === 4) return !runtime.state.awardBrief ? "officer" : !runtime.state.openingChecked ? "bidroom" : "officer";
+  if (runtime.state.stage === 5 && runtime.floor === 1 && !runtime.state.contractFarewell) return "officer";
   if (runtime.state.stage === 5) return !runtime.state.inspectionChecked ? "phone" : "terminal";
   return "result";
 }
@@ -31,6 +33,7 @@ export function complete(title, body) {
   runtime.state.history.push(
     ["요청서 확인 및 접수 준비", "경쟁 가능한 규격 수정", "검토·결재 후 공고 게시"][completed],
   );
+  awardQuestXP();
   runtime.state.stage++;
   save();
   render();
@@ -40,7 +43,7 @@ export function complete(title, body) {
       <p>
         ${completed === 2 ? "검토·결재를 거쳐 공고가 게시됐습니다. 다음 장면에서는 기업 담당자로 전환합니다." : "퀘스트 완료! 진행 상황을 이 브라우저에 저장했습니다."}
       </p>
-      ${lessonCard(completed)}
+      ${xpReward()}${lessonCard(completed)}
       ${buttons([["advance", completed === 2 ? "기업 담당자로 전환" : "다음 퀘스트"]])}`,
     "advance",
     false,
@@ -135,7 +138,7 @@ export function requestDoc() {
   return doc("물품 구매 요청서", [
     ["수요기관", "새봄도서관"],
     ["구매 물품", "이용자용 모니터 20대"],
-    ["배정 예산", "20,000,000원 (가상 설정)"],
+    ["배정 예산", "20,000,000원"],
     ["사용 목적", "자료실에서 문서·자료 열람"],
     ["납품기한", runtime.state.contact ? "계약일로부터 30일 이내" : "미기재 · 확인 필요"],
     ["납품 장소", runtime.state.contact ? "새봄도서관 2층 자료실" : "새봄도서관"],
@@ -165,7 +168,7 @@ export function documentDesk() {
         ["구매 수량", "20대"],
         ["필요 성능", "24형 이상 · FHD 이상 · HDMI 연결"],
         ["납품기한", "계약일로부터 30일 이내"],
-      ])}${doc("제품 자료 (가상)", [
+      ])}${doc("제품 자료", [
         ["새봄 M24", "24형 / FHD / HDMI · 20대 공급 · 계약 후 20일 내 납품"],
         ["새봄 C22", "22형 / FHD / HDMI · 20대 공급 · 계약 후 20일 내 납품"],
       ])}<div class="choices"><button class="choice" data-action="product-good">새봄 M24 · 24형 / FHD / HDMI</button><button class="choice" data-action="product-bad">새봄 C22 · 22형 / FHD / HDMI</button></div>`,
@@ -223,6 +226,7 @@ export function finishBid() {
     return;
   }
   runtime.state.history.push("기업 모의 입찰서 접수");
+  awardQuestXP();
   runtime.state.stage = 4;
   runtime.portalSignedIn = false;
   save();
@@ -239,7 +243,7 @@ export function finishBid() {
       runtime.floor = 0;
       runtime.state.floor = 0;
       render();
-      show("모의 입찰서 접수 완료", `<div class="success">입찰서가 접수됐어요. 이어서 낙찰자 선정과 계약 절차를 배워요.</div>${lessonCard(3)}${buttons([["return-rookie", "조달달로 돌아가 다음 업무 받기"]])}`, "advance", false);
+      show("모의 입찰서 접수 완료", `<div class="success">입찰서가 접수됐어요. 이어서 낙찰자 선정과 계약 절차를 배워요.</div>${xpReward()}${lessonCard(3)}${buttons([["return-rookie", "조달달로 돌아가 다음 업무 받기"]])}`, "advance", false);
     },
     "supplier",
   );

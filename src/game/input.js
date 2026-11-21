@@ -10,6 +10,11 @@ import { actions } from "./actions.js";
 import { save } from "../core/storage.js";
 import { resizeWorld } from "../world/render.js";
 
+export function physicalKey(e) {
+  const code = { KeyW: "w", KeyA: "a", KeyS: "s", KeyD: "d", KeyQ: "q", KeyE: "e" }[e.code];
+  return code || e.key.toLowerCase();
+}
+
 export function handleKey(e) {
   if (runtime.talkState) {
     if (e.code === "Space" || e.key === "Enter") {
@@ -46,7 +51,7 @@ export function handleKey(e) {
     return;
   }
   if (runtime.titleVisible) return;
-  const k = e.key.toLowerCase();
+  const k = physicalKey(e);
   if (k === "q") {
     e.preventDefault();
     if (!e.repeat) setNotebook($("quest-panel").hidden);
@@ -121,7 +126,7 @@ export function bindInput() {
     }
   });
   document.addEventListener("keydown", handleKey);
-  document.addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
+  document.addEventListener("keyup", (e) => keys.delete(physicalKey(e)));
   window.addEventListener("blur", () => {
     keys.clear();
     releaseTouch();

@@ -71,17 +71,17 @@ export function render() {
     )
     .join("");
   $("location").textContent =
-    runtime.state.stage === 3 ? "새봄테크 · 영업팀 사무실" : floors[runtime.floor].caption;
+    runtime.state.stage === 3 ? "새봄테크 영업팀" : floors[runtime.floor].caption;
   $("player-label").textContent =
-    runtime.state.stage === 3 ? "욘 대리 · 기업 담당자" : "플레이어 · 조달달 / 신입 9급 주무관";
+    runtime.state.stage === 3 ? "욘 대리 · 기업 담당자" : "조달달 · 신입 9급 주무관";
   $("scene-time").textContent = [
     "DAY 01 · 09:00",
     "DAY 01 · 10:00",
-    "공고 준비 · 시간 축약",
-    "입찰 참여 · 시간 축약",
-    "개찰·계약 · 시간 축약",
-    "납품·대금 지급 · 시간 축약",
-    "전체 업무 완료",
+    "DAY 02 · 09:00",
+    "DAY 03 · 14:00",
+    "DAY 04 · 10:00",
+    "DAY 24 · 14:00",
+    "DAY 24 · 17:00",
   ][runtime.state.stage];
   $("spot-doc").textContent =
     runtime.state.stage === 3
@@ -94,7 +94,7 @@ export function render() {
     $("spot-" + id).classList.toggle("target", target === id);
   $("guide-button").textContent = runtime.state.stage === LAST_STAGE ? "완료 기록 보기" : target === "elevator" ? "엘리베이터로 이동" : "다음 목표로 이동";
   $("quest-label").textContent = runtime.state.stage === LAST_STAGE ? "완료" : `퀘스트 ${runtime.state.stage + 1}`;
-  const goalLabels = { mentor: "김주문에게 업무 듣기", phone: runtime.state.stage === 5 ? "5층 · 납품 자료 확인" : "수요기관에 연락", doc: runtime.state.stage === 3 ? "공고에 맞는 제품 고르기" : "내 책상 자료 확인", terminal: runtime.state.stage === 5 ? "5층 · 대금 청구 확인" : "업무용 모니터 사용", officer: "3층 · 계약 담당자 만나기", bidroom: "3층 · 개찰·계약 자료 확인", result: "완료 기록 다시 보기" };
+  const goalLabels = { mentor: "김주문에게 업무 듣기", phone: runtime.state.stage === 5 ? "5층 · 납품 자료 확인" : "수요기관에 연락", doc: runtime.state.stage === 3 ? "공고에 맞는 제품 고르기" : "내 책상 자료 확인", terminal: runtime.state.stage === 5 ? "5층 · 대금 청구 확인" : "업무용 모니터 사용", officer: runtime.state.stage === 5 ? "3층 · 계약 담당자와 인사하기" : "3층 · 계약 담당자 만나기", bidroom: "3층 · 개찰·계약 자료 확인", result: "완료 기록 다시 보기" };
   $("current-goal").textContent = goalLabels[nextTarget()];
   $("quick-guide").textContent = $("guide-button").textContent;
   renderInventory();

@@ -29,7 +29,7 @@ import {
   terminal,
 } from "../components/portal.js";
 import { save } from "../core/storage.js";
-import { elevator, travelTo, officer, bidroom, openingGood, contractGood, delivery, reportDeliveryIssue, inspectDelivery, payment, finishPayment } from "./procurement.js";
+import { elevator, travelTo, officer, contractFarewell, bidroom, openingGood, contractGood, delivery, reportDeliveryIssue, inspectDelivery, payment, finishPayment } from "./procurement.js";
 import { inventoryItems, inspectItem } from "../components/inventory.js";
 
 export const actions = {
@@ -79,6 +79,7 @@ export const actions = {
   "floor-0": () => travelTo(0),
   "floor-1": () => travelTo(1),
   officer,
+  "contract-farewell": contractFarewell,
   bidroom,
   "opening-good": openingGood,
   "opening-bad": () => wrong("예정가격은 입찰 전에 결정해 둡니다. 입찰서를 받은 뒤 임의로 바꾸지 않아요.", "bidroom"),
