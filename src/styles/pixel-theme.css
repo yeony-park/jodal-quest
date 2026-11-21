@@ -1,0 +1,140 @@
+#world {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.hotspot {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 2px solid #fff2c7;
+  box-shadow: 3px 3px 0 #2a51405e;
+}
+.hotspot.target {
+  background: #ffdd78;
+}
+.minimap {
+  border-radius: 6px;
+  transform: none;
+  background: #e8e4c7;
+  border-color: #f7efd6;
+  box-shadow: 4px 4px 0 #304b4252;
+}
+.minimap svg {
+  border-radius: 2px;
+}
+.hud-button {
+  border-radius: 7px;
+}
+.inventory {
+  position: absolute;
+  bottom: 13px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 12px 9px;
+  background: #3f3c33ed;
+  border: 3px solid #b3a47e;
+  border-radius: 4px;
+  box-shadow:
+    0 4px 0 #242c26,
+    0 -2px 0 #e1d1aa;
+  z-index: 6;
+}
+.inventory-label {
+  position: absolute;
+  left: 50%;
+  top: -24px;
+  transform: translateX(-50%);
+  font-size: 12px;
+  white-space: nowrap;
+  color: #f5e9c8;
+  background: #4d4a3e;
+  padding: 3px 14px;
+  border: 1px solid #ab9c77;
+}
+.inventory-slots {
+  display: flex;
+  gap: 6px;
+}
+.inventory-slot {
+  position: relative;
+  width: 66px;
+  height: 72px;
+  border: 2px solid #8c8267;
+  border-radius: 2px;
+  background: linear-gradient(145deg, #46483b, #34392f);
+  color: #e8dfba;
+  box-shadow: inset 0 0 0 2px #252c2780;
+  padding: 2px 7px 17px;
+}
+.inventory-slot.owned {
+  border-color: #c1ae7a;
+  background: linear-gradient(145deg, #65614c, #454b3d);
+}
+.inventory-slot:hover {
+  border-color: #ffe4a1;
+}
+.inventory-slot svg {
+  width: 37px;
+  height: 43px;
+  image-rendering: pixelated;
+}
+.slot-number {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  font-size: 10px;
+  color: #cabd93;
+}
+.slot-name {
+  position: absolute;
+  bottom: 5px;
+  left: 0;
+  right: 0;
+  font-size: 11px;
+  text-align: center;
+}
+.slot-empty {
+  display: block;
+  line-height: 42px;
+  font-size: 28px;
+  opacity: 0.35;
+}
+.large-item {
+  text-align: center;
+}
+.large-item svg {
+  width: 75px;
+  height: 90px;
+}
+.bottom-controls {
+  bottom: 22px;
+  max-width: calc(50% - 230px);
+}
+.key-help {
+  display: none;
+}
+#level-badge {
+  background: #e8ce88;
+  color: #514b31;
+  padding: 3px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-weight: 900;
+}
+.speech {
+  bottom: 135px;
+}
+.speech-portrait svg,
+.title-chars svg {
+  image-rendering: pixelated;
+}
+.title-chars {
+  gap: 16px;
+}
+.game-logo {
+  border-radius: 7px;
+  border-width: 5px;
+  box-shadow:
+    6px 6px 0 #c3965f,
+    10px 10px 0 #17362c60;
+}

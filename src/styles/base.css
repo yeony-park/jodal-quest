@@ -1,0 +1,226 @@
+@font-face {
+  font-family: "Gaegu";
+  src: url(../../assets/fonts/Gaegu-Regular.ttf) format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --ink: #203c36;
+  --muted: #687d72;
+  --green: #296a55;
+  --paper: #fffaf0;
+  --line: #d4ddcf;
+  --hand: "Gaegu", cursive;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  font-family: "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  color: var(--ink);
+  background: #d6e5ce;
+  font-size: 16px;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+  border: 0;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid #d9962e;
+  outline-offset: 4px;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+[hidden] {
+  display: none !important;
+}
+#game-shell,
+#scene,
+#world {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+}
+#scene {
+  overflow: hidden;
+}
+#world {
+  display: block;
+}
+.hotspot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: #fffcefec;
+  border: 2px solid #fff8de;
+  padding: 9px 15px;
+  border-radius: 25px;
+  color: #2f5143;
+  font-weight: 800;
+  font-size: 14px;
+  white-space: nowrap;
+  box-shadow: 0 4px 0 #6b87633d;
+  transition: background 0.15s;
+}
+.hotspot:hover {
+  background: #fff;
+}
+.hotspot.target {
+  background: #ffecac;
+  border-color: #d9a849;
+}
+.hotspot.target:before {
+  content: "!";
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #dfa843;
+  margin-right: 7px;
+  color: #fff;
+}
+.hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.hud > * {
+  pointer-events: auto;
+}
+.minimap {
+  position: absolute;
+  left: 24px;
+  top: 22px;
+  width: 200px;
+  padding: 10px;
+  background: #fff9e8f5;
+  border: 3px solid #fcf9ea;
+  border-radius: 20px;
+  box-shadow: 0 5px 20px #29473925;
+  transform: rotate(-1deg);
+}
+.minimap svg {
+  width: 100%;
+  display: block;
+  border-radius: 10px;
+  background: #dbe7c9;
+}
+.map-caption {
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  display: block;
+  margin: 7px 0 1px;
+}
+.map-note {
+  font-size: 11px;
+  color: #667958;
+  text-align: center;
+  display: block;
+}
+.top-controls {
+  position: absolute;
+  right: 24px;
+  top: 24px;
+  display: flex;
+  align-items: start;
+  gap: 9px;
+}
+.hud-button {
+  background: #fff9ebf5;
+  color: #3e5949;
+  padding: 12px 16px;
+  border-radius: 15px;
+  min-height: 45px;
+  border: 2px solid #fcf7e7;
+  box-shadow: 0 4px 0 #77936740;
+  font-weight: 700;
+}
+.quest-toggle {
+  background: #f9e5aa;
+  border-color: #fff1c8;
+  transform: rotate(2deg);
+}
+.quest-toggle .quest-icon {
+  display: inline-block;
+  margin-right: 7px;
+  border: 1.5px solid #80714a;
+  border-radius: 3px;
+  width: 18px;
+  height: 22px;
+  vertical-align: middle;
+  background: repeating-linear-gradient(transparent 0 5px, #b5a882 5px 6px);
+}
+#quest-count {
+  font-size: 12px;
+  margin-left: 8px;
+}
+.bottom-controls {
+  position: absolute;
+  left: 24px;
+  bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff9e9d9;
+  padding: 10px 15px;
+  border-radius: 14px;
+  color: #46614c;
+  font-size: 12px;
+  backdrop-filter: blur(6px);
+}
+#player-label {
+  font-weight: 800;
+}
+.key-help {
+  color: #70816b;
+}
+kbd {
+  font: inherit;
+  border: 1px solid #b8c6ac;
+  border-radius: 4px;
+  padding: 2px 5px;
+  background: #fffbed;
+}
+#save-status {
+  position: absolute;
+  right: 25px;
+  bottom: 25px;
+  color: #355744;
+  background: #f9fbecdf;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+.mobile-controls {
+  display: none;
+  gap: 5px;
+}
+.mobile-controls button {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #fff9e8e8;
+  color: #355942;
+}

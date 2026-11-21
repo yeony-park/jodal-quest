@@ -1,0 +1,184 @@
+.level-up-tag {
+  text-align: center;
+  font: 900 26px monospace;
+  letter-spacing: 5px;
+  color: #bd8c32;
+  text-shadow: 2px 2px #fff1bf;
+}
+.level-up-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 18px 0;
+}
+.level-up-hero svg {
+  width: 90px;
+  height: 120px;
+  image-rendering: pixelated;
+}
+.level-up-hero strong {
+  font: 900 34px monospace;
+  color: #447451;
+}
+.level-up-hero span {
+  color: #c59b42;
+  font-size: 26px;
+}
+.level-progress {
+  height: 16px;
+  border: 3px solid #405942;
+  background: #9bad89;
+  padding: 2px;
+  max-width: 300px;
+  margin: 0 auto;
+}
+.level-progress i {
+  display: block;
+  height: 100%;
+  background: #eed179;
+  animation: level-fill 0.8s ease-out;
+}
+.ending-link {
+  display: block;
+  margin: 20px 0 4px;
+  padding: 14px;
+  text-align: center;
+  border-radius: 7px;
+  background: #406d51;
+  color: #fff6da;
+  text-decoration: none;
+  font-weight: 800;
+}
+.ending-destination {
+  text-align: center;
+  font-size: 12px !important;
+  margin: 8px 0 !important;
+}
+@keyframes level-fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+@media (max-width: 700px) {
+  .inventory {
+    bottom: 9px;
+    padding: 6px;
+  }
+  .inventory-slot {
+    width: 52px;
+    height: 61px;
+    padding: 0 4px 15px;
+  }
+  .inventory-slot svg {
+    width: 30px;
+    height: 36px;
+  }
+  .slot-name {
+    font-size: 10px;
+  }
+  .inventory-slots {
+    gap: 4px;
+  }
+  .bottom-controls {
+    left: 10px;
+    bottom: 100px;
+    max-width: none;
+    font-size: 10px;
+    padding: 6px;
+  }
+  .hud #save-status {
+    bottom: 104px;
+  }
+  .mobile-controls {
+    bottom: 142px;
+  }
+  .speech {
+    bottom: 135px;
+  }
+  .g2b-top {
+    padding: 8px;
+    font-size: 10px;
+  }
+  .g2b-top > span {
+    display: none;
+  }
+  .g2b-brand {
+    padding: 14px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .g2b-logo {
+    font-size: 23px;
+  }
+  .g2b-search {
+    width: 100%;
+  }
+  .g2b-nav {
+    padding: 0;
+    gap: 0;
+  }
+  .g2b-nav button {
+    padding: 10px;
+    font-size: 12px;
+  }
+  .g2b-content {
+    padding: 14px;
+  }
+  .g2b-grid {
+    grid-template-columns: 1fr;
+  }
+  .g2b-hero {
+    font-size: 17px;
+    padding-bottom: 16px;
+  }
+  .g2b-hero strong,
+  .g2b-hero em {
+    font-size: 22px;
+  }
+  .g2b-hero br {
+    display: block;
+  }
+  .g2b-card {
+    padding: 14px;
+  }
+  .g2b-form label {
+    width: 85px;
+    font-size: 12px;
+    padding: 10px;
+  }
+  .g2b-form span {
+    font-size: 12px;
+  }
+  .g2b-form > div {
+    gap: 5px;
+    flex-wrap: wrap;
+  }
+  .g2b-table-head,
+  .g2b-table-row {
+    grid-template-columns: 35px 1fr 55px;
+    padding: 10px;
+    font-size: 11px;
+  }
+  .g2b-table-head > span:nth-child(3),
+  .g2b-table-row > span:nth-child(3) {
+    display: none;
+  }
+  .training-ribbon {
+    font-size: 10px;
+  }
+  .g2b-form small {
+    padding: 5px;
+  }
+  .modal.portal-modal {
+    width: calc(100vw - 12px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .level-progress i {
+    animation: none;
+  }
+}

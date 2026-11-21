@@ -1,0 +1,45 @@
+import assert from "node:assert/strict";
+import { readFile, readdir, access } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+
+const root = fileURLToPath(new URL("../", import.meta.url));
+const dist = path.join(root, "dist");
+const html = await readFile(path.join(dist, "index.html"), "utf8");
+const css = await readFile(path.join(dist, "game.css"), "utf8");
+const js = await readFile(path.join(dist, "game.js"), "utf8");
+const refs = [
+  ...html.matchAll(/(?:src|href)="([^"#]+)"/g),
+  ...css.matchAll(/url\(["']?([^"')]+)["']?\)/g),
+];
+for (const [, ref] of refs) {
+  if (ref.startsWith("data:")) continue;
+  assert.ok(!/^(?:https?:|\/)/.test(ref), `Nonportable runtime asset: ${ref}`);
+  await access(path.resolve(dist, ref));
+}
+assert.doesNotMatch(html, /<!-- component:|<style>|<script>/);
+assert.doesNotMatch(js, /globalThis\.__test|fetch\(|XMLHttpRequest/);
+const ids = [...html.matchAll(/id="([^"]+)"/g)].map((m) => m[1]);
+assert.equal(new Set(ids).size, ids.length, "Duplicate static component IDs");
+for (const id of ["world", "quest-panel", "inventory-slots", "title-screen", "speech", "modal"])
+  assert.ok(ids.includes(id), id);
+const voice = await readFile(path.join(root, "assets/audio/yon-voice-bank.wav"));
+assert.ok(
+  js.includes(voice.toString("base64")),
+  "Processed voice must be embedded for file:// execution",
+);
+const builtFont = (await readdir(path.join(dist, "assets"))).find((n) =>
+  n.startsWith("Gaegu-Regular-"),
+);
+assert.deepEqual(
+  await readFile(path.join(dist, "assets", builtFont)),
+  await readFile(path.join(root, "assets/fonts/Gaegu-Regular.ttf")),
+);
+assert.match(await readFile(path.join(dist, "FONT-LICENSE.txt"), "utf8"), /SIL OPEN FONT LICENSE/);
+assert.ok(
+  (await readFile(path.join(root, "index.html"))).byteLength < 4096,
+  "Template should not contain the old bundled game",
+);
+console.log(
+  `Distribution checks passed: ${refs.length} local asset references, all HTML components, font and processed voice.`,
+);

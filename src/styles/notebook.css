@@ -1,0 +1,132 @@
+.notebook {
+  position: absolute;
+  right: 30px;
+  top: 92px;
+  width: min(365px, calc(100vw - 36px));
+  max-height: calc(100dvh - 130px);
+  overflow: auto;
+  padding: 36px 25px 25px 45px;
+  transform: rotate(1deg);
+  transform-origin: top right;
+  color: #45453d;
+  background-color: #fff2cf;
+  background-image:
+    linear-gradient(90deg, transparent 30px, #cf8d8066 30px, #cf8d8066 32px, transparent 32px),
+    repeating-linear-gradient(0deg, transparent 0 31px, #a8b8aa66 31px 32px),
+    radial-gradient(ellipse at 70% 30%, #ffffff77, transparent 75%);
+  background-position:
+    0 0,
+    0 5px,
+    0 0;
+  border: 1px solid #ddcda3;
+  border-radius: 3px 7px 20px 4px;
+  box-shadow:
+    2px 5px 0 #e8d9b5,
+    3px 7px 0 #fff6de,
+    0 17px 32px #35462e38;
+  font-family: var(--hand);
+}
+.notebook:before {
+  content: "";
+  position: absolute;
+  left: 70px;
+  top: 0;
+  width: 95px;
+  height: 22px;
+  background: #dfc799a6;
+  transform: rotate(-3deg);
+  border-left: 2px dotted #ead6ac;
+  border-right: 2px dotted #ead6ac;
+}
+.notebook .close-note {
+  position: absolute;
+  right: 10px;
+  top: 8px;
+  background: transparent;
+  color: #8b7d60;
+  font: 24px var(--hand);
+  width: 30px;
+  height: 30px;
+}
+.note-to {
+  font-size: 23px;
+  line-height: 32px;
+  margin: 0 0 8px;
+  transform: rotate(-2deg);
+}
+.notebook h2 {
+  font: 30px/32px var(--hand);
+  margin: 0 0 10px;
+  color: #38463c;
+  transform: rotate(-1deg);
+  text-decoration: underline;
+  text-decoration-color: #d5aa5b;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 6px;
+}
+.notebook p {
+  font: 23px/32px var(--hand);
+  margin: 0 0 8px;
+}
+.notebook .todo {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+}
+.todo li {
+  font: 23px/32px var(--hand);
+  display: flex;
+  gap: 10px;
+  margin: 0;
+}
+.check {
+  display: inline-grid;
+  place-items: center;
+  border: 1.5px solid #7c8270;
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  margin-top: 6px;
+  transform: rotate(-5deg);
+  border-radius: 3px;
+}
+.checked {
+  color: #82907c;
+}
+.checked .check {
+  color: #477758;
+  font-size: 28px;
+  border-color: #80977e;
+}
+.note-ps {
+  font: 21px/32px var(--hand);
+  color: #686b53;
+  margin: 10px 0;
+}
+.signature {
+  text-align: right;
+  font: 27px var(--hand);
+  transform: rotate(-5deg);
+  margin: 15px 0;
+}
+.note-progress {
+  font: 18px/24px var(--hand);
+  color: #8c8468;
+}
+.note-progress .step {
+  display: flex;
+  gap: 6px;
+}
+.note-progress small {
+  display: none;
+}
+.note-progress .active {
+  color: #ad713f;
+}
+.notebook .primary {
+  width: 100%;
+  margin-top: 12px;
+  font: 24px var(--hand);
+  background: #637951;
+  padding: 9px;
+}

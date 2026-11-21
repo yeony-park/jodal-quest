@@ -1,0 +1,187 @@
+@media (max-width: 700px) {
+  .minimap {
+    left: 12px;
+    top: 12px;
+    width: 135px;
+    padding: 7px;
+    border-radius: 14px;
+  }
+  .map-caption {
+    font-size: 10px;
+  }
+  .map-note {
+    font-size: 9px;
+  }
+  .top-controls {
+    right: 12px;
+    top: 12px;
+    gap: 5px;
+  }
+  .hud-button {
+    padding: 10px;
+    min-height: 42px;
+    font-size: 13px;
+  }
+  .top-controls .help-button {
+    display: none;
+  }
+  #quest-count {
+    margin-left: 4px;
+  }
+  .quest-toggle .quest-icon {
+    display: none;
+  }
+  .notebook {
+    top: 72px;
+    right: 16px;
+    max-height: calc(100dvh - 95px);
+    padding-right: 22px;
+  }
+  .bottom-controls {
+    left: 12px;
+    bottom: 12px;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  .key-help {
+    display: none;
+  }
+  .mobile-controls {
+    display: flex;
+    position: absolute;
+    left: 12px;
+    bottom: 60px;
+  }
+  .hud #save-status {
+    right: 12px;
+    bottom: 17px;
+    font-size: 10px;
+    max-width: 125px;
+  }
+  .hotspot {
+    font-size: 12px;
+    padding: 7px 11px;
+  }
+  .speech {
+    padding: 24px 19px 16px 77px;
+    bottom: 18px;
+    width: calc(100vw - 24px);
+    border-width: 3px;
+  }
+  .speech-portrait {
+    left: 10px;
+    bottom: 20px;
+    width: 57px;
+    height: 78px;
+    border-radius: 18px;
+  }
+  .speech-portrait svg {
+    height: 87px;
+  }
+  .speech-name {
+    left: 73px;
+    font-size: 15px;
+  }
+  .speech:before {
+    left: 85px;
+  }
+  .speech-text {
+    font-size: 18px;
+    min-height: 100px;
+    line-height: 1.7;
+  }
+  .modal {
+    padding: 23px;
+  }
+  .modal h2 {
+    font-size: 23px;
+  }
+  .row {
+    grid-template-columns: 80px 1fr;
+    font-size: 13px;
+  }
+  .title-eyebrow {
+    font-size: 12px;
+  }
+  .title-chars {
+    height: 110px;
+  }
+  .title-chars svg {
+    height: 130px;
+  }
+  .title-copy {
+    font-size: 23px;
+  }
+  .game-logo {
+    padding: 25px 18px;
+  }
+  .title-footer {
+    font-size: 11px;
+  }
+  .title-audio {
+    right: 12px;
+    top: 12px;
+  }
+  .title-screen {
+    padding-top: 65px;
+  }
+  .title-buttons button {
+    padding: 12px;
+  }
+  .game-logo:after {
+    font-size: 22px;
+  }
+}
+@media (max-height: 600px) and (min-width: 701px) {
+  .title-screen {
+    padding: 15px;
+  }
+  .title-eyebrow {
+    margin-bottom: 8px;
+  }
+  .game-logo {
+    max-width: 350px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+  .game-logo h1 {
+    font-size: 50px;
+  }
+  .game-logo:after {
+    font-size: 20px;
+  }
+  .title-chars {
+    display: none;
+  }
+  .title-copy {
+    margin: 12px;
+    font-size: 23px;
+  }
+  .title-buttons {
+    gap: 8px;
+  }
+  .title-buttons button {
+    padding: 10px;
+  }
+  .title-footer {
+    margin-top: 12px;
+  }
+  .speech {
+    bottom: 18px;
+    padding-top: 18px;
+  }
+  .speech-text {
+    font-size: 20px;
+  }
+  .minimap {
+    width: 155px;
+  }
+  .notebook {
+    max-height: calc(100dvh - 110px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

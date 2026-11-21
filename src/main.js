@@ -1,0 +1,13 @@
+import "./styles/index.css";
+import { loadGame } from "./core/storage.js";
+import { bindInput } from "./game/input.js";
+import { resizeWorld } from "./world/render.js";
+import { render } from "./components/hud.js";
+import { intro } from "./components/title.js";
+import { frame } from "./world/navigation.js";
+loadGame();
+bindInput();
+resizeWorld();
+render();
+intro();
+requestAnimationFrame(frame);
