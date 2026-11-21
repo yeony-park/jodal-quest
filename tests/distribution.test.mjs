@@ -42,6 +42,12 @@ assert.ok(
   (await readFile(path.join(root, "index.html"))).byteLength < 4096,
   "Template should not contain the old bundled game",
 );
+assert.ok(!html.includes("data-source-only"), "Built page must not redirect to itself");
+assert.match(
+  await readFile(path.join(root, "index.html"), "utf8"),
+  /data-source-only/,
+  "Source template should forward to the built game",
+);
 console.log(
   `Distribution checks passed: ${refs.length} local asset references, all HTML components, font and both processed voice banks.`,
 );
