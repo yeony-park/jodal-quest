@@ -61,6 +61,8 @@ export function mentor() {
         save();
         render();
       },
+      "mentor",
+      "네! 수요기관에 납기를 확인하고 요청서를 보완할게요.",
     );
   } else if (runtime.state.stage === 1) {
     speak(
@@ -75,12 +77,14 @@ export function mentor() {
         save();
         render();
       },
+      "mentor",
+      "알겠습니다. 성능 기준으로 수정안을 만들어 볼게요.",
     );
   } else if (runtime.state.stage === 2) {
     if (!runtime.state.noticeChecked) {
       speak("김주문", [
         "공고 초안을 먼저 확인해 주세요. 요청서는 모니터 20대였죠? 수량이 같은지 대조해 보세요.",
-      ]);
+      ], () => {}, "mentor", "네, 요청서와 수량을 대조해 볼게요.");
       return;
     }
     speak(
@@ -90,8 +94,17 @@ export function mentor() {
         "이제 권한 있는 담당자의 구매결의·결재 절차로 넘길게요. 그 절차가 끝나야 공고가 게시됩니다.",
       ],
       () => actions.approve(),
+      "mentor",
+      "검토 감사합니다! 결재가 끝나면 공고를 확인할게요.",
     );
-  } else speak("김주문", ["수고했어요, 조달달 주무관! 확인하고 협의하는 습관을 기억하세요."]);
+  } else
+    speak(
+      "김주문",
+      ["수고했어요, 조달달 주무관! 확인하고 협의하는 습관을 기억하세요."],
+      () => {},
+      "mentor",
+      "네, 선배님. 꼭 기억할게요!",
+    );
 }
 
 export function phone() {
@@ -113,6 +126,7 @@ export function phone() {
         toast("납기 30일 · 2층 자료실을 기록했어요.");
       },
       "contact",
+      "확인 감사합니다. 계약일로부터 30일 이내, 2층 자료실로 적어 둘게요.",
     );
   } else show("수요기관 확인 메모", `${requestDoc()}${buttons([["close", "돌아가기"]])}`);
 }
@@ -176,6 +190,8 @@ export function tutorial() {
       setNotebook(true);
       toast("첫 업무를 받았어요. 김주문의 노트를 확인해 보세요.");
     },
+    "mentor",
+    "네, 선배님! 연락 데스크에서 납기부터 확인해 볼게요.",
   );
 }
 
@@ -188,6 +204,7 @@ export function supplierNPC() {
     ],
     () => {},
     "supplier",
+    "반갑습니다! 공고가 게시되면 잘 부탁드려요.",
   );
 }
 
@@ -233,5 +250,5 @@ export function returnRookie() {
   speak("김주문", [
     "조달달 주무관으로 돌아왔어요. 모의 입찰서는 접수됐고, 이제 낙찰자 선정과 계약 절차를 배울 차례예요.",
     "복도 왼쪽 엘리베이터를 타고 3층 계약 담당자에게 가 보세요. 노트의 다음 목표 버튼도 안내해 줄 거예요.",
-  ]);
+  ], () => {}, "mentor", "네! 엘리베이터를 타고 3층으로 가 볼게요.");
 }

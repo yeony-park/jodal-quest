@@ -45,7 +45,7 @@ python3 -m http.server 8765 --bind 127.0.0.1 --directory dist
 해당 터미널에서 Ctrl+C로 종료합니다. 파일 직접 실행과 localhost는 저장 공간이 다를 수 있습니다.
 
 검증과 제출
-npm test는 빌드 후 게임 검사 75개와 배포 자산 검사를 실행합니다.
+npm test는 빌드 후 게임 검사 76개와 배포 자산 검사를 실행합니다.
 실기 결과는 검증기록.txt에 기록합니다. Windows EXE 제작, 공개 배포, 공모전 접수와 시연 영상 제작은 남아 있습니다.
 엔딩 링크는 조달청 채용정보입니다.
 https://www.pps.go.kr/kor/bbs/list.do?key=00645

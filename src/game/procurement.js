@@ -34,7 +34,7 @@ export function travelTo(floor) {
 export function officer() {
   if (runtime.floor !== 1) return;
   if (runtime.state.stage !== 4) {
-    speak("이계약 주무관", ["여기는 가상의 개찰·계약 창구예요. 입찰서 접수 뒤 공고한 선정방식에 따른 심사와 계약 절차를 확인해요."], () => {}, "officer");
+    speak("이계약 주무관", ["여기는 가상의 개찰·계약 창구예요. 입찰서 접수 뒤 공고한 선정방식에 따른 심사와 계약 절차를 확인해요."], () => {}, "officer", "네, 순서를 기억해 둘게요.");
     return;
   }
   if (!runtime.state.awardBrief) {
@@ -46,11 +46,11 @@ export function officer() {
       runtime.state.awardBrief = true;
       save();
       render();
-    }, "officer");
+    }, "officer", "네, 개찰·계약 자료에서 순서부터 확인할게요.");
     return;
   }
   if (!runtime.state.openingChecked) {
-    speak("이계약 주무관", ["옆의 개찰·계약 자료를 먼저 확인해 주세요. 예정가격을 언제 결정했는지 기억해 볼까요?"], () => {}, "officer");
+    speak("이계약 주무관", ["옆의 개찰·계약 자료를 먼저 확인해 주세요. 예정가격을 언제 결정했는지 기억해 볼까요?"], () => {}, "officer", "네, 자료를 먼저 보고 올게요.");
     return;
   }
   show("입찰서 접수 다음은?", `${doc("가상 계약 검토 기록", [
@@ -115,7 +115,7 @@ export function reportDeliveryIssue() {
   runtime.state.deliveryIssueReported = true;
   save();
   render();
-  speak("수요기관 담당자", ["한 대가 부족한 것을 확인했어요. 계약상대자에게 보완을 요청하겠습니다.", "부족한 한 대가 도착했어요! 수요기관 연락 데스크에서 보완한 자료를 다시 확인해 주세요. 게임에서는 대기 시간을 축약했어요."], () => {}, "contact");
+  speak("수요기관 담당자", ["한 대가 부족한 것을 확인했어요. 계약상대자에게 보완을 요청하겠습니다.", "부족한 한 대가 도착했어요! 수요기관 연락 데스크에서 보완한 자료를 다시 확인해 주세요. 게임에서는 대기 시간을 축약했어요."], () => {}, "contact", "보완 감사합니다. 스무 대가 맞는지 다시 확인할게요.");
 }
 
 export function inspectDelivery() {

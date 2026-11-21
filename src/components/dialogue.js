@@ -15,24 +15,17 @@ export function stopTalk() {
   stopSounds();
 }
 
-export function speak(name, lines, onDone = () => {}, role = "mentor") {
+// reply: 대화가 끝난 뒤 조달달이 녹음 목소리로 하는 짧은 대답. 대화마다 따로 적습니다.
+export function speak(name, lines, onDone = () => {}, role = "mentor", reply = "") {
   close();
   stopTalk();
   keys.clear();
   runtime.target = null;
   setNotebook(false);
-  const done = role === "rookie" ? onDone : () => {
-    const replies = [
-      "납기와 장소는 수요기관에 확인하고 요청서를 보완할게요.",
-      "필요한 성능은 남기고 경쟁할 수 있는 규격으로 검토할게요.",
-      "수량과 조건을 대조한 뒤 검토와 담당자 결재를 받을게요.",
-      "기업도 같은 공고를 읽고 규격과 참가 조건을 확인하는군요.",
-      "입찰 전에 정한 예정가격과 심사를 확인하고 전자계약으로 이어갈게요.",
-      "계약한 수량을 채우고 검사·검수와 납품 서류를 확인할게요.",
-      "확인한 절차를 다음 업무에서도 기억할게요.",
-    ];
-    speak("조달달", [replies[runtime.state.stage] || replies[6]], onDone, "rookie");
-  };
+  const done =
+    !reply || role === "rookie" || runtime.state.stage === 3
+      ? onDone
+      : () => speak("조달달", [reply], onDone, "rookie");
   runtime.talkState = { name, lines, onDone: done, role, index: 0, revealed: 0 };
   $("speech").hidden = false;
   document.body.classList.add("talking");

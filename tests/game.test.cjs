@@ -351,6 +351,12 @@ async function main() {
         const rect={x:parseFloat(el.style.left)-65,y:parseFloat(el.style.top)-17,w:130,h:34};
         assert.ok(rect.x>=0&&rect.x+rect.w<=w&&rect.y>=0&&rect.y+rect.h<=h);
         for(const other of [...visuals,...placed]) assert.ok(!(rect.x<other.x+other.w&&rect.x+rect.w>other.x&&rect.y<other.y+other.h&&rect.y+rect.h>other.y),`${w} stage ${stage} ${id} overlaps a silhouette/label`);
+        const own=visuals.find(v=>v.id===id);
+        // 화면 밖 대상의 이름표는 가장자리에 붙으므로 화면 안 대상만 거리를 봅니다.
+        if(own&&own.x>=0&&own.x+own.w<=w&&own.y>=0&&own.y+own.h<=h){
+          const dx=Math.max(own.x-(rect.x+rect.w),rect.x-(own.x+own.w),0), dy=Math.max(own.y-(rect.y+rect.h),rect.y-(own.y+own.h),0);
+          assert.ok(Math.hypot(dx,dy)<=100,`${w} stage ${stage} ${id} label sits ${Math.round(Math.hypot(dx,dy))}px from its target`);
+        }
         placed.push(rect);
       }
     }
@@ -467,11 +473,24 @@ async function main() {
   });
   check("Every conversation replies in the rookie recording before its callback", () => {
     const c=boot();
-    c.run(`speak('김주문',['확인해 주세요.'],()=>{state.brief=true;});revealLine();nextLine()`);
+    c.run(`speak('김주문',['확인해 주세요.'],()=>{state.brief=true;},'mentor','네, 확인할게요.');revealLine();nextLine()`);
     assert.equal(c.run("talkState.role"), "rookie");
     assert.equal(c.run("state.brief"), false);
     c.finish();
     assert.equal(c.run("state.brief"), true);
+  });
+  check("Rookie replies are written per conversation and never play while the supplier is the player", () => {
+    const c=boot();
+    c.run(`speak('안내',['먼저 선배에게 가 보세요.']);revealLine();nextLine()`);
+    assert.equal(c.run("talkState"), null);
+    c.run(`state.stage=3;speak('욘 대리',['공고를 읽어 볼게요.'],()=>{},'supplier','네!');revealLine();nextLine()`);
+    assert.equal(c.run("talkState"), null);
+    c.run(`state.stage=0;mentor();`);
+    c.run(`while(talkState&&talkState.role!=='rookie'){revealLine();nextLine()}`);
+    assert.match(c.run("talkState.lines[0]"), /납기/);
+    c.run(`state.stage=1;mentor();`);
+    c.run(`while(talkState&&talkState.role!=='rookie'){revealLine();nextLine()}`);
+    assert.match(c.run("talkState.lines[0]"), /성능 기준/);
   });
   b.run("actions.new()");
   await b.run("Promise.all([supplierVoiceReady,rookieVoiceReady])");

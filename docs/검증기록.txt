@@ -98,3 +98,7 @@ WCAG 2.2의 비텍스트 대비 3:1을 기준으로 sRGB를 선형화한 상대 
 선배 접근 위치의 바닥 목표 표시는 가려진 조각 없이 전체 숨김 처리했습니다. 열린 바닥의 목표 표시는 마름모로 그립니다.
 새 화면은 /tmp/jodal-run2/fix1-mentor-desktop.png, fix1-mentor-mobile.png, fix1-supplier-desktop.png, fix1-supplier-mobile.png입니다.
 측정값은 /tmp/jodal-run2/fix1-scenes-result.json, 저장 검사는 fix1-save-result.json에 있습니다.
+
+독립 검토 후속 수정 2 (2026-11-21 UTC)
+조달달 답변을 단계별 한 문장에서 대화별 문장으로 바꾸고 기업 단계에서는 재생하지 않게 했습니다. 이름표는 대상 실루엣 둘레에서만 자리를 찾습니다.
+회귀 검사를 추가해 npm test의 게임 검사와 배포 자산 검사를 통과했습니다. 현재 검사 수는 README에 적혀 있습니다.

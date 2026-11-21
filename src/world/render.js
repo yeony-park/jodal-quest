@@ -366,20 +366,31 @@ export function labelVisuals() {
   return visuals;
 }
 
-export function placeLabel(anchor, size, obstacles) {
+// 이름표는 대상 실루엣 바로 둘레(위·아래·옆·대각)에서만 자리를 찾습니다.
+// 화면 전체를 뒤지면 이름표가 대상과 떨어져 다른 버튼처럼 보입니다.
+export function placeLabel(anchor, size, obstacles, own) {
   const margin=8, maxX=Math.max(margin,runtime.view.width-size.w-margin), maxY=Math.max(margin,runtime.view.height-size.h-margin);
-  const preferred={x:Math.max(margin,Math.min(maxX,anchor.x-size.w/2)),y:Math.max(margin,Math.min(maxY,anchor.y-size.h))};
+  const t=own || {x:anchor.x-12,y:anchor.y,w:24,h:24};
+  const cx=t.x+t.w/2, cy=t.y+t.h/2;
   let best=null, score=Infinity;
-  const rect={...preferred,...size};
-  const consider=(x,y)=>{
-    rect.x=x;rect.y=y;
+  const consider=(x,y,rank)=>{
+    const rect={x:Math.max(margin,Math.min(maxX,x)),y:Math.max(margin,Math.min(maxY,y)),w:size.w,h:size.h};
     let hits=0;for(const obstacle of obstacles)if(intersects(rect,obstacle,6))hits++;
-    const value=hits*1e8+(x-preferred.x)**2+(y-preferred.y)**2;
-    if(value<score){score=value;best={...rect};}
+    const value=hits*1e8+rank*1e3+Math.hypot(rect.x+size.w/2-cx,rect.y+size.h/2-cy);
+    if(value<score){score=value;best=rect;}
   };
-  consider(preferred.x,preferred.y);
-  if(score===0)return best;
-  for(let y=margin;y<=maxY;y+=20) for(let x=margin;x<=maxX;x+=20) consider(x,y);
+  let rank=0;
+  for(const gap of [10,26,44,66,90]) {
+    const top=t.y-gap-size.h, bottom=t.y+t.h+gap, left=t.x-gap-size.w, right=t.x+t.w+gap;
+    consider(cx-size.w/2,top,rank++);
+    for(let k=1;k<=4;k++) for(const d of [k,-k]) consider(cx-size.w/2+d*size.w/3,top,rank++);
+    for(let k=0;k<=3;k++) for(const d of k?[k,-k]:[0]) {
+      consider(right,cy-size.h/2+d*size.h,rank++);
+      consider(left,cy-size.h/2+d*size.h,rank++);
+    }
+    for(let k=0;k<=4;k++) for(const d of k?[k,-k]:[0]) consider(cx-size.w/2+d*size.w/3,bottom,rank++);
+    if(score<1e8)return best;
+  }
   return best;
 }
 
@@ -394,7 +405,7 @@ export function positionLabels() {
     const p=project(s.npcX??s.x,s.npcY??s.y), own=visuals.find(v=>v.id===id);
     const anchor={x:(p.x-runtime.view.x)*runtime.view.scale,y:own?own.y-10:(p.y-65-runtime.view.y)*runtime.view.scale};
     if(own)anchor.x=own.x+own.w/2;
-    const r=placeLabel(anchor,{w:el.offsetWidth||130,h:el.offsetHeight||34},obstacles);
+    const r=placeLabel(anchor,{w:el.offsetWidth||130,h:el.offsetHeight||34},obstacles,own);
     el.style.left=r.x+r.w/2+"px";el.style.top=r.y+r.h/2+"px";
     obstacles.push(r);
   }

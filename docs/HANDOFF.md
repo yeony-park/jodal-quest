@@ -4,7 +4,7 @@ Updated 2026-11-21. This build has six quests, two floors, recorded rookie repli
 
 ## Build and repository rules
 
-Use Node 22+, `npm ci`, then `npm test`. The test command rebuilds `dist` and runs 75 game checks plus distribution checks. `npm run dev` serves the game at http://127.0.0.1:8765. For offline play, open `dist/index.html` and keep the entire distribution folder together.
+Use Node 22+, `npm ci`, then `npm test`. The test command rebuilds `dist` and runs 76 game checks plus distribution checks. `npm run dev` serves the game at http://127.0.0.1:8765. For offline play, open `dist/index.html` and keep the entire distribution folder together.
 
 Edit source in `src`; regenerate `dist` with `npm run build`. Keep the CSS import order in `src/styles/index.css`. Later rules in `ending.css` override mobile inventory rules in `pixel-theme.css`; check both when changing the HUD. No new dependencies, external images, or fonts were added. The owner-supplied processed rookie voice bank is included.
 
@@ -88,13 +88,13 @@ The owner's recording is now registered as the production `rookie` voice, indepe
 
 The coordinator prepared these grains from the owner's 5.67-second AAC recording using a 90Hz highpass, 7.5kHz lowpass, loudness normalization, peak leveling, and 6ms fades. Only the processed bank is included; the raw recording stays outside the repository and distribution.
 
-`loadVoiceBank(role, bytes, offsets, segment = 0.085)` validates decoded ranges and registers an independent `rookie` or `supplier` bank. `loadRookieVoice()` stores `runtime.rookieVoiceReady`; both banks load after audio initialization. The build embeds both WAV files as base64 for offline play. A failed decode falls back to synthesized syllables. Every non-rookie conversation adds a short stage-specific rookie reply before its completion callback. Both recordings use a 1.4 base playback rate plus the existing character-derived variation; only the synthetic rookie fallback uses 1.7. Sound settings retain both preview buttons and one master volume. Other characters retain their existing synthetic voices.
+`loadVoiceBank(role, bytes, offsets, segment = 0.085)` validates decoded ranges and registers an independent `rookie` or `supplier` bank. `loadRookieVoice()` stores `runtime.rookieVoiceReady`; both banks load after audio initialization. The build embeds both WAV files as base64 for offline play. A failed decode falls back to synthesized syllables. Conversations pass an optional per-conversation rookie reply as the fifth argument of `speak`; it plays before the completion callback and is skipped at supplier stage 3. Both recordings use a 1.4 base playback rate plus the existing character-derived variation; only the synthetic rookie fallback uses 1.7. Sound settings retain both preview buttons and one master volume. Other characters retain their existing synthetic voices.
 
 Tests verify both production banks, nonempty voiced windows, rookie dialogue playback, independence, decode fallback, and invalid-range rejection. The distribution suite checks both embedded banks and excludes raw M4A recordings. No upload UI or external voice service was added.
 
 ## Evidence and remaining work
 
-`npm test` currently passes 75 checks plus the distribution suite. See `docs/검증기록.txt` for browser results and limits. No commit, push, PR, or deployment was performed by this worker.
+`npm test` currently passes 76 checks plus the distribution suite. See `docs/검증기록.txt` for browser results and limits. No commit, push, PR, or deployment was performed by this worker.
 
 Official reference content was supplied to the worker from a 2026-11-21 fetch :
 
@@ -123,7 +123,7 @@ Artifacts for this worker are in `/tmp/jodal-run2/`. Full-room depth screenshots
 
 ## Follow-up 1 : review fixes
 
-The current suite passes 75 checks plus distribution checks. Recovery IDs must be strings before any property-key lookup; malformed pending IDs and nested completed-ID arrays reject the save and leave Continue unavailable. Valid pending recovery strings still resume and finish.
+The current suite passes 76 checks plus distribution checks. Recovery IDs must be strings before any property-key lookup; malformed pending IDs and nested completed-ID arrays reject the save and leave Continue unavailable. Valid pending recovery strings still resume and finish.
 
 `drawFurniture` outlines only active spots, so stage 3 shows document/terminal cues and leaves the disabled phone unoutlined. `positionLabels` uses screen-space silhouette bounds, label dimensions, existing labels, and visible HUD rectangles to place clickable labels without covering actors or active furniture. The same placement applies on both floors and adapts to viewport/camera changes.
 

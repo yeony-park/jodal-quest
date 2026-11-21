@@ -819,7 +819,7 @@
     if (runtime.floor !== 1) return;
     if (runtime.state.stage !== 4) {
       speak("이계약 주무관", ["여기는 가상의 개찰·계약 창구예요. 입찰서 접수 뒤 공고한 선정방식에 따른 심사와 계약 절차를 확인해요."], () => {
-      }, "officer");
+      }, "officer", "네, 순서를 기억해 둘게요.");
       return;
     }
     if (!runtime.state.awardBrief) {
@@ -831,12 +831,12 @@
         runtime.state.awardBrief = true;
         save();
         render();
-      }, "officer");
+      }, "officer", "네, 개찰·계약 자료에서 순서부터 확인할게요.");
       return;
     }
     if (!runtime.state.openingChecked) {
       speak("이계약 주무관", ["옆의 개찰·계약 자료를 먼저 확인해 주세요. 예정가격을 언제 결정했는지 기억해 볼까요?"], () => {
-      }, "officer");
+      }, "officer", "네, 자료를 먼저 보고 올게요.");
       return;
     }
     show("입찰서 접수 다음은?", `${doc("가상 계약 검토 기록", [
@@ -895,7 +895,7 @@
     save();
     render();
     speak("수요기관 담당자", ["한 대가 부족한 것을 확인했어요. 계약상대자에게 보완을 요청하겠습니다.", "부족한 한 대가 도착했어요! 수요기관 연락 데스크에서 보완한 자료를 다시 확인해 주세요. 게임에서는 대기 시간을 축약했어요."], () => {
-    }, "contact");
+    }, "contact", "보완 감사합니다. 스무 대가 맞는지 다시 확인할게요.");
   }
   function inspectDelivery() {
     if (runtime.state.stage !== 5 || runtime.floor !== 0 || !runtime.state.deliveryIssueReported) return;
@@ -1192,7 +1192,9 @@
           runtime.state.brief = true;
           save();
           render();
-        }
+        },
+        "mentor",
+        "네! 수요기관에 납기를 확인하고 요청서를 보완할게요."
       );
     } else if (runtime.state.stage === 1) {
       speak(
@@ -1206,13 +1208,16 @@
           runtime.state.specAdvice = true;
           save();
           render();
-        }
+        },
+        "mentor",
+        "알겠습니다. 성능 기준으로 수정안을 만들어 볼게요."
       );
     } else if (runtime.state.stage === 2) {
       if (!runtime.state.noticeChecked) {
         speak("김주문", [
           "공고 초안을 먼저 확인해 주세요. 요청서는 모니터 20대였죠? 수량이 같은지 대조해 보세요."
-        ]);
+        ], () => {
+        }, "mentor", "네, 요청서와 수량을 대조해 볼게요.");
         return;
       }
       speak(
@@ -1221,9 +1226,19 @@
           "수량 20대와 성능 조건을 확인했어요. 초안 검토를 마쳤습니다.",
           "이제 권한 있는 담당자의 구매결의·결재 절차로 넘길게요. 그 절차가 끝나야 공고가 게시됩니다."
         ],
-        () => actions.approve()
+        () => actions.approve(),
+        "mentor",
+        "검토 감사합니다! 결재가 끝나면 공고를 확인할게요."
       );
-    } else speak("김주문", ["수고했어요, 조달달 주무관! 확인하고 협의하는 습관을 기억하세요."]);
+    } else
+      speak(
+        "김주문",
+        ["수고했어요, 조달달 주무관! 확인하고 협의하는 습관을 기억하세요."],
+        () => {
+        },
+        "mentor",
+        "네, 선배님. 꼭 기억할게요!"
+      );
   }
   function phone() {
     if (runtime.state.stage === 0) {
@@ -1243,7 +1258,8 @@
           render();
           toast("납기 30일 · 2층 자료실을 기록했어요.");
         },
-        "contact"
+        "contact",
+        "확인 감사합니다. 계약일로부터 30일 이내, 2층 자료실로 적어 둘게요."
       );
     } else show("수요기관 확인 메모", `${requestDoc()}${buttons([["close", "돌아가기"]])}`);
   }
@@ -1303,7 +1319,9 @@
         render();
         setNotebook(true);
         toast("첫 업무를 받았어요. 김주문의 노트를 확인해 보세요.");
-      }
+      },
+      "mentor",
+      "네, 선배님! 연락 데스크에서 납기부터 확인해 볼게요."
     );
   }
   function supplierNPC() {
@@ -1315,7 +1333,8 @@
       ],
       () => {
       },
-      "supplier"
+      "supplier",
+      "반갑습니다! 공고가 게시되면 잘 부탁드려요."
     );
   }
   function finishBid() {
@@ -1357,7 +1376,8 @@
     speak("김주문", [
       "조달달 주무관으로 돌아왔어요. 모의 입찰서는 접수됐고, 이제 낙찰자 선정과 계약 절차를 배울 차례예요.",
       "복도 왼쪽 엘리베이터를 타고 3층 계약 담당자에게 가 보세요. 노트의 다음 목표 버튼도 안내해 줄 거예요."
-    ]);
+    ], () => {
+    }, "mentor", "네! 엘리베이터를 타고 3층으로 가 볼게요.");
   }
 
   // src/world/contrast.js
@@ -1690,25 +1710,33 @@
     const visuals = sceneItems(false).filter((item) => item.actor || item.furniture?.spot && spotActive(item.furniture.spot)).map((item) => ({ id: item.furniture?.spot || Object.keys(spots).find((id) => spots[id].npcX / TILE === item.x0 && spots[id].npcY / TILE === item.y0), ...screen(sceneItemBounds(item)) }));
     return visuals;
   }
-  function placeLabel(anchor, size, obstacles) {
+  function placeLabel(anchor, size, obstacles, own) {
     const margin = 8, maxX = Math.max(margin, runtime.view.width - size.w - margin), maxY = Math.max(margin, runtime.view.height - size.h - margin);
-    const preferred = { x: Math.max(margin, Math.min(maxX, anchor.x - size.w / 2)), y: Math.max(margin, Math.min(maxY, anchor.y - size.h)) };
+    const t = own || { x: anchor.x - 12, y: anchor.y, w: 24, h: 24 };
+    const cx = t.x + t.w / 2, cy = t.y + t.h / 2;
     let best = null, score = Infinity;
-    const rect = { ...preferred, ...size };
-    const consider = (x, y) => {
-      rect.x = x;
-      rect.y = y;
+    const consider = (x, y, rank2) => {
+      const rect = { x: Math.max(margin, Math.min(maxX, x)), y: Math.max(margin, Math.min(maxY, y)), w: size.w, h: size.h };
       let hits = 0;
       for (const obstacle of obstacles) if (intersects(rect, obstacle, 6)) hits++;
-      const value = hits * 1e8 + (x - preferred.x) ** 2 + (y - preferred.y) ** 2;
+      const value = hits * 1e8 + rank2 * 1e3 + Math.hypot(rect.x + size.w / 2 - cx, rect.y + size.h / 2 - cy);
       if (value < score) {
         score = value;
-        best = { ...rect };
+        best = rect;
       }
     };
-    consider(preferred.x, preferred.y);
-    if (score === 0) return best;
-    for (let y = margin; y <= maxY; y += 20) for (let x = margin; x <= maxX; x += 20) consider(x, y);
+    let rank = 0;
+    for (const gap of [10, 26, 44, 66, 90]) {
+      const top = t.y - gap - size.h, bottom = t.y + t.h + gap, left = t.x - gap - size.w, right = t.x + t.w + gap;
+      consider(cx - size.w / 2, top, rank++);
+      for (let k = 1; k <= 4; k++) for (const d of [k, -k]) consider(cx - size.w / 2 + d * size.w / 3, top, rank++);
+      for (let k = 0; k <= 3; k++) for (const d of k ? [k, -k] : [0]) {
+        consider(right, cy - size.h / 2 + d * size.h, rank++);
+        consider(left, cy - size.h / 2 + d * size.h, rank++);
+      }
+      for (let k = 0; k <= 4; k++) for (const d of k ? [k, -k] : [0]) consider(cx - size.w / 2 + d * size.w / 3, bottom, rank++);
+      if (score < 1e8) return best;
+    }
     return best;
   }
   function positionLabels() {
@@ -1725,7 +1753,7 @@
       const p = project(s.npcX ?? s.x, s.npcY ?? s.y), own = visuals.find((v) => v.id === id);
       const anchor = { x: (p.x - runtime.view.x) * runtime.view.scale, y: own ? own.y - 10 : (p.y - 65 - runtime.view.y) * runtime.view.scale };
       if (own) anchor.x = own.x + own.w / 2;
-      const r = placeLabel(anchor, { w: el.offsetWidth || 130, h: el.offsetHeight || 34 }, obstacles);
+      const r = placeLabel(anchor, { w: el.offsetWidth || 130, h: el.offsetHeight || 34 }, obstacles, own);
       el.style.left = r.x + r.w / 2 + "px";
       el.style.top = r.y + r.h / 2 + "px";
       obstacles.push(r);
@@ -1907,24 +1935,13 @@
     stopSounds();
   }
   function speak(name, lines, onDone = () => {
-  }, role = "mentor") {
+  }, role = "mentor", reply = "") {
     close();
     stopTalk();
     keys.clear();
     runtime.target = null;
     setNotebook(false);
-    const done = role === "rookie" ? onDone : () => {
-      const replies = [
-        "납기와 장소는 수요기관에 확인하고 요청서를 보완할게요.",
-        "필요한 성능은 남기고 경쟁할 수 있는 규격으로 검토할게요.",
-        "수량과 조건을 대조한 뒤 검토와 담당자 결재를 받을게요.",
-        "기업도 같은 공고를 읽고 규격과 참가 조건을 확인하는군요.",
-        "입찰 전에 정한 예정가격과 심사를 확인하고 전자계약으로 이어갈게요.",
-        "계약한 수량을 채우고 검사·검수와 납품 서류를 확인할게요.",
-        "확인한 절차를 다음 업무에서도 기억할게요."
-      ];
-      speak("조달달", [replies[runtime.state.stage] || replies[6]], onDone, "rookie");
-    };
+    const done = !reply || role === "rookie" || runtime.state.stage === 3 ? onDone : () => speak("조달달", [reply], onDone, "rookie");
     runtime.talkState = { name, lines, onDone: done, role, index: 0, revealed: 0 };
     $("speech").hidden = false;
     document.body.classList.add("talking");
