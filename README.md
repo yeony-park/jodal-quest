@@ -12,11 +12,13 @@
 
 **Mac 등에서 브라우저로 실행하려면** [게임 소스 ZIP](https://github.com/yeony-park/jodal-quest/archive/refs/tags/v0.1.0-preview.1.zip)을 내려받아 압축을 풀고 폴더 안의 `dist/index.html`을 여세요. 게임 파일과 글꼴은 `dist` 안에 함께 들어 있습니다. 비공개 저장소의 다운로드는 접근 권한이 있는 GitHub 계정으로 로그인해야 합니다.
 
-## 58초 예고편
+## 60초 예고편
 
 [![새봄지방조달청의 첫 출근. 조달의 달인 예고편 다운로드](docs/media/trailer-cover.jpg)](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/JodalQuest-Trailer.mp4)
 
-**[예고편 MP4 다운로드 · 58초 · 소리 있음](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/JodalQuest-Trailer.mp4)**
+**[예고편 MP4 다운로드 · 60초 · 소리 있음](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/JodalQuest-Trailer.mp4)**
+
+첫 출근한 조달달의 표정부터 납품 당일 모자란 한 대까지, 실제 플레이에 픽셀 컷을 더했습니다. 43초부터는 정파·캐비닛 수집왕·사파의 세 갈래 보상을 볼 수 있습니다. 영상 자막에는 [Galmuri](https://github.com/quiple/galmuri) 글꼴을 썼습니다.
 
 ## 플레이할 때 눈여겨볼 두 장면
 
