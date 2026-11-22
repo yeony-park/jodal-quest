@@ -186,6 +186,47 @@
   }
 }
 
+.delivery-closeup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 18px 0;
+}
+.delivery-face {
+  flex: none;
+  padding: 10px;
+  background: #edb5a7;
+  border: 3px solid #294a41;
+}
+.delivery-face svg {
+  display: block;
+  width: 200px;
+  height: 160px;
+  image-rendering: pixelated;
+}
+.delivery-closeup strong { font-size: 25px; line-height: 1.5; }
+.modal .delivery-closeup p { margin: 0 0 8px; }
+@media (prefers-reduced-motion: no-preference) {
+  .modal:has(> .delivery-reveal) { animation: delivery-shake 240ms steps(1, end) 1; }
+  .delivery-face .surprise-sweat { animation: delivery-sweat 420ms steps(2, end) 2; }
+}
+@keyframes delivery-shake {
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+  100% { transform: translateX(0); }
+}
+@keyframes delivery-sweat {
+  50% { transform: translateY(1px); }
+}
+@media (max-width: 600px) {
+  .delivery-closeup { flex-direction: column; gap: 12px; padding: 0; text-align: center; }
+  .delivery-record .document { padding: 12px; margin: 10px 0; }
+  .delivery-record .row { grid-template-columns: 68px minmax(0, 1fr); gap: 8px; }
+  .delivery-record .choices { gap: 8px; }
+  .delivery-record .choice { padding: 10px 12px; }
+}
+
 .submission-active,
 .submission-bag {
   border: 3px solid #fff2a6;

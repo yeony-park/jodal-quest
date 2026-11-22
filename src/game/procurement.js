@@ -9,6 +9,7 @@ import { buttons, close, doc, show, toast } from "../components/modal.js";
 import { speak } from "../components/dialogue.js";
 import { chime } from "../audio/sound.js";
 import { ending } from "../components/ending.js";
+import { face } from "../world/characters.js";
 
 export function elevator() {
   if (runtime.state.stage === 3) return;
@@ -118,17 +119,39 @@ export function contractFarewell() {
 }
 
 export function delivery() {
-  if (runtime.state.stage !== 5 || runtime.floor !== 0) return;
+  if (runtime.state.stage !== 5 || runtime.floor !== 0 || runtime.modalKind === "delivery-surprise") return;
   const corrected = runtime.state.deliveryIssueReported;
-  show("수요기관의 납품 확인 요청", `${doc("납품·검사·검수 자료", [
+  const record = doc("납품·검사·검수 자료", [
     ["계약 수량", "모니터 20대"],
     ["실제 도착", corrected ? "모니터 20대 · 부족분 보완 완료" : "모니터 19대 · 1대 부족"],
     ["규격·납기", "24형 / FHD / HDMI · 계약 후 20일"],
     ["담당", "검사공무원 · 물품출납공무원"],
-  ])}<p>${corrected ? "보완한 납품 자료가 도착했어요. 다음 절차는?" : "수량을 대조했더니 한 대가 부족해요. 어떻게 할까요?"}</p>
+  ]);
+  const choices = `<p>${corrected ? "보완한 납품 자료가 도착했어요. 다음 절차는?" : "수량을 대조했더니 한 대가 부족해요. 어떻게 할까요?"}</p>
     <div class="choices">${corrected
       ? '<button class="choice" data-action="delivery-good">검사·검수 담당자가 계약 내용과 일치함을 확인하고 물품을 인수한다</button>'
-      : '<button class="choice" data-action="delivery-report">수요기관·계약상대자에게 부족분 보완을 요청한다</button><button class="choice" data-action="delivery-bad">19대만 도착했지만 20대를 모두 받았다고 기록한다</button>'}</div>`, "delivery");
+      : '<button class="choice" data-action="delivery-report">수요기관·계약상대자에게 부족분 보완을 요청한다</button><button class="choice" data-action="delivery-bad">19대만 도착했지만 20대를 모두 받았다고 기록한다</button>'}</div>`;
+  const showRecord = () => show("수요기관의 납품 확인 요청", `<div class="delivery-record">${record}${choices}</div>`, "delivery");
+  if (corrected || runtime.state.deliverySurpriseSeen) {
+    showRecord();
+    return;
+  }
+  const state = runtime.state;
+  state.deliverySurpriseSeen = true;
+  save();
+  show("수요기관의 납품 확인 요청", `<div class="delivery-reveal">${record}</div>`, "delivery-surprise", false);
+  // Timers, rather than animation events, also finish the still reduced-motion cut.
+  const active = () => runtime.state === state && runtime.modalOpen && runtime.modalKind === "delivery-surprise";
+  setTimeout(() => {
+    if (!active()) return;
+    show("납품 확인 중", `<div class="delivery-closeup" role="status">
+      <div class="delivery-face" role="img" aria-label="입을 벌리고 땀을 흘리며 놀란 조달달">${face("rookie", "surprised")}</div>
+      <div><p>조달달</p><strong>잠깐만요.<br>한 대가 비었어요!</strong></div>
+    </div>`, "delivery-surprise", false);
+    setTimeout(() => {
+      if (active()) showRecord();
+    }, 900);
+  }, 240);
 }
 
 export function reportDeliveryIssue() {

@@ -9,6 +9,7 @@ export const fresh = () => ({
   awardBrief: false,
   openingChecked: false,
   deliveryIssueReported: false,
+  deliverySurpriseSeen: false,
   inspectionChecked: false,
   brief: false,
   contact: false,

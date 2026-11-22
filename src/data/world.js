@@ -50,7 +50,7 @@ export const floors = [
   },
   {
     level: "2F",
-    caption: "2층 계약 체험실",
+    caption: "2층 계약팀",
     rooms: ["계약 상담석", "개찰·계약 자료실"],
     term: "계약상대자",
     corridorCols: [9],

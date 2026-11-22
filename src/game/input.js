@@ -16,6 +16,10 @@ export function physicalKey(e) {
 }
 
 export function handleKey(e) {
+  if (runtime.modalKind === "delivery-surprise") {
+    e.preventDefault();
+    return;
+  }
   if (runtime.talkState && !runtime.modalOpen) {
     if (e.code === "Space" || e.key === "Enter") {
       e.preventDefault();
@@ -78,6 +82,10 @@ export function handleKey(e) {
 
 export function bindInput() {
   document.addEventListener("click", (e) => {
+    if (runtime.modalKind === "delivery-surprise") {
+      e.preventDefault();
+      return;
+    }
     const b = e.target.closest("[data-action]");
     if (b) {
       const a = b.dataset.action;
