@@ -5,9 +5,9 @@ import { keys, player, runtime } from "../core/runtime.js";
 import { save } from "../core/storage.js";
 import { floorOrder, floors, spots } from "../data/world.js";
 import { render } from "../components/hud.js";
-import { buttons, close, doc, show, toast } from "../components/modal.js";
+import { buttons, close, doc, show } from "../components/modal.js";
 import { callContact, speak } from "../components/dialogue.js";
-import { elevatorChime } from "../audio/sound.js";
+import { playLiftArrival } from "../components/elevator.js";
 import { ending } from "../components/ending.js";
 import { face } from "../world/characters.js";
 
@@ -35,10 +35,7 @@ export function travelTo(floor) {
   player.y = spots.elevator.y;
   save();
   render();
-  if (!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches)
-    document.getElementById("scene").animate?.([{ opacity: 0.25 }, { opacity: 1 }], { duration: 280 });
-  elevatorChime();
-  toast(`${floors[floor].level} 도착 · 노트에서 다음 목표를 확인하세요.`);
+  playLiftArrival(floors[floor].level);
 }
 
 export function officer() {

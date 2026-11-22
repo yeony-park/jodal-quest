@@ -4,7 +4,6 @@ import { $ } from "../core/dom.js";
 import supplierVoiceData from "../../assets/audio/yon-voice-bank.wav";
 import rookieVoiceData from "../../assets/audio/jodal-voice-bank.wav";
 import officeMusic from "../../assets/audio/office-loop.mp3";
-import firstDayVoice from "../../assets/audio/first-day.mp3";
 import titleCall from "../../assets/audio/title-call.mp3";
 
 const settingsKey = "jodal-sound-v1";
@@ -21,7 +20,6 @@ try {
 let musicBuffer, musicGain, musicSource;
 let musicReady, titleReady, titleVoice;
 let ringNotes = [];
-let narration;
 let titlePending = true;
 const activeEffects = new Set();
 
@@ -164,7 +162,7 @@ export function stopEffects() {
 
 export function changeSoundSetting(key, value) {
   settings[key] = value;
-  if (key === "dialogue" && !value) { stopVoices(); stopFirstDayVoice(); titleVoice?.stop(); }
+  if (key === "dialogue" && !value) { stopVoices(); stopTitleCall(); }
   if (key === "effects" && !value) stopEffects();
   if (key === "music" || key === "musicVolume") syncMusic();
   if (key === "musicVolume") $("music-level").textContent = value + "%";
@@ -261,17 +259,9 @@ export function keyClick() {
   effectNote(340, 0.012, 0.034, 0.15, "triangle", 170);
 }
 
-export function playFirstDayVoice() {
-  if (!settings.dialogue || typeof Audio === "undefined") return;
-  if (titleVoice) titleVoice.stop();
-  narration = new Audio("data:audio/mpeg;base64," + firstDayVoice);
-  narration.volume = 0.72;
-  narration.play().catch(() => {});
-}
-
-export function stopFirstDayVoice() {
-  narration?.pause();
-  narration = null;
+export function stopTitleCall() {
+  titleVoice?.stop();
+  titleVoice = null;
 }
 
 export function footstep() {

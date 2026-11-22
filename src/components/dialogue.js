@@ -1,7 +1,7 @@
 import { keys, runtime } from "../core/runtime.js";
 import { $ } from "../core/dom.js";
 import { learnTerm } from "./learning.js";
-import { playSyllable, ringPhone, stopFirstDayVoice, stopRing, stopVoices } from "../audio/sound.js";
+import { playSyllable, ringPhone, stopRing, stopVoices } from "../audio/sound.js";
 import { close } from "./modal.js";
 import { setNotebook } from "./hud.js";
 import { face, rookieOutfit } from "../world/characters.js";
@@ -11,7 +11,6 @@ export function stopTalk() {
   clearTimeout(runtime.phoneTimer);
   clearTimeout(runtime.arrivalTimer);
   stopRing();
-  stopFirstDayVoice();
   $("first-day").hidden = true;
   $("speech-paper").hidden = true;
   $("hang-up").hidden = true;
@@ -73,7 +72,7 @@ export function typeLine() {
     if (runtime.talkState !== t) return;
     t.revealed++;
     $("speech-text").textContent = text.slice(0, t.revealed);
-    if (!line.narration && !runtime.modalOpen && t.revealed % 2 === 1) playSyllable(text[t.revealed - 1], t.role);
+    if (!runtime.modalOpen && t.revealed % 2 === 1) playSyllable(text[t.revealed - 1], t.role);
     if (t.revealed < text.length)
       runtime.talkTimer = setTimeout(tick, /[,!?。.]$/.test(text.slice(0, t.revealed)) ? 160 : 42);
     else {

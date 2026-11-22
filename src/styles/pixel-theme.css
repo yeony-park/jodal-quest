@@ -445,3 +445,12 @@ body:has(#first-day:not([hidden])) #game-shell { visibility: hidden; }
 .lift-keys { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 12px; }
 .lift-keys button { min-height: 44px; border: 2px solid #879487; border-radius: 12px; color: #31413b; background: #f3f4e9; box-shadow: 0 3px #849282; font: bold 20px monospace; }
 .lift-keys button:active, .lift-keys button:disabled { opacity: 1; box-shadow: inset 0 0 0 2px #d8a948; background: #ffedb6; color: #544321; }
+
+#lift-arrival { position: fixed; inset: 0; z-index: 22; display: flex; overflow: hidden; }
+#lift-arrival[hidden] { display: none; }
+.arrival-door { width: 50%; height: 100%; border: 6px solid #778782; background: repeating-linear-gradient(0deg, transparent 0 5px, #eef2df22 6px 7px), linear-gradient(95deg, #a3b4ab, #d6dfd4 38%, #adbbb0 74%, #c4cfc4); }
+#lift-left { border-right: 4px solid #51635c; }
+#lift-right { border-left: 4px solid #e0e7d9; }
+.arrival-sign { position: absolute; top: 12%; left: 50%; transform: translateX(-50%); padding: .3em .7em; border: 5px solid #87978d; background: #35473f; color: #ffda89; font: bold clamp(26px,5vw,50px) monospace; box-shadow: 4px 4px #516259; }
+.arrival-sign span { color: #a6d7a8; }
+body:has(#lift-arrival:not([hidden])) .hud { visibility: hidden; }

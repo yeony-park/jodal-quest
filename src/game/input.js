@@ -2,6 +2,7 @@ import { deadlineEdited, pressDeadlineKey } from "../components/deadline.js";
 import { keys, runtime } from "../core/runtime.js";
 import { changeSoundSetting, playPaperTurn, stopEffects, stopVoices, syncMusic, unlockAudio } from "../audio/sound.js";
 import { nextLine, revealLine } from "../components/dialogue.js";
+import { liftOpening } from "../components/elevator.js";
 import { close } from "../components/modal.js";
 import { $ } from "../core/dom.js";
 import { render, setNotebook } from "../components/hud.js";
@@ -34,6 +35,7 @@ function pressMove(key, time) {
 }
 
 export function handleKey(e) {
+  if (liftOpening()) { e.preventDefault(); return; }
   if (runtime.modalKind === "delivery-surprise") {
     e.preventDefault();
     return;
