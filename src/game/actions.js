@@ -38,17 +38,15 @@ export const actions = {
   "recovered-notice": () => { openPortal("draft"); $("portal-quantity").value=20; savePortalDraft(); },
   close,
   help,
+  "title-help": () => show("게임 도움말", `<p><kbd>Space</kbd>로 대화 · 클릭 또는 방향키로 이동</p>
+    <p>공공조달 체험 게임 · 실제 업무와 다를 수 있습니다</p>${buttons([["close", "닫기"]])}`, "help"),
   glossary: openGlossary,
   interact,
   "return-rookie": returnRookie,
   restart: () =>
     show(
       "처음부터 다시 시작할까요?",
-      /* HTML */ `<p>저장된 진행 상황과 학습 점수가 초기화됩니다.</p>
-        ${buttons([
-          ["new", "새 게임 시작"],
-          ["close", "취소", true],
-        ])}`,
+      buttons([["new", "새 게임 시작"], ["close", "취소", true]]),
       "restart",
     ),
   new: () => startGame(true),

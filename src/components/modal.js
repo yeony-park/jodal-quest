@@ -16,12 +16,12 @@ export function show(title, body, kind = "", closable = true) {
   $("game-shell").inert = true;
   keys.clear();
   runtime.target = null;
-  runtime.lastFocus = document.activeElement;
+  if (!runtime.modalOpen) runtime.lastFocus = document.activeElement;
   runtime.modalOpen = true;
   runtime.modalKind = kind;
   $("modal").classList.toggle("portal-modal", kind === "portal");
   $("modal").innerHTML =
-    `${closable ? '<button class="close" data-action="close" aria-label="닫기">×</button>' : ""}<div class="eyebrow">${runtime.state.stage === 3 ? "SUPPLIER SIDE" : "PROCUREMENT QUEST"}</div><h2 id="modal-title">${title}</h2>${body}`;
+    `${closable ? '<button class="close" data-action="close" aria-label="닫기">×</button>' : ""}<h2 id="modal-title">${title}</h2>${body}`;
   $("overlay").hidden = false;
   $("modal").scrollTop = 0;
   $("modal").focus();
@@ -46,7 +46,7 @@ export function buttons(items) {
 
 export function doc(title, rows) {
   return /* HTML */ `<div class="document">
-    <div class="doc-header"><strong>${title}</strong><small>업무 문서</small></div>
+    <div class="doc-header"><strong>${title}</strong></div>
     ${rows.map(([a, b]) => /* HTML */ `<div class="row"><span>${a}</span><b>${b}</b></div>`).join("")}
   </div>`;
 }

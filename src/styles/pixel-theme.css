@@ -10,13 +10,13 @@
   box-shadow: 3px 3px 0 #2a51405e;
 }
 .hotspot.target {
-  background: #ffdd78;
+  background: #ffe2a3;
 }
 .minimap {
   border-radius: 6px;
   transform: none;
-  background: #e8e4c7;
-  border-color: #f7efd6;
+  background: #e4f4ec;
+  border-color: #fbfff9;
   box-shadow: 4px 4px 0 #304b4252;
 }
 .minimap svg {
@@ -31,12 +31,12 @@
   left: 50%;
   transform: translateX(-50%);
   padding: 8px 12px 9px;
-  background: #3f3c33ed;
-  border: 3px solid #b3a47e;
+  background: #e5dff3;
+  border: 3px solid #c5b9da;
   border-radius: 4px;
   box-shadow:
-    0 4px 0 #242c26,
-    0 -2px 0 #e1d1aa;
+    0 4px 0 #afa4c5,
+    0 -2px 0 #f8f3ff;
   z-index: 6;
 }
 .inventory-label {
@@ -46,10 +46,10 @@
   transform: translateX(-50%);
   font-size: 12px;
   white-space: nowrap;
-  color: #f5e9c8;
-  background: #4d4a3e;
+  color: #493f58;
+  background: #efe9fa;
   padding: 3px 14px;
-  border: 1px solid #ab9c77;
+  border: 1px solid #c6b7d8;
 }
 .inventory-slots {
   display: flex;
@@ -59,16 +59,16 @@
   position: relative;
   width: 66px;
   height: 72px;
-  border: 2px solid #8c8267;
+  border: 2px solid #b6acc5;
   border-radius: 2px;
-  background: linear-gradient(145deg, #46483b, #34392f);
-  color: #e8dfba;
-  box-shadow: inset 0 0 0 2px #252c2780;
+  background: linear-gradient(145deg, #f4f0fa, #e8e3ef);
+  color: #473e55;
+  box-shadow: inset 0 0 0 2px #ffffff80;
   padding: 2px 7px 17px;
 }
 .inventory-slot.owned {
-  border-color: #c1ae7a;
-  background: linear-gradient(145deg, #65614c, #454b3d);
+  border-color: #b39da5;
+  background: linear-gradient(145deg, #fff3dd, #f4dbcc);
 }
 .inventory-slot:hover {
   border-color: #ffe4a1;
@@ -83,7 +83,7 @@
   top: 3px;
   left: 5px;
   font-size: 10px;
-  color: #cabd93;
+  color: #625568;
 }
 .slot-name {
   position: absolute;
@@ -135,8 +135,8 @@
   border-radius: 7px;
   border-width: 5px;
   box-shadow:
-    6px 6px 0 #c3965f,
-    10px 10px 0 #17362c60;
+    6px 6px 0 #e0b69e,
+    10px 10px 0 #8eaca34d;
 }
 
 /* Always-available guidance keeps off-screen targets reachable on a phone. */
@@ -151,7 +151,7 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 7px;
-  background: #f9f3dfed;
+  background: #fffaf1f5;
   border: 2px solid #fff4d6;
   padding: 8px 12px;
   border-radius: 6px;
@@ -171,8 +171,8 @@
   color: #355744;
 }
 .goal-bar #quick-guide {
-  background: #326b54;
-  color: #fffbea;
+  background: #c6e9db;
+  color: #294d48;
 }
 .talking .goal-bar,
 .talking .mobile-controls {
@@ -181,7 +181,7 @@
 .lesson-card {
   margin-top: 16px;
   padding: 10px 16px;
-  background: #f4ecd4;
+  background: #f7eddf;
   border-left: 4px solid #c49a47;
 }
 .lesson-card h3 {
@@ -279,11 +279,11 @@
 .hotspot {
   border-color: #fff2a6;
   outline: 2px solid #172f35;
-  background: #294b43;
-  color: #fffbea;
+  background: #dff1e8;
+  color: #294d48;
 }
 .hotspot.target {
-  background: #ffdd78;
+  background: #ffe2a3;
   color: #172f35;
   animation: goal-glow 1.4s steps(2, end) infinite;
 }
@@ -293,5 +293,22 @@
 @media (prefers-reduced-motion: reduce) {
   .hotspot.target { animation: none; }
 }
-.hotspot:hover { background: #355f52; color: #fffbea; }
-.hotspot.target:hover { background: #ffdd78; color: #172f35; }
+.hotspot:hover { background: #c6e7db; color: #294d48; }
+.hotspot.target:hover { background: #ffe2a3; color: #172f35; }
+
+.hotspot.in-range::after {
+  content: "Space / E";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  padding: 2px 6px;
+  background: #294a41;
+  color: white;
+  border-radius: 4px;
+  font: 700 11px/1.3 system-ui, sans-serif;
+  pointer-events: none;
+}
+@media (pointer: coarse) {
+  .hotspot.in-range::after { content: "누르기"; }
+}

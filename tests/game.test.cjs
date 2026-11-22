@@ -907,10 +907,13 @@ async function main() {
     for(const fields of [{xp:-1},{xp:'100'},{xp:Infinity},{questMistakes:1},{contractFarewell:'yes'}])
       assert.equal(boot(JSON.stringify({...old,...fields})).run('loaded'),false);
   });
-  check("In-game notices keep the story clock and one accuracy note each on title and ending", () => {
-    assert.doesNotMatch(production,/축약|가상|대기 시간은 줄|심사 세부 내용과 대기/);
+  check("In-game notices keep the story clock and one accuracy note each in title help and ending", () => {
+    assert.doesNotMatch(production.replace("체험을 위해 가상으로 설정되었습니다.", ""),/축약|가상|대기 시간은 줄|심사 세부 내용과 대기/);
     assert.doesNotMatch(html,/축약|가상/);
-    assert.equal((html.match(/실제 업무와 다를 수 있습니다/g)||[]).length,1);
+    assert.doesNotMatch(html,/실제 업무와 다를 수 있습니다/);
+    const help = boot(); help.run("actions['title-help']()");
+    assert.match(help.el("modal").innerHTML, /실제 업무와 다를 수 있습니다/);
+    assert.match(help.el("modal").innerHTML, /Space.*클릭 또는 방향키로 이동/);
     const c=boot();for(let stage=0;stage<=6;stage++) {
       c.run(`state.stage=${stage};render()`);assert.match(c.el('scene-time').textContent,/^DAY \d{2} · \d{2}:\d{2}$/);
     }

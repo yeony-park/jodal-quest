@@ -6,7 +6,7 @@
 }
 .primary {
   background: var(--green);
-  color: white;
+  color: #254d40;
 }
 .secondary {
   background: #fffdf1;
@@ -19,7 +19,7 @@
   z-index: 30;
   display: grid;
   place-items: center;
-  background: linear-gradient(180deg, #173d3ce6, #244e41d9);
+  background: linear-gradient(180deg, #dbf3edee 0%, #eff5e8ed 52%, #fae7dfeb 100%);
   overflow: auto;
   padding: 25px;
   text-align: center;
@@ -27,50 +27,31 @@
 .title-card {
   position: relative;
   width: min(640px, 100%);
-  color: #fff5d8;
-}
-.title-eyebrow {
-  font-size: 14px;
-  letter-spacing: 4px;
-  color: #d6e8c7;
-  margin-bottom: 18px;
+  color: #36564e;
 }
 .game-logo {
   position: relative;
   padding: 25px 35px 29px;
-  border: 6px solid #f5d7a0;
+  border: 6px solid #e7bfa4;
   border-radius: 35% 35% 23% 23% / 25% 25% 20% 20%;
-  background: #ffefd0;
+  background: #fff4df;
   color: #35624a;
   box-shadow:
     0 10px 0 #c3965f,
     0 18px 40px #0c30244d;
-  transform: rotate(-3deg);
   margin: 0 auto 30px;
-  max-width: 500px;
+  max-width: 640px;
 }
 .game-logo:after {
   content: "신입 주무관 생존기";
   display: block;
   font: 26px var(--hand);
-  color: #9b794c;
+  color: #795d44;
   letter-spacing: 2px;
   margin-top: 7px;
 }
-.game-logo h1 {
-  margin: 0;
-  font-size: clamp(48px, 8vw, 76px);
-  font-weight: 1000;
-  letter-spacing: -5px;
-  line-height: 1.05;
-  text-shadow: 2px 3px 0 #d7d8a1;
-}
-.game-logo h1 span {
-  display: block;
-  font-size: 0.55em;
-  letter-spacing: 5px;
-  margin-bottom: 8px;
-}
+.game-logo h1 { margin: 0; line-height: 0; }
+.game-logo h1 svg { width: 100%; height: auto; filter: drop-shadow(0 4px #ced8b8); }
 .title-chars {
   height: 135px;
   display: flex;
@@ -84,10 +65,6 @@
   width: 120px;
   filter: drop-shadow(0 5px 0 #143e2b55);
 }
-.title-copy {
-  font: 25px/1.4 var(--hand);
-  margin: 12px 0 23px;
-}
 .title-buttons {
   display: grid;
   gap: 12px;
@@ -98,34 +75,36 @@
   border-radius: 22px;
   font-size: 20px;
   padding: 16px 20px;
-  box-shadow: 0 5px 0 #173d30;
+  box-shadow: 0 5px 0 #a3bdb1;
 }
 .title-buttons .primary {
-  background: #f5cc72;
+  background: #ffdeb0;
   color: #494734;
   border: 3px solid #fff0bf;
 }
 .title-buttons .secondary {
-  background: #ffffff15;
-  border-color: #dce4b45c;
-  color: #f7f6dc;
+  background: #f4edfa;
+  border-color: #ccbedb;
+  color: #51445e;
 }
-.title-footer {
-  font-size: 12px;
-  color: #d7e3cd;
-  margin-top: 24px;
-  line-height: 1.8;
-}
+.title-help,
 .title-audio {
   position: absolute;
   right: 22px;
   top: 22px;
-  background: #fff7df22;
-  color: #fff2d1;
-  border: 1px solid #e8eccc55;
+  background: #f8fffa;
+  color: #38594e;
+  border: 1px solid #bdd8cc;
   border-radius: 15px;
   padding: 9px 13px;
   z-index: 1;
+}
+.title-help {
+  left: 22px;
+  right: auto;
+  width: 44px;
+  height: 44px;
+  font-weight: 800;
 }
 .title-mode .hud,
 .title-mode .hotspot {
@@ -212,7 +191,7 @@
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: #203c377d;
+  background: #667d7880;
   backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
@@ -250,12 +229,6 @@
   height: 32px;
   font-size: 21px;
 }
-.eyebrow {
-  font-size: 12px;
-  letter-spacing: 2px;
-  color: #6d8b70;
-  font-weight: 800;
-}
 .actions {
   display: flex;
   gap: 10px;
@@ -283,10 +256,6 @@
 }
 .doc-header strong {
   font-size: 17px;
-}
-.doc-header small {
-  font-size: 12px;
-  color: #879080;
 }
 .row {
   display: grid;

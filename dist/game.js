@@ -976,17 +976,14 @@
     },
     close,
     help,
+    "title-help": () => show("게임 도움말", `<p><kbd>Space</kbd>로 대화 · 클릭 또는 방향키로 이동</p>
+    <p>공공조달 체험 게임 · 실제 업무와 다를 수 있습니다</p>${buttons([["close", "닫기"]])}`, "help"),
     glossary: openGlossary,
     interact,
     "return-rookie": returnRookie,
     restart: () => show(
       "처음부터 다시 시작할까요?",
-      /* HTML */
-      `<p>저장된 진행 상황과 학습 점수가 초기화됩니다.</p>
-        ${buttons([
-        ["new", "새 게임 시작"],
-        ["close", "취소", true]
-      ])}`,
+      buttons([["new", "새 게임 시작"], ["close", "취소", true]]),
       "restart"
     ),
     new: () => startGame(true),
@@ -2304,11 +2301,11 @@
     $("game-shell").inert = true;
     keys.clear();
     runtime.target = null;
-    runtime.lastFocus = document.activeElement;
+    if (!runtime.modalOpen) runtime.lastFocus = document.activeElement;
     runtime.modalOpen = true;
     runtime.modalKind = kind;
     $("modal").classList.toggle("portal-modal", kind === "portal");
-    $("modal").innerHTML = `${closable ? '<button class="close" data-action="close" aria-label="닫기">×</button>' : ""}<div class="eyebrow">${runtime.state.stage === 3 ? "SUPPLIER SIDE" : "PROCUREMENT QUEST"}</div><h2 id="modal-title">${title}</h2>${body}`;
+    $("modal").innerHTML = `${closable ? '<button class="close" data-action="close" aria-label="닫기">×</button>' : ""}<h2 id="modal-title">${title}</h2>${body}`;
     $("overlay").hidden = false;
     $("modal").scrollTop = 0;
     $("modal").focus();
@@ -2338,7 +2335,7 @@
     return (
       /* HTML */
       `<div class="document">
-    <div class="doc-header"><strong>${title}</strong><small>업무 문서</small></div>
+    <div class="doc-header"><strong>${title}</strong></div>
     ${rows.map(([a, b]) => (
         /* HTML */
         `<div class="row"><span>${a}</span><b>${b}</b></div>`

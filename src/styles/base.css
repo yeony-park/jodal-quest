@@ -8,8 +8,8 @@
 :root {
   --ink: #203c36;
   --muted: #687d72;
-  --green: #296a55;
-  --paper: #fffaf0;
+  --green: #bde5d5;
+  --paper: #fffdf6;
   --line: #d4ddcf;
   --hand: "Gaegu", cursive;
 }
@@ -158,7 +158,7 @@ button:disabled {
   font-weight: 700;
 }
 .quest-toggle {
-  background: #f9e5aa;
+  background: #ffe4b5;
   border-color: #fff1c8;
   transform: rotate(2deg);
 }
