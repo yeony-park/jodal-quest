@@ -47,7 +47,7 @@ export function requestSubmission(target, onSubmit) {
     mentor: "김주문", officer: "이계약 주무관", phone: "한서진 사서"}[target];
   const expectedItem = submissionSteps[step].item;
   const expected = inventoryItems[expectedItem].name;
-  const verb = target === "reader" ? "사원증 대기" : atDesk ? "펼치기" : "건네기";
+  const verb = target === "reader" ? "사원증 찍기" : atDesk ? "펼치기" : "건네기";
   close();
   $("handoff-recipient").textContent = recipient;
   $("submission-hint").textContent = `아래 가방에서 ‘${expected}’ 칸을 눌러 주세요.`;
@@ -69,8 +69,10 @@ export function selectDocument(item, dragging = false) {
   }
   $("handoff-tray").setAttribute("aria-disabled", "false");
   $("handoff-paper").innerHTML = itemIcon(item);
-  $("handoff-label").textContent = pending.step === "registration" ? "사원증 대기" : inventoryItems[item].name + " " + pending.verb;
-  $("submission-hint").textContent = "오른쪽 서류 칸을 누르거나, 그곳으로 끌어 놓으세요.";
+  $("handoff-label").textContent = pending.step === "registration" ? pending.verb : inventoryItems[item].name + " " + pending.verb;
+  $("submission-hint").textContent = pending.step === "registration"
+    ? "단말기를 누르거나 사원증을 그 위로 끌어 놓으세요."
+    : "오른쪽 서류 칸을 누르거나, 그곳으로 끌어 놓으세요.";
   if (!dragging) $("handoff-tray").focus({preventScroll: true});
 }
 
@@ -104,7 +106,7 @@ export function submitItem(item) {
   if (!pending) return false;
   if (!matchesSubmission(pending.step,item) || !ownedItems()[item]) {
     const name=inventoryItems[submissionSteps[pending.step].item].name;
-    $("submission-hint").textContent = `이번에 필요한 서류는 ${name}입니다. 가방을 다시 살펴보세요.`;
+    $("submission-hint").textContent = `가방에서 ‘${name}’ 칸을 눌러 주세요.`;
     return false;
   }
   playPaperTurn();

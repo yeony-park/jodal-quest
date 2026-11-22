@@ -73,6 +73,6 @@ export function save() {
     $("save-status").textContent = "✓ 자동 저장됨";
   } catch (e) {
     runtime.storageOK = false;
-    $("save-status").textContent = "저장 불가 · 현재 창에서만 이어서 진행할 수 있어요";
+    $("save-status").textContent = "저장할 수 없어요. 이 창에서 계속 플레이할 수 있어요.";
   }
 }

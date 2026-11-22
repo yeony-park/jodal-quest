@@ -1300,7 +1300,7 @@ async function main() {
       [0, {}, "첫 출근", "5층"], [0, {brief:true}, "언제까지", "5층"],
       [0, {brief:true,contact:true}, "납품기한", "5층"],
       [1, {}, "브랜드", "5층"], [1, {specAdvice:true}, "규격서를 고치", "5층"],
-      [2, {}, "수량", "5층"], [2, {noticeChecked:true}, "초안을 다 써", "5층"],
+      [2, {}, "수량", "5층"], [2, {noticeChecked:true}, "선배님께 보여 드리", "5층"],
       [4, {}, "계약팀", "2층"], [4, {awardBrief:true}, "개찰 자료", "2층"],
       [4, {awardBrief:true,openingChecked:true}, "심사 결과", "2층"],
       [5, {}, "잘 도착", "5층"], [5, {deliveryIssueReported:true}, "빠졌던", "5층"],

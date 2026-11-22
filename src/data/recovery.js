@@ -26,7 +26,7 @@ export const recoveryScenes = {
     stage: 2, title: "수량이 다른 공고 초안 수습", action: "recovered-notice",
     reaction: "요청서는 20대예요. 공고에 올릴 수량부터 다시 세어 봐요.",
     consequence: "초안의 수량이 요청서 20대와 달라 검토본 저장이 멈췄어요.",
-    correction: "요청서에는 스무 대라고 적혀 있죠? 제가 초안도 20대로 고쳐서 검토본을 저장할게요. 결재는 그다음이에요.",
+    correction: "제가 수량을 요청서와 똑같이 20대로 고쳐서 저장할게요. 그다음에 결재를 올리면 돼요.",
     source: "5. 구매결의 · 수량 / 6. 입찰공고",
   },
   product: {
