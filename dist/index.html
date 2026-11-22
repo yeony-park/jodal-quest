@@ -22,6 +22,7 @@
     ><button class="hotspot" id="spot-supplier" data-action="go-supplier">
       욘 대리 · 기업 담당자
     </button>
+    <button class="hotspot" id="spot-cabinet" data-action="go-cabinet">자료 캐비닛</button>
     <button class="hotspot" id="spot-elevator" data-action="go-elevator">엘리베이터</button>
     <button class="hotspot" id="spot-officer" data-action="go-officer">계약 담당자</button>
     <button class="hotspot" id="spot-bidroom" data-action="go-bidroom">개찰·계약 자료</button>
@@ -31,7 +32,7 @@
       <span class="inventory-label">조달달의 가방 · 7칸</span>
       <div class="inventory-slots" id="inventory-slots"></div>
     </div>
-    <aside class="minimap" aria-label="사무실 미니맵">
+    <button class="minimap" data-action="map" aria-label="층별 지도 열기">
       <svg viewBox="0 0 188 112" role="img" aria-label="책상과 현재 플레이어 위치">
         <rect
           x="4"
@@ -47,8 +48,8 @@
         <circle id="mini-target" r="5" fill="#e6ae43" stroke="#fff6cf" stroke-width="2" />
         <circle id="mini-player" r="4" fill="#32765e" stroke="white" stroke-width="2" /></svg
       ><span class="map-caption" id="location"></span
-      ><span class="map-note">초록 · 나 / 노랑 · 다음 목표</span>
-    </aside>
+      ><span class="map-note">층별 지도 열기 ↗</span>
+    </button>
     <div class="top-controls">
       <span id="scene-time" class="scene-clock"></span>
       <button
@@ -85,8 +86,11 @@
     <div class="goal-bar">
       <span id="current-goal" aria-live="polite"></span>
       <button data-action="guide" id="quick-guide">다음 목표로 이동</button>
-      <button data-action="glossary" aria-label="조달 용어 수첩 열기">용어 수첩</button>
     </div>
+    <aside class="glossary-dock" aria-label="배운 용어">
+      <button data-action="glossary" aria-label="조달 용어 수첩 열기">용어 수첩 <span id="glossary-count">0</span></button>
+      <ul id="learned-terms" aria-live="polite" aria-relevant="additions"></ul>
+    </aside>
     <div class="bottom-controls">
       <span id="level-badge">Lv. 1</span><span id="xp-status"><progress id="xp-bar" value="0" max="150" aria-label="다음 레벨까지 경험치"></progress><small id="xp-label">0 / 150 XP</small></span><span id="player-label"></span
       ><span class="key-help"
@@ -105,23 +109,30 @@
 </main>
 
     <section class="title-screen" id="title-screen" aria-labelledby="game-title">
+  <button class="title-help" data-action="title-help" aria-label="게임 도움말" aria-haspopup="dialog">?</button>
   <button class="title-audio" data-action="sound">♫ 사운드 설정</button>
   <div class="title-card">
-    <div class="title-eyebrow">첫 출근, 첫 번째 의뢰</div>
     <div class="game-logo">
-      <h1 id="game-title"><span>조달의</span>달인</h1>
+      <h1 id="game-title" aria-label="조달의 달인">
+        <svg viewBox="-2 -2 88 21" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">
+          <defs>
+            <path id="logo-jo" d="M1 1h12v2H8v2h2v2h2v1h2v2h-3V9H9V7H7V6H6v1H4v2H2v1H0V8h2V7h2V5h2V3H1z M6 10h2v4h6v2H0v-2h6z"/>
+            <path id="logo-dal" d="M0 0h8v2H2v4h6v2H0z M10 0h2v3h3v2h-3v4h-2z M1 9h12v5H3v1h10v2H1v-5h10v-1H1z"/>
+            <path id="logo-ui" d="M2 1h6v2H2z M0 3h2v5H0z M8 3h2v5H8z M2 8h6v2H2z M0 13h11v2H0z M12 0h2v17h-2z"/>
+            <path id="logo-in" d="M2 1h6v2H2z M0 3h2v5H0z M8 3h2v5H8z M2 8h6v2H2z M12 0h2v12h-2z M1 12h3v3h10v2H1z"/>
+          </defs>
+          <use href="#logo-jo"/><use href="#logo-dal" x="17"/><use href="#logo-ui" x="34"/>
+          <use href="#logo-dal" x="53"/><use href="#logo-in" x="70"/>
+        </svg>
+      </h1>
     </div>
     <div class="title-chars" id="title-chars"></div>
-    <p class="title-copy">첫 업무가 도착했어요.<br />조달달 주무관, 준비됐나요?</p>
     <div class="title-buttons">
       <button class="primary" data-action="start-new">게임 시작하기</button
       ><button class="secondary" id="continue-button" data-action="continue" hidden>
         이어서 하기
       </button>
     </div>
-    <p class="title-footer">
-      Space로 대화 · 클릭 또는 방향키로 이동<br />공공조달 체험 게임 · 실제 업무와 다를 수 있습니다
-    </p>
   </div>
 </section>
 

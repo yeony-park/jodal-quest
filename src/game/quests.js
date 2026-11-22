@@ -5,7 +5,6 @@ import { runtime } from "../core/runtime.js";
 import { save } from "../core/storage.js";
 import { buttons, close, doc, show, toast } from "../components/modal.js";
 import { render, setNotebook } from "../components/hud.js";
-import { chime } from "../audio/sound.js";
 import { speak } from "../components/dialogue.js";
 import { actions } from "./actions.js";
 import { $ } from "../core/dom.js";
@@ -40,15 +39,11 @@ export function complete(title, body) {
   show(
     title,
     /* HTML */ `<div class="success">✓ ${body}</div>
-      <p>
-        ${completed === 2 ? "검토·결재를 거쳐 공고가 게시됐습니다. 이제 공고를 본 기업의 차례입니다." : "퀘스트 완료!"}
-      </p>
       ${xpReward()}${lessonCard(completed)}
-      ${buttons([["advance", completed === 2 ? "기업 담당자로 전환" : "다음 퀘스트"]])}`,
+      ${buttons([["advance", completed === 2 ? "입찰 준비하기" : "다음 퀘스트"]])}`,
     "advance",
     false,
   );
-  chime();
 }
 
 export function mentor() {
@@ -56,7 +51,7 @@ export function mentor() {
     speak(
       "김주문",
       [
-        "새봄도서관에서 모니터 20대를 요청했어요. 요청서에 납품기한이 빠져 있네요.",
+        { term: "수요기관", text: "모니터 20대를 요청한 새봄도서관이 이번 수요기관이에요. 요청서에는 납품기한이 빠져 있네요." },
         "왼쪽 연락 데스크에서 수요기관에 납기를 확인해 주세요. 확인한 내용으로 요청서를 보완하면 됩니다.",
       ],
       () => {
@@ -72,7 +67,7 @@ export function mentor() {
       "김주문",
       [
         "규격서에 특정 브랜드가 적혀 있네요. 이번 사례에서는 그 브랜드만 필요한 사유가 확인되지 않았어요.",
-        "수요기관과 확인했더니 문서 열람용 24형 이상, FHD 이상, HDMI 연결이면 된대요.",
+        { term: "규격", text: "규격은 물품이 갖춰야 할 조건이에요. 도서관에는 24형 이상, FHD 이상, HDMI 연결이면 충분하대요." },
         "이 성능 기준을 담아 수정안을 만들어 주세요. 필요한 조건은 지키고, 다른 기업도 참여할 수 있게요.",
       ],
       () => {
@@ -94,7 +89,7 @@ export function mentor() {
       "김주문",
       [
         "수량 20대와 성능 조건을 확인했어요. 초안 검토를 마쳤습니다.",
-        "이제 권한 있는 담당자의 구매결의·결재 절차로 넘길게요. 그 절차가 끝나야 공고가 게시됩니다.",
+        { term: "구매결의", text: "수량과 예산, 계약방법을 정리해 구매를 결정하는 게 구매결의예요. 담당자의 결재가 끝나면 공고를 게시해요." },
       ],
       () => actions.approve(),
       "mentor",
@@ -119,7 +114,7 @@ export function phone() {
     speak(
       "수요기관 담당자",
       [
-        "새봄도서관입니다. 아, 요청서에 납기를 빠뜨렸네요!",
+        "새봄도서관 한서진 사서입니다. 아, 요청서에 납기를 빠뜨렸네요!",
         "계약일로부터 30일 이내에 도서관 2층 자료실로 부탁드려요. 이용자들이 문서를 읽을 때 쓸 모니터예요.",
       ],
       () => {
@@ -183,7 +178,7 @@ export function tutorial() {
       "반가워요, 조달달 주무관! 새봄지방조달청에 온 걸 환영해요. 첫 업무는 제가 옆에서 알려 줄게요.",
       "방향키나 WASD로 걸어 보세요. 사람이나 책상 이름을 누르면 알아서 찾아가요. 대화는 스페이스바로 넘기면 돼요.",
       "왼쪽 위 작은 지도에서 내 위치를 볼 수 있어요. 오른쪽 위는 제 업무 노트, 아래 7칸은 물건을 모으는 인벤토리예요.",
-      "우리는 내용을 확인하고 초안을 준비해요. 공고는 검토와 담당자 결재를 거칩니다. 혼자 확정하면 안 돼요.",
+      { term: "수요기관", text: "필요한 물품을 사 달라고 요청하는 곳을 수요기관이라고 해요. 이번 수요기관은 새봄도서관이에요." },
       "첫 의뢰는 도서관 모니터 20대예요. 요청서에 납기가 빠졌네요. 연락 데스크에서 확인해 주세요. 노트에도 적어 둘게요.",
     ],
     () => {
@@ -232,7 +227,6 @@ export function finishBid() {
   save();
   render();
   close();
-  chime();
   speak(
     "욘 대리",
     [
@@ -243,7 +237,7 @@ export function finishBid() {
       runtime.floor = 0;
       runtime.state.floor = 0;
       render();
-      show("입찰서 접수 완료", `<div class="success">입찰서가 접수됐어요. 이어서 낙찰자 선정과 계약 절차를 배워요.</div>${xpReward()}${lessonCard(3)}${buttons([["return-rookie", "조달달로 돌아가 다음 업무 받기"]])}`, "advance", false);
+      show("입찰서 접수 완료", `<div class="success">입찰서가 접수됐어요. 이어서 낙찰자 선정과 계약 절차를 배워요.</div>${xpReward()}${lessonCard(3)}${buttons([["return-rookie", "계약 업무 받기"]])}`, "advance", false);
     },
     "supplier",
   );
@@ -252,7 +246,7 @@ export function finishBid() {
 export function returnRookie() {
   if (runtime.state.stage !== 4) return;
   speak("김주문", [
-    "조달달 주무관, 새봄테크의 입찰서가 접수됐어요. 이제 낙찰자 선정과 계약 절차를 배울 차례예요.",
-    "복도 왼쪽 엘리베이터를 타고 3층 계약 담당자에게 가 보세요. 노트의 다음 목표 버튼도 안내해 줄 거예요.",
-  ], () => {}, "mentor", "네! 엘리베이터를 타고 3층으로 가 볼게요.");
+    "입찰서가 접수됐어요. 다음은 낙찰자 선정과 계약이에요.",
+    "복도 왼쪽 엘리베이터를 타고 2층 계약 담당자에게 가 보세요. 노트의 다음 목표 버튼도 안내해 줄 거예요.",
+  ], () => {}, "mentor", "네! 엘리베이터를 타고 2층으로 가 볼게요.");
 }

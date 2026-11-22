@@ -1,3 +1,5 @@
+import { floors } from "../data/world.js";
+import { glossary, legacyLearnedTerms } from "../data/learning.js";
 import { recoveryScenes } from "../data/recovery.js";
 import { fresh } from "../data/initial-state.js";
 import { LAST_STAGE } from "../data/quests.js";
@@ -28,7 +30,7 @@ export function loadGame() {
       Number.isInteger(s.stage) &&
       s.stage >= 0 &&
       s.stage <= LAST_STAGE &&
-      (s.floor === undefined || s.floor === 0 || s.floor === 1) &&
+      (s.floor === undefined || (Number.isInteger(s.floor) && s.floor >= 0 && s.floor < floors.length)) &&
       ["contractFarewell", "awardBrief", "openingChecked", "deliveryIssueReported", "inspectionChecked"].every(
         (k) => s[k] === undefined || typeof s[k] === "boolean",
       ) &&
@@ -47,6 +49,8 @@ export function loadGame() {
       s.history.every((x) => typeof x === "string")
     ) {
       runtime.state = { ...fresh(), ...s, xp: s.xp ?? s.stage * 100, questMistakes: s.questMistakes ?? s.mistakes };
+      runtime.state.learnedTerms = s.learnedTerms === undefined ? legacyLearnedTerms(s)
+        : [...new Set((Array.isArray(s.learnedTerms) ? s.learnedTerms : []).filter(term => typeof term === "string" && Object.hasOwn(glossary, term)))];
       runtime.floor = s.stage === 3 ? 0 : runtime.state.floor;
       runtime.state.floor = runtime.floor;
       runtime.loaded = s.started;
@@ -63,6 +67,6 @@ export function save() {
     $("save-status").textContent = "✓ 자동 저장됨";
   } catch (e) {
     runtime.storageOK = false;
-    $("save-status").textContent = "저장 불가 · 현재 창에서 계속";
+    $("save-status").textContent = "저장 불가 · 현재 창에서만 진행 가능";
   }
 }

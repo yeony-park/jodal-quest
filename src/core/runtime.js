@@ -22,8 +22,6 @@ export const runtime = {
   walk: 0,
   audioCtx: null,
   master: null,
-  muted: false,
-  volume: 0.28,
   supplierVoiceReady: null,
   rookieVoiceReady: null,
   talkState: null,

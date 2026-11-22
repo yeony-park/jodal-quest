@@ -1,8 +1,9 @@
-import { MAP_H, MAP_W, TILE, floors, spots } from "../data/world.js";
+import { MAP_H, MAP_W, TILE, floorForScene, floors, spots } from "../data/world.js";
 import { keys, player, runtime } from "../core/runtime.js";
 import { result } from "../components/ending.js";
 import { close, toast } from "../components/modal.js";
 import { setNotebook } from "../components/hud.js";
+import { nextTarget } from "../game/quests.js";
 import { actions } from "../game/actions.js";
 import { draw, updateMap } from "./render.js";
 import { LAST_STAGE } from "../data/quests.js";
@@ -16,7 +17,7 @@ export function spotNearby(id) {
 
 export function cellBlocked(x, y, floor = runtime.floor) {
   if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H) return true;
-  const f = floors[floor];
+  const f = floorForScene(floor, runtime.state.stage);
   for (const p of f.partitions) {
     if (p.axis === "h" && y === p.at && x >= p.from && x < p.to && !p.doors.includes(x))
       return true;
@@ -111,7 +112,10 @@ export function stepPlayer(dx, dy) {
   if (canWalk(player.x, player.y + dy)) player.y += dy;
 }
 
-export function interact() {
+export function interactionTarget() {
+  const goal = guideTarget(nextTarget());
+  if (spots[goal] && spotActive(goal) && Math.hypot(player.x - spots[goal].x, player.y - spots[goal].y) < 55)
+    return goal;
   let closest = null,
     distance = Infinity;
   for (const [id, p] of Object.entries(spots)) {
@@ -122,7 +126,12 @@ export function interact() {
       closest = id;
     }
   }
-  if (distance < 55) actions[closest]();
+  return distance < 55 ? closest : null;
+}
+
+export function interact() {
+  const id = interactionTarget();
+  if (id) actions[id]();
   else toast("사람이나 모니터 가까이 다가가 주세요.");
 }
 

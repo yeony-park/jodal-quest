@@ -1,13 +1,15 @@
-import { recover, finishRecovery } from "./recovery.js";
+import { beginRecovery, recover, finishRecovery } from "./recovery.js";
 import { requestSubmission, submitItem } from "./submission.js";
-import { openGlossary } from "../components/learning.js";
+import { floors } from "../data/world.js";
+import { showFloorMap } from "../components/floor-map.js";
+import { openCabinet, openGlossary } from "../components/learning.js";
 import { buttons, close, help, show } from "../components/modal.js";
 import { startGame } from "../components/title.js";
 import { player, runtime } from "../core/runtime.js";
 import { render, setNotebook } from "../components/hud.js";
 import { $ } from "../core/dom.js";
-import { previewVoice, soundSettings, stopSounds, updateVolume } from "../audio/sound.js";
-import { nextLine, speak } from "../components/dialogue.js";
+import { previewVoice, soundSettings } from "../audio/sound.js";
+import { nextLine } from "../components/dialogue.js";
 import { go, interact } from "../world/navigation.js";
 import {
   complete,
@@ -38,17 +40,15 @@ export const actions = {
   "recovered-notice": () => { openPortal("draft"); $("portal-quantity").value=20; savePortalDraft(); },
   close,
   help,
+  "title-help": () => show("게임 도움말", `<p><kbd>Space</kbd>로 대화 · 클릭 또는 방향키로 이동</p>
+    <p>공공조달 체험 게임 · 실제 업무와 다를 수 있습니다</p>${buttons([["close", "닫기"]])}`, "help"),
   glossary: openGlossary,
   interact,
   "return-rookie": returnRookie,
   restart: () =>
     show(
       "처음부터 다시 시작할까요?",
-      /* HTML */ `<p>저장된 진행 상황과 학습 점수가 초기화됩니다.</p>
-        ${buttons([
-          ["new", "새 게임 시작"],
-          ["close", "취소", true],
-        ])}`,
+      buttons([["new", "새 게임 시작"], ["close", "취소", true]]),
       "restart",
     ),
   new: () => startGame(true),
@@ -60,11 +60,6 @@ export const actions = {
   quests: () => setNotebook($("quest-panel").hidden),
   sound: soundSettings,
   "talk-next": nextLine,
-  mute: () => {
-    runtime.muted = !runtime.muted;
-    stopSounds();
-    updateVolume();
-  },
   "voice-preview": previewVoice,
   "rookie-voice-preview": () => previewVoice("rookie"),
   guide: () => {
@@ -76,8 +71,8 @@ export const actions = {
   doc: documentDesk,
   terminal: () => runtime.state.stage === 5 ? payment() : terminal(),
   elevator,
-  "floor-0": () => travelTo(0),
-  "floor-1": () => travelTo(1),
+  map: () => showFloorMap(),
+  cabinet: openCabinet,
   officer,
   "contract-farewell": contractFarewell,
   bidroom,
@@ -104,16 +99,6 @@ export const actions = {
       player.y = 144;
     }
     runtime.portalSignedIn = false;
-    if (runtime.state.stage === 3)
-      speak(
-        "욘 대리",
-        [
-          "공고가 게시됐군요! 저는 새봄테크 영업팀의 욘 대리예요.",
-          "제품 자료를 비교한 뒤 업무용 모니터에서 공고를 검색하고 입찰서를 준비해 볼게요.",
-        ],
-        () => {},
-        "supplier",
-      );
   },
   "intake-good": () => {
     if (runtime.state.stage !== 0) return;
@@ -130,11 +115,7 @@ export const actions = {
     }
     complete("요청서 접수 준비 완료", "확인한 납기를 보완하고 선배 검토를 거쳐 접수했습니다.");
   },
-  "intake-bad": () =>
-    wrong(
-      "납기는 구매 목적과 공급 가능성에 영향을 줍니다. 수요기관 확인 없이 임의로 정하지 않아요.",
-      "doc",
-    ),
+  "intake-bad": () => beginRecovery("intake"),
   "spec-good": () => {
     if (runtime.state.stage !== 1) return;
     if (!runtime.state.specAdvice) {
@@ -180,6 +161,11 @@ export const actions = {
     ),
   "submit-bid": finishBid,
 };
+
+floors.forEach((_, index) => {
+  actions["map-" + index] = () => showFloorMap(index, runtime.modalKind === "elevator");
+  actions["floor-" + index] = () => travelTo(index);
+});
 
 Object.assign(actions, {
   supplier: supplierNPC,

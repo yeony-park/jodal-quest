@@ -2,13 +2,12 @@
   padding: 0;
   width: min(1130px, calc(100vw - 30px));
   max-height: 93dvh;
-  border: 5px solid #273444;
+  border: 5px solid #9eafc6;
   border-radius: 10px;
   overflow: auto;
   background: white;
   color: #25334d;
 }
-.portal-modal > .eyebrow,
 .portal-modal > h2,
 .portal-modal > .close {
   display: none;
@@ -19,8 +18,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 13px;
-  background: #263444;
-  color: #e1e7f1;
+  background: #d5e3f3;
+  color: #304a6a;
   font-size: 12px;
 }
 .monitor-chrome button {
@@ -115,20 +114,20 @@
 }
 .g2b-nav {
   display: flex;
-  background: #4978ed;
+  background: #cbdffb;
   padding: 0 22px;
   gap: 15px;
   justify-content: space-between;
 }
 .g2b-nav button {
   background: transparent;
-  color: white;
+  color: #294365;
   padding: 12px 22px;
   font-size: 14px;
   font-weight: 700;
 }
 .g2b-nav button:hover {
-  background: #335bc0;
+  background: #b4d0f4;
 }
 .g2b-content {
   padding: 24px;
@@ -179,8 +178,8 @@
   line-height: 1.65;
 }
 .g2b-primary {
-  background: #4978ed;
-  color: white;
+  background: #cbdffb;
+  color: #294365;
   padding: 11px 17px;
   border-radius: 3px;
   font-size: 14px;

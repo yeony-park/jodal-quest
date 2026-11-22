@@ -41,7 +41,7 @@ export function startGame(isNew) {
   }
   keys.clear();
   runtime.target = null;
-  if (!isNew && runtime.floor === 1) {
+  if (!isNew && runtime.floor !== 0) {
     player.x = 48;
     player.y = 240;
   }

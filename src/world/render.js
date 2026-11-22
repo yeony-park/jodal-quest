@@ -1,9 +1,9 @@
-import { MAP_H, MAP_W, TILE, floors, spots } from "../data/world.js";
+import { MAP_H, MAP_W, TILE, floorForScene, floors, spots } from "../data/world.js";
 import { canvas, ctx } from "./canvas.js";
 import { player, runtime } from "../core/runtime.js";
-import { pixelPerson } from "./characters.js";
+import { pixelPerson, rookieOutfit } from "./characters.js";
 import { nextTarget } from "../game/quests.js";
-import { guideTarget, spotActive, spotNearby } from "./navigation.js";
+import { guideTarget, interactionTarget, spotActive, spotNearby } from "./navigation.js";
 import { outlineRect } from "./contrast.js";
 import { $ } from "../core/dom.js";
 
@@ -51,8 +51,20 @@ export function box(x, y, w, h, z, top = "#c5cbbd", left = "#899e91", right = "#
 }
 
 export function drawFurniture(o) {
+  if (o.type === "cabinet") {
+    box(o.x, o.y, o.w, o.h, 34, "#eadbbf", "#a08b78", "#786d70");
+    const opened = runtime.state.learnedTerms.includes(floors[runtime.floor].term);
+    for (const z of [6, 17, 28]) {
+      const shift = opened && z === 28 ? 0.20 : 0;
+      box(o.x + 0.08, o.y + 0.94 + shift, 0.84, 0.12, z, "#e4cdb0", "#c5ae95", "#948579");
+      const p = project((o.x + 0.48) * TILE, (o.y + 1.08 + shift) * TILE, z - 3);
+      ctx.fillStyle = "#574b4a";
+      ctx.fillRect(Math.round(p.x) - 3, Math.round(p.y), 7, 2);
+    }
+    return;
+  }
   if (o.type === "shelf") {
-    box(o.x, o.y, o.w, o.h, 41, "#b6c4b8", "#758e86", "#536e69");
+    box(o.x, o.y, o.w, o.h, 41, "#d4dee8", "#a0b8c4", "#839ca5");
     const p = project((o.x + 0.1) * TILE, (o.y + o.h) * TILE, 26);
     for (let i = 0; i < Math.round(o.w * 5); i++) {
       ctx.fillStyle = ["#c58a69", "#e0c378", "#759aaf", "#9caf81"][i % 4];
@@ -60,17 +72,50 @@ export function drawFurniture(o) {
     }
     return;
   }
+  if (o.type === "display") {
+    box(o.x, o.y, o.w, o.h, 18, "#f4e5c8", "#c8afa0", "#aa948a");
+    box(o.x + .22, o.y + .15, o.w - .44, .68, 30, "#e1f5f2", "#b4d8d8", "#91bdc1");
+    const p = project((o.x + o.w / 2) * TILE, (o.y + .6) * TILE, 32);
+    polygon([{x:p.x-6,y:p.y}, {x:p.x-4,y:p.y-9}, {x:p.x+4,y:p.y-9}, {x:p.x+6,y:p.y}], "#c58166");
+    return;
+  }
   if (o.type === "plant") {
     box(o.x + 0.15, o.y + 0.15, 0.65, 0.65, 13, "#d2a876", "#96704b", "#73563f");
     const p = project((o.x + 0.5) * TILE, (o.y + 0.5) * TILE, 30);
+    if (o.variety === "palm") {
+      ctx.fillStyle = "#82684e";
+      ctx.fillRect(p.x - 2, p.y - 12, 4, 30);
+      for (const side of [-1, 1]) {
+        polygon([{x:p.x,y:p.y-8}, {x:p.x+side*8,y:p.y-16}, {x:p.x+side*18,y:p.y-13}, {x:p.x+side*21,y:p.y-4}], "#618c76");
+        polygon([{x:p.x,y:p.y-8}, {x:p.x+side*10,y:p.y-9}, {x:p.x+side*14,y:p.y+8}], "#86ae88");
+      }
+      return;
+    }
+    if (o.variety === "flowers") {
+      for (const [dx, dy, color] of [[-7,3,"#cc8492"],[1,-3,"#e2a468"],[8,1,"#aa91ba"]]) {
+        ctx.fillStyle = "#678b71";
+        ctx.fillRect(p.x + dx, p.y + dy, 2, 14);
+        ctx.fillStyle = color;
+        ctx.fillRect(p.x + dx - 3, p.y + dy - 2, 8, 5);
+        ctx.fillRect(p.x + dx - 1, p.y + dy - 4, 4, 9);
+        ctx.fillStyle = "#ffdf98";
+        ctx.fillRect(p.x + dx, p.y + dy, 2, 2);
+      }
+      return;
+    }
     ctx.fillStyle = "#4e7c53";
     ctx.fillRect(p.x - 8, p.y - 8, 16, 20);
     ctx.fillStyle = "#7a9e64";
     ctx.fillRect(p.x - 12, p.y - 2, 24, 8);
     return;
   }
-  box(o.x + 0.08, o.y + 0.08, o.w - 0.16, o.h - 0.16, 19, "#dfc695", "#ad8c68", "#92724e");
-  if (o.type === "table") return;
+  box(o.x + 0.08, o.y + 0.08, o.w - 0.16, o.h - 0.16, 19, "#f2d6b4", "#cea890", "#b18776");
+  if (o.type === "table") {
+    // A folder and two stacked books give the shared desks a little lived-in detail.
+    box(o.x + .25, o.y + .22, .54, .4, 21, "#dce9e8", "#96ada9", "#839f9a");
+    box(o.x + 1, o.y + .2, .54, .46, 23, "#d8a7a0", "#bd8c88", "#a67a78");
+    return;
+  }
   const p = project((o.x + 0.5) * TILE, (o.y + 0.5) * TILE, 21);
   if (o.type === "phone") {
     if (o.spot && spotNearby(o.spot)) outlineRect(p.x - 14, p.y - 14, 28, 17);
@@ -178,7 +223,7 @@ function person(x, y, kind, moving) {
 }
 
 export function sceneItems(moving) {
-  const floor = floors[runtime.floor],
+  const floor = floorForScene(runtime.floor, runtime.state.stage),
     items = [];
   for (const p of floor.partitions) {
     if (p.axis === "v")
@@ -188,7 +233,7 @@ export function sceneItems(moving) {
         y0: p.from,
         x1: p.at + 0.18,
         y1: p.to,
-        draw: () => box(p.at, p.from, 0.18, p.to - p.from, p.z, "#e0dfca", "#b8bdab", "#96aa9a"),
+        draw: () => box(p.at, p.from, 0.18, p.to - p.from, p.z, "#f4e6d8", "#d2d4c7", "#b8c9c0"),
       });
     else
       for (let x = p.from; x < p.to; x++)
@@ -199,7 +244,7 @@ export function sceneItems(moving) {
             y0: p.at,
             x1: x + 1,
             y1: p.at + 0.13,
-            draw: () => box(x, p.at, 1, 0.13, p.z, "#dce1cd", "#a3b5a7", "#93a994"),
+            draw: () => box(x, p.at, 1, 0.13, p.z, "#f5eadd", "#c5d6ca", "#afc8be"),
           });
   }
   for (const o of floor.furnishings)
@@ -208,20 +253,20 @@ export function sceneItems(moving) {
     if (runtime.floor === 0) {
       items.push(person(spots.mentor.npcX, spots.mentor.npcY, "mentor"));
       items.push(person(spots.supplier.npcX, spots.supplier.npcY, "supplier"));
-    } else items.push(person(spots.officer.npcX, spots.officer.npcY, "officer"));
+    } else if (runtime.floor === 1) items.push(person(spots.officer.npcX, spots.officer.npcY, "officer"));
   }
-  items.push(person(player.x, player.y, runtime.state.stage === 3 ? "supplier" : "rookie", moving));
+  items.push(person(player.x, player.y, runtime.state.stage === 3 ? "supplier" : rookieOutfit(), moving));
   return items;
 }
 
 export function draw(t, moving) {
   camera();
-  const floor = floors[runtime.floor];
+  const floor = floorForScene(runtime.floor, runtime.state.stage);
   ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = "#738e84";
+  ctx.fillStyle = "#d7e8e4";
   ctx.fillRect(0, 0, 940, 620);
   for (let i = 0; i < 90; i++) {
-    ctx.fillStyle = i % 2 ? "#78958a" : "#6c877e";
+    ctx.fillStyle = i % 2 ? "#e5eff0" : "#c6ddd9";
     ctx.fillRect((i * 137) % 940, (i * 83) % 620, 2, 2);
   }
   polygon(
@@ -231,7 +276,7 @@ export function draw(t, moving) {
       project(MAP_W * TILE, MAP_H * TILE),
       project(0, MAP_H * TILE),
     ].map((p) => ({ x: p.x, y: p.y + 8 })),
-    "#385a54",
+    "#8da9a3",
   );
   for (let y = 0; y < MAP_H; y++)
     for (let x = 0; x < MAP_W; x++) {
@@ -239,16 +284,27 @@ export function draw(t, moving) {
       tile(
         x,
         y,
-        corridor ? ((x + y) % 2 ? "#899e92" : "#96aa9c") : (x + y) % 2 ? "#9da99b" : "#a9b3a3",
+        corridor ? ((x + y) % 2 ? "#b7d8d2" : "#c5e1d8") : (x + y) % 2 ? (floor.tint || "#e5e2cc") : "#f0ecd9",
       );
     }
-  box(0, 0, 18, 0.12, 37, "#e0e5d0", "#b6c2b2", "#9cae9f");
-  box(0, 0, 0.12, 14, 37, "#e0e5d0", "#b6c2b2", "#9cae9f");
+  box(0, 0, 18, 0.12, 37, "#fbf0dc", "#d6dfd6", "#b9cec5");
+  box(0, 0, 0.12, 14, 37, "#fbf0dc", "#d6dfd6", "#b9cec5");
+  // A framed noticeboard on the back wall, outside the walking and interaction layers.
+  const board = project(9 * TILE, 0, 25);
+  const wallPoint = (offset, z) => ({x: board.x + offset, y: board.y + offset * .5 - z});
+  polygon([wallPoint(-16,-6), wallPoint(16,-6), wallPoint(16,11), wallPoint(-16,11)], "#bb9477", "#957b67");
+  for (const [offset, color] of [[-11,"#fff2c9"],[-2,"#d1e6dd"],[7,"#e6cbd5"]])
+    polygon([wallPoint(offset,-2), wallPoint(offset+6,-2), wallPoint(offset+6,6), wallPoint(offset,6)], color);
   if (runtime.state.stage !== 3) drawElevator();
   const items = sceneItems(moving), dest = spots[guideTarget(nextTarget())];
   if (dest && spotNearby(guideTarget(nextTarget())) && !runtime.modalOpen && !runtime.talkState) drawFloorMarker(dest, items);
   for (const item of paintOrder(items)) item.draw();
   const p = project(player.x, player.y);
+  if (!runtime.titleVisible) {
+    const x = p.x, y = p.y - 54;
+    polygon([{x, y}, {x: x - 7, y: y - 12}, {x, y: y - 20}, {x: x + 7, y: y - 12}], "#88e6ba", "#265e52");
+    polygon([{x, y}, {x, y: y - 18}, {x: x + 6, y: y - 12}], "#41a782");
+  }
   ctx.fillStyle = "#fff4d7";
   ctx.fillRect(Math.round(p.x - 28), Math.round(p.y + 7), 56, 15);
   ctx.fillStyle = "#3e6359";
@@ -292,7 +348,7 @@ const miniY = (y) => 8 + (y / MAP_H) * 96;
 
 // 미니맵의 복도·칸막이·가구를 현재 층 자료로 그립니다.
 export function miniLayout() {
-  const floor = floors[runtime.floor],
+  const floor = floorForScene(runtime.floor, runtime.state.stage),
     r = (n) => Math.round(n * 10) / 10;
   let walls = "";
   for (const p of floor.partitions)
@@ -319,7 +375,7 @@ export function miniLayout() {
           `<rect x="${r(miniX(o.x))}" y="${r(miniY(o.y))}" width="${r((o.w / MAP_W) * 168)}" height="${r((o.h / MAP_H) * 96)}"/>`,
       )
       .join("")}</g>` +
-    `<rect x="6" y="${r(miniY(6.6))}" width="6" height="${r((1.8 / MAP_H) * 96)}" fill="#4c6268"/>`
+    (runtime.state.stage === 3 ? "" : `<rect x="6" y="${r(miniY(6.6))}" width="6" height="${r((1.8 / MAP_H) * 96)}" fill="#4c6268"/>`)
   );
 }
 
@@ -334,7 +390,7 @@ export function sceneItemBounds(item) {
     const p = project(item.x0 * TILE, item.y0 * TILE);
     return { x: p.x - 20, y: p.y - 54, w: 40, h: 58 };
   }
-  const height = item.height ?? ({ shelf: 41, plant: 40, table: 19, phone: 35 }[item.furniture?.type] ?? 46);
+  const height = item.height ?? ({ cabinet: 34, shelf: 41, plant: 40, table: 19, phone: 35 }[item.furniture?.type] ?? 46);
   const corners = [[item.x0,item.y0],[item.x1,item.y0],[item.x1,item.y1],[item.x0,item.y1]]
     .map(([x,y]) => project(x*TILE,y*TILE));
   const xs = corners.map(p=>p.x), ys = corners.map(p=>p.y);
@@ -360,20 +416,20 @@ export function drawFloorMarker(dest, items) {
 
 export function labelVisuals() {
   const scale=runtime.view.scale, screen=r=>({x:(r.x-runtime.view.x)*scale,y:(r.y-runtime.view.y)*scale,w:r.w*scale,h:r.h*scale});
-  const visuals=sceneItems(false).filter(item=>item.actor || (item.furniture?.spot && spotActive(item.furniture.spot)))
-    .map(item=>({id:item.furniture?.spot || Object.keys(spots).find(id=>spots[id].npcX/TILE===item.x0 && spots[id].npcY/TILE===item.y0),...screen(sceneItemBounds(item))}));
+  const visuals = sceneItems(false).filter(item => item.furniture?.spot ||
+    (item.actor && spotActive(item.actor) && spots[item.actor]?.npcX !== undefined))
+    .map(item => ({id: item.furniture?.spot || item.actor, ...screen(sceneItemBounds(item))}));
   return visuals;
 }
 
 // 이름표는 대상 실루엣 바로 둘레(위·아래·옆·대각)에서만 자리를 찾습니다.
 // 화면 전체를 뒤지면 이름표가 대상과 떨어져 다른 버튼처럼 보입니다.
 export function placeLabel(anchor, size, obstacles, own) {
-  const margin=8, maxX=Math.max(margin,runtime.view.width-size.w-margin), maxY=Math.max(margin,runtime.view.height-size.h-margin);
   const t=own || {x:anchor.x-12,y:anchor.y,w:24,h:24};
   const cx=t.x+t.w/2, cy=t.y+t.h/2;
   let best=null, score=Infinity;
   const consider=(x,y,rank)=>{
-    const rect={x:Math.max(margin,Math.min(maxX,x)),y:Math.max(margin,Math.min(maxY,y)),w:size.w,h:size.h};
+    const rect={x,y,w:size.w,h:size.h};
     let hits=0;for(const obstacle of obstacles)if(intersects(rect,obstacle,6))hits++;
     const value=hits*1e8+rank*1e3+Math.hypot(rect.x+size.w/2-cx,rect.y+size.h/2-cy);
     if(value<score){score=value;best=rect;}
@@ -381,6 +437,7 @@ export function placeLabel(anchor, size, obstacles, own) {
   let rank=0;
   for(const gap of [10,26,44,66,90]) {
     const top=t.y-gap-size.h, bottom=t.y+t.h+gap, left=t.x-gap-size.w, right=t.x+t.w+gap;
+    if (own?.id === "cabinet") consider(cx-size.w/2,bottom,rank++);
     consider(cx-size.w/2,top,rank++);
     for(let k=1;k<=4;k++) for(const d of [k,-k]) consider(cx-size.w/2+d*size.w/3,top,rank++);
     for(let k=0;k<=3;k++) for(const d of k?[k,-k]:[0]) {
@@ -395,25 +452,29 @@ export function placeLabel(anchor, size, obstacles, own) {
 
 export function positionLabels() {
   const visuals=labelVisuals(), obstacles=[...visuals];
-  for(const el of document.querySelectorAll?.(".minimap,.goal-bar,.top-controls,.inventory,.bottom-controls,.mobile-controls,.scene-clock") || []) {
-    const r=el.getBoundingClientRect();if(r.width&&r.height)obstacles.push({x:r.x,y:r.y,w:r.width,h:r.height});
-  }
-  const target=guideTarget(nextTarget()), ids=Object.keys(spots).sort((a,b)=>(a===target?-1:b===target?1:0));
-  for(const id of ids) {
-    const el=$("spot-"+id), s=spots[id];el.hidden=!spotActive(id) || (id !== target && !spotNearby(id));if(el.hidden)continue;
+  const target = guideTarget(nextTarget()), nearby = interactionTarget();
+  const ids = Object.keys(spots).sort((a, b) => Number(b === target) - Number(a === target));
+  for (const id of ids) {
+    const el = $("spot-" + id), s = spots[id];
+    el.hidden = !spotActive(id) || (id !== target && !spotNearby(id) && !(id === "cabinet" && runtime.floor > 1));
+    if (el.hidden) continue;
+    el.classList.toggle("in-range", id === nearby);
     const p=project(s.npcX??s.x,s.npcY??s.y), own=visuals.find(v=>v.id===id);
     const anchor={x:(p.x-runtime.view.x)*runtime.view.scale,y:own?own.y-10:(p.y-65-runtime.view.y)*runtime.view.scale};
     if(own)anchor.x=own.x+own.w/2;
     const r=placeLabel(anchor,{w:el.offsetWidth||130,h:el.offsetHeight||34},obstacles,own);
     el.style.left=r.x+r.w/2+"px";el.style.top=r.y+r.h/2+"px";
     obstacles.push(r);
+    // Off-screen destinations are reachable from the HUD's guide button.
+    el.style.visibility = r.x + r.w < 0 || r.x > runtime.view.width || r.y + r.h < 0 || r.y > runtime.view.height ? "hidden" : "";
   }
 }
 
 export function updateMap() {
-  if ($("mini-layout").dataset?.floor !== String(runtime.floor)) {
+  const layout = runtime.state.stage === 3 ? "supplier" : String(runtime.floor);
+  if ($("mini-layout").dataset?.floor !== layout) {
     $("mini-layout").innerHTML = miniLayout();
-    $("mini-layout").setAttribute("data-floor", runtime.floor);
+    $("mini-layout").setAttribute("data-floor", layout);
   }
   positionLabels();
   $("mini-player").setAttribute("cx", miniX(player.x / TILE));

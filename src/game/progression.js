@@ -1,3 +1,4 @@
+import { questFanfare } from "../audio/sound.js";
 import { recoveryScenes } from "../data/recovery.js";
 import { runtime } from "../core/runtime.js";
 import { toast } from "../components/modal.js";
@@ -19,6 +20,7 @@ export function awardQuestXP() {
   const level = levelProgress().level;
   runtime.lastXP = `${XP_PER_QUEST} XP${clean ? ` + 수습 없이 완료 보너스 ${CLEAN_BONUS} XP` : ""}${level > previous ? ` · 레벨 업! Lv. ${level}` : ""}`;
   toast(runtime.lastXP);
+  questFanfare();
 }
 
 export function xpReward() {

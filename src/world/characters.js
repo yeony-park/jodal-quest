@@ -1,3 +1,5 @@
+import { endingTitle } from "../data/recovery.js";
+import { LAST_STAGE } from "../data/quests.js";
 import { spotNearby } from "./navigation.js";
 import { project } from "./render.js";
 import { runtime } from "../core/runtime.js";
@@ -30,9 +32,14 @@ export const spriteRows = [
   "....XXXX.XXXX...",
 ];
 
-const hair = { supplier: "#49384d", mentor: "#605049", officer: "#2f3a4f" };
+export function rookieOutfit() {
+  if (runtime.state.stage !== LAST_STAGE) return "rookie";
+  return endingTitle(runtime.state.recoveries, runtime.state.mistakes) === "사파" ? "sapa" : "jeongpa";
+}
 
-const jacket = { supplier: "#956ba5", mentor: "#c29458", officer: "#5f7f63" };
+const hair = { contact: "#685b52", sapa: "#332d40", supplier: "#49384d", mentor: "#605049", officer: "#2f3a4f" };
+
+const jacket = { contact: "#478786", sapa: "#4b365a", jeongpa: "#e5eedd", supplier: "#956ba5", mentor: "#c29458", officer: "#5f7f63" };
 
 export function pixelPalette(kind) {
   return {
@@ -43,6 +50,7 @@ export function pixelPalette(kind) {
     J: jacket[kind] || "#3b7c91",
     W: "#f9edcf",
     A: kind === "supplier" ? "#f0cb7a" : kind === "officer" ? "#e3d9a8" : "#bd6e4b",
+    B: kind === "sapa" ? "#c57579" : "#468278",
     P: kind === "supplier" ? "#654b73" : "#3a4e54",
   };
 }
@@ -57,6 +65,23 @@ export function spriteCells(kind) {
   if (kind === "supplier") {
     for (let y = 6; y < 15; y++) for (const x of [2, 3, 12, 13]) cells.push([x, y, "H"]);
     cells.push([12, 5, "A"], [13, 5, "A"], [12, 6, "A"]);
+  }
+  if (kind === "contact") {
+    // A pinned bun, light fringe and a library badge distinguish the caller at portrait size.
+    for (let y = 2; y <= 5; y++) for (let x = 1; x <= 4; x++) cells.push([x,y,"H"]);
+    cells.push([4,4,"W"],[5,4,"W"],[6,3,"W"],[9,14,"W"],[10,14,"W"],[9,15,"B"],[10,15,"B"]);
+  }
+  if (kind === "sapa" || kind === "jeongpa") {
+    for (let y = 12; y <= 20; y++) {
+      const edge = y < 17 ? 3 : 2;
+      for (let x = edge; x < 16 - edge; x++) cells.push([x,y,"J"]);
+    }
+    for (let x = 3; x <= 12; x++) cells.push([x,17,"B"]);
+    for (let i = 0; i < 5; i++) cells.push([5+i,12+i,"B"], [10-i,12+i,"W"]);
+    if (kind === "sapa") {
+      for (let x = 2; x <= 13; x++) cells.push([x,4,"B"]);
+      cells.push([13,5,"B"], [14,5,"B"], [14,6,"B"], [15,7,"B"], [12,18,"B"], [13,19,"B"]);
+    }
   }
   if (kind === "officer") cells.push([4, 3, "A"], [5, 3, "A"], [6, 2, "A"]);
   if (kind === "mentor")

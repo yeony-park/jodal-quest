@@ -1,5 +1,6 @@
+import { showFloorMap } from "../components/floor-map.js";
 import { awardQuestXP, xpReward } from "./progression.js";
-import { lessonCard } from "../components/learning.js";
+import { learnTerm, lessonCard } from "../components/learning.js";
 import { keys, player, runtime } from "../core/runtime.js";
 import { save } from "../core/storage.js";
 import { floors, spots } from "../data/world.js";
@@ -12,12 +13,11 @@ import { ending } from "../components/ending.js";
 export function elevator() {
   if (runtime.state.stage === 3) return;
   if (runtime.state.stage === 5 && runtime.floor === 1 && !runtime.state.contractFarewell) { contractFarewell(); return; }
-  show("엘리베이터 · 어느 층으로 갈까요?", `<p>현재 ${floors[runtime.floor].level}입니다.</p>
-    ${buttons([[runtime.floor === 0 ? "floor-1" : "floor-0", runtime.floor === 0 ? "3층 · 개찰·계약 창구" : "5층 · 구매팀·납품 확인"], ["close", "이번 층에 머무르기", true]])}`, "elevator");
+  showFloorMap(runtime.floor, true);
 }
 
 export function travelTo(floor) {
-  if (runtime.state.stage === 3 || ![0, 1].includes(floor)) return;
+  if (runtime.state.stage === 3 || !Number.isInteger(floor) || !floors[floor]) return;
   close();
   keys.clear();
   runtime.target = null;
@@ -42,9 +42,9 @@ export function officer() {
   }
   if (!runtime.state.awardBrief) {
     speak("이계약 주무관", [
-      "3층에 온 걸 환영해요. 입찰서 접수 다음에는 낙찰자 선정과 계약 절차가 남아 있어요.",
-      "예정가격은 입찰 전에 결정해 두었어요. 먼저 옆의 개찰·계약 자료에서 순서를 확인해 주세요.",
-      "이번 구매 건은 공고한 낙찰자 선정방식에 따른 심사를 마친 뒤 전자계약을 진행합니다.",
+      "2층에 온 걸 환영해요. 입찰서 접수 다음에는 낙찰자 선정과 계약 절차가 남아 있어요.",
+      { term: "예정가격", text: "예정가격은 입찰 전에 정하는 가격이에요. 옆에 있는 개찰·계약 자료에서 확인할 수 있어요." },
+      { term: "낙찰자 선정·전자계약", text: "공고한 기준으로 심사해 낙찰예정자를 선정하고, 그 업체와 전자계약을 맺어요." },
     ], () => {
       runtime.state.awardBrief = true;
       save();
@@ -81,8 +81,8 @@ export function bidroom() {
     ["현재 확인할 것", "입찰 전에 결정해 둔 예정가격과 공고한 선정방식"],
     ["사례", "새봄도서관 모니터 20대"],
   ])}<p>예정가격은 언제 결정할까요?</p><div class="choices">
-    <button class="choice" data-action="opening-good">입찰 전에 결정해 두고, 지금 그 자료를 확인한다</button>
-    <button class="choice" data-action="opening-bad">기업의 입찰서를 받은 다음 원하는 금액으로 정한다</button></div>`, "opening");
+    <button class="choice" data-action="opening-good">입찰 전에 미리 결정해 둔 예정가격 자료를 확인한다</button>
+    <button class="choice" data-action="opening-bad">기업의 입찰서를 받은 뒤에 원하는 금액으로 정한다</button></div>`, "opening");
 }
 
 export function openingGood() {
@@ -100,7 +100,6 @@ export function contractGood() {
   runtime.state.stage = 5;
   save();
   render();
-  chime();
   show("전자계약 체결 완료", `<div class="success">권한 있는 계약 담당자가 낙찰예정자와 전자계약을 체결했어요.</div><p>계약서를 가방에 넣었어요. 이계약 주무관에게 다음 업무를 확인해요.</p>${xpReward()}${lessonCard(4)}${buttons([["contract-farewell", "계약서를 받고 담당자와 인사하기"]])}`, "advance", false);
 }
 
@@ -110,7 +109,7 @@ export function contractFarewell() {
     "계약서 받았죠? 모니터 20대와 계약일로부터 30일 이내라는 납품 조건을 기억해 주세요.",
     "수고했어요, 조달달 주무관. 이제 엘리베이터로 5층 구매팀에 돌아가세요.",
     "수요기관 연락 데스크에서 납품 자료를 확인하고, 계약서의 규격과 수량에 맞게 도착했는지 대조해 주세요.",
-    "부족한 물품이 있으면 보완을 요청하고, 검사·검수와 물품인수를 확인한 뒤 납품 서류를 살펴봐요.",
+    { term: "검사·검수", text: "검사·검수는 도착한 물품이 계약한 규격과 수량에 맞는지 확인하는 일이에요. 부족하면 보완을 요청하세요." },
   ], () => {
     runtime.state.contractFarewell = true;
     save();
@@ -137,7 +136,7 @@ export function reportDeliveryIssue() {
   runtime.state.deliveryIssueReported = true;
   save();
   render();
-  speak("수요기관 담당자", ["한 대가 부족한 것을 확인했어요. 계약상대자에게 보완을 요청하겠습니다.", "부족한 한 대가 도착했어요! 수요기관 연락 데스크에서 보완한 자료를 다시 확인해 주세요."], () => {}, "contact", "보완 감사합니다. 스무 대가 맞는지 다시 확인할게요.");
+  speak("수요기관 담당자", ["새봄도서관 한서진입니다. 한 대가 부족한 것을 확인했어요. 계약상대자에게 보완을 요청하겠습니다.", "부족한 한 대가 도착했어요! 수요기관 연락 데스크에서 보완한 자료를 다시 확인해 주세요."], () => {}, "contact", "보완 감사합니다. 스무 대가 맞는지 다시 확인할게요.");
 }
 
 export function inspectDelivery() {
@@ -145,6 +144,7 @@ export function inspectDelivery() {
   runtime.state.inspectionChecked = true;
   save();
   render();
+  learnTerm("검사·검수");
   show("검사·검수와 물품인수 완료", `<div class="success">계약한 규격과 수량 20대를 확인하고 물품을 인수했어요.</div><p>수요기관이 영수증을 발급했어요. 업무용 모니터에서 납품 서류와 대금 청구를 확인하세요.</p>${buttons([["close", "대금 청구 확인하러 가기"]])}`);
 }
 
@@ -154,12 +154,13 @@ export function payment() {
     show("대금 지급 전 확인", `<p>수요기관의 납품 자료부터 확인하세요. 검사·검수와 물품인수 후 영수증과 납품 서류를 확인해요.</p>${buttons([["close", "납품 확인하러 가기"]])}`);
     return;
   }
+  learnTerm("대금 청구");
   show("납품 서류와 대금 청구 확인", `${doc("계약 종결 검토", [
     ["검사·검수 및 인수", "모니터 20대 · 완료"],
     ["영수증·납품 서류", "수요기관 영수증 발급 · 서류 하자 없음"],
     ["대금 청구", "계약상대자가 조달청에 청구"],
   ])}<p>권한 있는 담당자의 다음 업무로 알맞은 것은?</p><div class="choices">
-    <button class="choice" data-action="payment-bad">납품 서류를 생략하고 입찰서만 보고 지급한다</button>
+    <button class="choice" data-action="payment-bad">납품 서류 확인을 생략하고 입찰서만 보고 대금을 지급한다</button>
     <button class="choice" data-action="payment-good">확인한 납품 서류로 계약종결 서류를 작성하고 대금 지급 절차를 진행한다</button></div>`, "payment");
 }
 
@@ -171,6 +172,5 @@ export function finishPayment() {
   save();
   render();
   close();
-  chime();
   speak("김주문", ["스무 대가 모두 도착했는지 끝까지 확인했군요. 납품 서류를 확인하고 담당자가 대금 지급 절차를 마쳤어요.", "요청서부터 계약과 납품까지, 오늘 배운 절차를 다시 떠올려 봐요."], ending);
 }

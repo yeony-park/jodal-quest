@@ -4,6 +4,7 @@ import { guideTarget } from "../world/navigation.js";
 import { runtime } from "../core/runtime.js";
 import { $ } from "../core/dom.js";
 import { nextTarget } from "../game/quests.js";
+import { renderGlossary } from "./learning.js";
 import { renderInventory } from "./inventory.js";
 
 export function render() {
@@ -53,7 +54,7 @@ export function render() {
                 [false, "입찰서 제출"],
               ]
             : runtime.state.stage === 4
-              ? [[runtime.state.awardBrief, "3층 계약 담당자에게 설명 듣기"], [runtime.state.openingChecked, "입찰 전 결정한 예정가격 확인"], [false, "선정방식에 따른 심사 확인 후 전자계약"]]
+              ? [[runtime.state.awardBrief, "2층 계약 담당자에게 설명 듣기"], [runtime.state.openingChecked, "입찰 전 결정한 예정가격 확인"], [false, "선정방식에 따른 심사 확인 후 전자계약"]]
               : runtime.state.stage === 5
                 ? [[runtime.state.deliveryIssueReported, "5층에서 납품 부족분 보완 요청"], [runtime.state.inspectionChecked, "보완한 물품의 검사·검수와 인수"], [false, "영수증·납품 서류 확인 후 대금 지급"]]
                 : [
@@ -94,11 +95,12 @@ export function render() {
     $("spot-" + id).classList.toggle("target", target === id);
   $("guide-button").textContent = runtime.state.stage === LAST_STAGE ? "완료 기록 보기" : target === "elevator" ? "엘리베이터로 이동" : "다음 목표로 이동";
   $("quest-label").textContent = runtime.state.stage === LAST_STAGE ? "완료" : `퀘스트 ${runtime.state.stage + 1}`;
-  const goalLabels = { mentor: "김주문에게 업무 듣기", phone: runtime.state.stage === 5 ? "5층 · 납품 자료 확인" : "수요기관에 연락", doc: runtime.state.stage === 3 ? "공고에 맞는 제품 고르기" : "내 책상 자료 확인", terminal: runtime.state.stage === 5 ? "5층 · 대금 청구 확인" : "업무용 모니터 사용", officer: runtime.state.stage === 5 ? "3층 · 계약 담당자와 인사하기" : "3층 · 계약 담당자 만나기", bidroom: "3층 · 개찰·계약 자료 확인", result: "완료 기록 다시 보기" };
+  const goalLabels = { mentor: "김주문에게 업무 듣기", phone: runtime.state.stage === 5 ? "5층 · 납품 자료 확인" : "수요기관에 연락", doc: runtime.state.stage === 3 ? "공고에 맞는 제품 고르기" : "내 책상 자료 확인", terminal: runtime.state.stage === 5 ? "5층 · 대금 청구 확인" : "업무용 모니터 사용", officer: runtime.state.stage === 5 ? "2층 · 계약 담당자와 인사하기" : "2층 · 계약 담당자 만나기", bidroom: "2층 · 개찰·계약 자료 확인", result: "완료 기록 다시 보기" };
   $("current-goal").textContent = goalLabels[nextTarget()];
   $("quick-guide").textContent = $("guide-button").textContent;
   renderInventory();
-  if (!runtime.storageOK) $("save-status").textContent = "저장 불가 · 현재 창에서 계속";
+  renderGlossary();
+  if (!runtime.storageOK) $("save-status").textContent = "저장 불가 · 현재 창에서만 진행 가능";
 }
 
 export function setNotebook(open) {
