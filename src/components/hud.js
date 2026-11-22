@@ -75,15 +75,6 @@ export function render() {
     runtime.state.stage === 3 ? "새봄테크 영업팀" : floors[runtime.floor].caption;
   $("player-label").textContent =
     runtime.state.stage === 3 ? "욘 대리 · 기업 담당자" : "조달달 · 신입 9급 주무관";
-  $("scene-time").textContent = [
-    "DAY 01 · 09:00",
-    "DAY 01 · 10:00",
-    "DAY 02 · 09:00",
-    "DAY 03 · 14:00",
-    "DAY 04 · 10:00",
-    "DAY 24 · 14:00",
-    "DAY 24 · 17:00",
-  ][runtime.state.stage];
   $("spot-doc").textContent =
     runtime.state.stage === 3
       ? "제품 자료 · 내 책상"
@@ -100,7 +91,7 @@ export function render() {
   $("quick-guide").textContent = $("guide-button").textContent;
   renderInventory();
   renderGlossary();
-  if (!runtime.storageOK) $("save-status").textContent = "저장 불가 · 현재 창에서만 진행 가능";
+  if (!runtime.storageOK) $("save-status").textContent = "저장 불가 · 현재 창에서만 이어서 진행할 수 있어요";
 }
 
 export function setNotebook(open) {

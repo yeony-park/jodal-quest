@@ -3,7 +3,7 @@ import { beginRecovery, recover, finishRecovery } from "./recovery.js";
 import { requestSubmission, selectDocument, handOverDocument } from "./submission.js";
 import { floors } from "../data/world.js";
 import { showFloorMap } from "../components/floor-map.js";
-import { openCabinet, openGlossary } from "../components/learning.js";
+import { openCabinet, openGlossary, meetLibrarian } from "../components/learning.js";
 import { buttons, close, help, show } from "../components/modal.js";
 import { startGame } from "../components/title.js";
 import { player, runtime } from "../core/runtime.js";
@@ -76,6 +76,7 @@ export const actions = {
   elevator,
   map: () => showFloorMap(),
   cabinet: openCabinet,
+  librarian: meetLibrarian,
   officer,
   "contract-farewell": contractFarewell,
   bidroom,

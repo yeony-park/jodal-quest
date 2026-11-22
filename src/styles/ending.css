@@ -332,8 +332,33 @@
 .map-legend span::before { content: ""; display: inline-block; width: 9px; height: 9px; margin-right: 4px; border-radius: 50%; background: #247953; }
 .map-legend .map-lift::before { background: #67619e; }
 .map-legend .map-cabinet::before { border-radius: 2px; background: #b58443; }
-.cabinet-card { border: 1px solid #d8caaa; border-left: 5px solid #bc9973; background: #fff7e4; padding: 14px 20px; }
-.cabinet-card h3 { margin: 8px 0; }
+.cabinet-card, .glossary .cabinet-card {
+  position: relative;
+  margin: 16px 3px;
+  padding: 18px 25px 15px;
+  border: 1px solid #d3c39f;
+  border-radius: 2px;
+  color: #584934;
+  background: repeating-linear-gradient(transparent 0 25px, #d9ceb55e 25px 26px), #fff5d9;
+  box-shadow: 2px 3px 0 #d9cdb4;
+}
+.cabinet-card::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 15px;
+  height: 15px;
+  background: linear-gradient(45deg, #dec79d 48%, #a59373 50%, var(--paper) 56%);
+  pointer-events: none;
+}
+.cabinet-card h3, .glossary .cabinet-card summary { margin: 0; font: bold 26px var(--hand); }
+.modal .cabinet-card p { margin: 8px 0 12px; color: #504639; line-height: 1.65; }
+.cabinet-card footer { font-size: 14px; color: #6b5941; }
+@media (prefers-reduced-motion: no-preference) {
+  .cabinet-card.just-found { animation: unfold-note .35s ease-out; }
+  @keyframes unfold-note { from { opacity: .35; transform: translateY(8px) rotate(-2deg); } }
+}
 .mentor-assessment {
   padding: 20px 18px 12px 40px;
   border: 1px solid #dfd1ad;

@@ -3,7 +3,7 @@
     <canvas
       id="world"
       tabindex="0"
-      aria-label="사무실 게임 공간. 방향키로 이동하거나 대상 버튼을 누르세요."
+      aria-label="사무실 공간이에요. 방향키로 이동하거나 대상 버튼을 눌러 보세요."
     ></canvas>
     <button class="hotspot" id="spot-doc" data-action="go-doc">요청서 · 내 책상</button
     ><button class="hotspot" id="spot-mentor" data-action="go-mentor">선배 김주문</button
@@ -12,6 +12,7 @@
     ><button class="hotspot" id="spot-supplier" data-action="go-supplier">
       욘 대리 · 기업 담당자
     </button>
+    <button class="hotspot" id="spot-librarian" data-action="go-librarian">문다은 자료 담당자</button>
     <button class="hotspot" id="spot-cabinet" data-action="go-cabinet">자료 캐비닛</button>
     <button class="hotspot" id="spot-elevator" data-action="go-elevator">엘리베이터</button>
     <button class="hotspot" id="spot-officer" data-action="go-officer">계약 담당자</button>
@@ -19,10 +20,15 @@
   </div>
   <div class="hud" id="game-hud">
     <div id="bag" class="inventory" aria-label="인벤토리 · 7칸">
-      <span class="inventory-label">조달달의 가방 · 7칸</span>
+      <span class="inventory-label">서류 가방 · 7칸</span>
       <div class="inventory-slots" id="inventory-slots"></div>
     </div>
-    <button class="minimap" data-action="map" aria-label="층별 지도 열기">
+    <div class="minimap">
+      <button class="expand-map" data-action="map" aria-label="층별 지도 크게 보기" title="층별 지도 크게 보기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M14 4h6v6m0-6-7 7M10 20H4v-6m0 6 7-7"/>
+        </svg>
+      </button>
       <svg viewBox="0 0 188 112" role="img" aria-label="책상과 현재 플레이어 위치">
         <rect
           x="4"
@@ -38,10 +44,9 @@
         <circle id="mini-target" r="5" fill="#e6ae43" stroke="#fff6cf" stroke-width="2" />
         <circle id="mini-player" r="4" fill="#32765e" stroke="white" stroke-width="2" /></svg
       ><span class="map-caption" id="location"></span
-      ><span class="map-note">층별 지도 열기 ↗</span>
-    </button>
+      >
+    </div>
     <div class="top-controls">
-      <span id="scene-time" class="scene-clock"></span>
       <button
         class="hud-button quest-toggle"
         id="quest-toggle"
@@ -49,7 +54,7 @@
         aria-controls="quest-panel"
         aria-expanded="false"
       >
-        <span class="quest-icon" aria-hidden="true"></span>퀘스트<span id="quest-count"
+        퀘스트<span id="quest-count"
           >0 / 6</span
         ></button
       ><button class="hud-button" id="sound-toggle" data-action="sound" aria-label="사운드 설정">
@@ -59,7 +64,7 @@
     <aside
       class="notebook"
       id="quest-panel"
-      aria-label="김주문이 손으로 적어 준 퀘스트 노트"
+      aria-label="김주문이 손수 적어 준 퀘스트 노트"
       hidden
     >
       <button class="close-note" data-action="quests" aria-label="퀘스트 노트 접기">×</button>
@@ -78,8 +83,7 @@
       <button data-action="guide" id="quick-guide">다음 목표로 이동</button>
     </div>
     <aside class="glossary-dock" aria-label="배운 용어">
-      <button data-action="glossary" aria-label="조달 용어 수첩 열기">용어 수첩 <span id="glossary-count">0</span></button>
-      <ul id="learned-terms" aria-live="polite" aria-relevant="additions"></ul>
+      <button id="glossary-button" data-action="glossary">용어 수첩 <span id="glossary-count">0</span></button>
     </aside>
     <div class="bottom-controls">
       <span id="level-badge">Lv. 1</span><span id="xp-status"><progress id="xp-bar" value="0" max="150" aria-label="다음 레벨까지 경험치"></progress><small id="xp-label">0 / 150 XP</small></span><span id="player-label"></span

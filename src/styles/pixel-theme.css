@@ -19,7 +19,7 @@
   border-color: #fbfff9;
   box-shadow: 4px 4px 0 #304b4252;
 }
-.minimap svg {
+.minimap > svg {
   border-radius: 2px;
 }
 .hud-button {
@@ -208,29 +208,29 @@
   padding: 1px 6px;
   font-size: 12px;
 }
-#learned-terms {
-  max-height: 160px;
-  overflow-y: auto;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-#learned-terms li {
-  border-top: 1px solid #ddd4e8;
-  padding: 4px 3px;
-  font-size: 12px;
+#glossary-button.has-unread #glossary-count { background: #ffe0a1; outline: 2px solid #9e723c; }
+.glossary details.is-unread summary::after { content: "•"; margin-left: 6px; color: #986020; }
+@media (prefers-reduced-motion: no-preference) {
+  #glossary-button.has-unread #glossary-count { animation: unread-term 1.6s ease-in-out infinite alternate; }
+  @keyframes unread-term { to { background: #fff4d8; box-shadow: 0 0 6px #ac783f; } }
+  .intro-playing .game-logo { animation: stamp-title 1.9s both; transform-origin: 52% 68%; }
+  @keyframes stamp-title {
+    0% { opacity: 0; transform: translateY(-86px) rotate(-10deg) scale(1.45); }
+    18% { opacity: 1; }
+    67% { transform: translateY(5px) rotate(1deg) scale(.97, .91); }
+    82% { transform: translateY(-3px) rotate(-1deg) scale(1.015); }
+    100% { transform: none; }
+  }
 }
 .notebook { z-index: 8; }
 @media (max-width: 1190px), (max-height: 540px) {
   .glossary-dock { right: 12px; bottom: 62px; width: 132px; }
-  #learned-terms { max-height: 46px; }
 }
 @media (min-width: 701px) and (max-width: 960px) {
   .inventory-slot { width: 44px; }
 }
 @media (max-width: 700px) {
   .glossary-dock { right: 10px; bottom: 6px; width: 132px; padding: 0 7px; }
-  #learned-terms { max-height: 22px; }
 }
 .lesson-card {
   margin-top: 16px;
@@ -367,26 +367,6 @@
   .hotspot.in-range::after { content: "누르기"; }
 }
 
-.title-screen:not(.intro-playing) > :not(#title-enter) { visibility: hidden; }
-#title-enter:not([hidden]) { position: absolute; inset: 0; z-index: 2; width: 100%; color: #35584c; background: #ecf2de; font: bold 24px var(--hand); }
-
-#first-day { position: fixed; inset: 0; z-index: 12; background: #35454a; }
-#first-day img { width: 100%; height: 100%; object-fit: cover; object-position: center 65%; image-rendering: pixelated; }
-#first-day > span { position: absolute; top: clamp(14px, 4vh, 40px); left: clamp(14px, 4vw, 64px); padding: 7px 14px; color: #314741; background: #fff8e7; border: 2px solid #779188; box-shadow: 3px 3px #37453f80; font-weight: bold; }
-body:has(#first-day:not([hidden])) #game-shell { visibility: hidden; }
-#first-day:not([hidden]) + .speech { bottom: max(12px, 3vh); padding: 22px 24px 12px; width: min(620px, calc(100vw - 28px)); }
-#first-day:not([hidden]) + .speech .speech-portrait, #first-day:not([hidden]) + .speech::before { display: none; }
-#first-day:not([hidden]) + .speech .speech-name { left: 22px; top: -18px; }
-#first-day:not([hidden]) + .speech .speech-text { min-height: 1.6em; }
-@media (max-width: 700px) {
-  #first-day:not([hidden]) + .speech { padding-top: 38px; }
-  #first-day:not([hidden]) + .speech .speech-name { top: 5px; }
-}
-@media (max-aspect-ratio: 1/1) {
-  #first-day img { height: 80%; object-position: center center; }
-}
-
-
 .decision-scene { display: grid; grid-template-columns: clamp(66px, 19%, 122px) minmax(0, 1fr); gap: clamp(9px, 2.5vw, 22px); align-items: start; }
 .decision-actor { margin: 0; text-align: center; background: #ebeedb; border: 2px solid #879b80; box-shadow: 3px 3px #cad0b8; }
 .decision-actor svg { display: block; width: 100%; max-height: 148px; }
@@ -410,6 +390,9 @@ body:has(#first-day:not([hidden])) #game-shell { visibility: hidden; }
   .decision-turn .decision-thought { grid-column: 2; grid-row: 1; margin: 0; align-self: center; }
   .decision-turn h3, .decision-document { margin: 0; }
 }
+
+.title-screen:not(.intro-playing) > :not(#title-enter) { visibility: hidden; }
+#title-enter:not([hidden]) { position: absolute; inset: 0; z-index: 2; width: 100%; color: #35584c; background: #ecf2de; font: bold 24px var(--hand); }
 
 #modal:has(#deadline-form) { width: min(900px, 100%); }
 #deadline-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(130px, .55fr); gap: 10px; align-items: start; margin: 10px 0; }
@@ -439,3 +422,26 @@ body:has(#first-day:not([hidden])) #game-shell { visibility: hidden; }
   .deadline-keypad { padding: 4px; gap: 4px; }
 }
 
+#first-day { position: fixed; inset: 0; z-index: 12; background: #35454a; }
+#first-day img { width: 100%; height: 100%; object-fit: cover; object-position: center 65%; image-rendering: pixelated; }
+#first-day > span { position: absolute; top: clamp(14px, 4vh, 40px); left: clamp(14px, 4vw, 64px); padding: 7px 14px; color: #314741; background: #fff8e7; border: 2px solid #779188; box-shadow: 3px 3px #37453f80; font-weight: bold; }
+body:has(#first-day:not([hidden])) #game-shell { visibility: hidden; }
+#first-day:not([hidden]) + .speech { bottom: max(12px, 3vh); padding: 22px 24px 12px; width: min(620px, calc(100vw - 28px)); }
+#first-day:not([hidden]) + .speech .speech-portrait, #first-day:not([hidden]) + .speech::before { display: none; }
+#first-day:not([hidden]) + .speech .speech-name { left: 22px; top: -18px; }
+#first-day:not([hidden]) + .speech .speech-text { min-height: 1.6em; }
+@media (max-width: 700px) {
+  #first-day:not([hidden]) + .speech { padding-top: 38px; }
+  #first-day:not([hidden]) + .speech .speech-name { top: 5px; }
+}
+@media (max-aspect-ratio: 1/1) {
+  #first-day img { height: 80%; object-position: center center; }
+}
+
+#modal:has(.lift-panel) { width: min(285px, 100%); background: #d6dcd3; border: 3px solid #899588; border-radius: 12px; padding: 20px; }
+#modal:has(.lift-panel) h2 { margin: 0 0 12px; font-size: 19px; }
+.lift-panel { padding: 12px; border: 1px solid #8b998d; background: linear-gradient(100deg,#c3cec4,#e6e9dc 45%,#c4cdc4); border-radius: 6px; }
+.lift-display { margin-bottom: 12px; padding: 6px; color: #f8cf80; background: #32403c; border: 3px inset #a7b4a8; text-align: center; font: bold 29px monospace; }
+.lift-keys { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 12px; }
+.lift-keys button { min-height: 44px; border: 2px solid #879487; border-radius: 12px; color: #31413b; background: #f3f4e9; box-shadow: 0 3px #849282; font: bold 20px monospace; }
+.lift-keys button:active, .lift-keys button:disabled { opacity: 1; box-shadow: inset 0 0 0 2px #d8a948; background: #ffedb6; color: #544321; }

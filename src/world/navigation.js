@@ -1,4 +1,5 @@
-import { MAP_H, MAP_W, TILE, floorForScene, floors, spots } from "../data/world.js";
+import { footstep } from "../audio/sound.js";
+import { MAP_H, MAP_W, TILE, floorForScene, floors, spotOnFloor, spots } from "../data/world.js";
 import { keys, player, runtime } from "../core/runtime.js";
 import { result } from "../components/ending.js";
 import { close, toast } from "../components/modal.js";
@@ -11,7 +12,7 @@ import { LAST_STAGE } from "../data/quests.js";
 export const MOVE_SPEED = 145;
 
 export function spotNearby(id) {
-  const spot = spots[id];
+  const spot = spotOnFloor(id, runtime.floor);
   return spotActive(id) && Math.hypot(player.x - spot.x, player.y - spot.y) <= 2 * TILE;
 }
 
@@ -35,6 +36,7 @@ export function spotActive(id) {
   const spot = spots[id];
   if (!spot) return false;
   if (runtime.state.stage === 3) return id === "doc" || id === "terminal";
+  if (id === "cabinet" && floors[runtime.floor].guide) return false;
   return spot.floor === undefined || spot.floor === runtime.floor;
 }
 
@@ -45,8 +47,9 @@ export function guideTarget(id) {
 }
 
 export function routeTo(id) {
-  const goal = spots[id],
-    sx = Math.floor(player.x / TILE),
+  const goal = spotOnFloor(id, runtime.floor);
+  if (!goal) return [];
+  const sx = Math.floor(player.x / TILE),
     sy = Math.floor(player.y / TILE),
     gx = Math.floor(goal.x / TILE),
     gy = Math.floor(goal.y / TILE),
@@ -95,7 +98,7 @@ export function go(id) {
   keys.clear();
   if (!spotActive(id)) {
     const next = guideTarget(id);
-    if (next === id) return;
+    if (next === id || !floors[spots[id]?.floor]) return;
     toast(`${floors[spots[id].floor].level}에 있어요. 엘리베이터로 이동합니다.`);
     id = next;
   }
@@ -107,9 +110,23 @@ export function go(id) {
   runtime.target = { id, path, index: 0 };
 }
 
+let stride = 0;
+
+function trackSteps(distance) {
+  stride += distance;
+  if (stride >= 46) {
+    stride %= 46;
+    footstep();
+  }
+}
+
 export function stepPlayer(dx, dy) {
+  const x = player.x, y = player.y;
   if (canWalk(player.x + dx, player.y)) player.x += dx;
   if (canWalk(player.x, player.y + dy)) player.y += dy;
+  const distance = Math.hypot(player.x - x, player.y - y);
+  trackSteps(distance);
+  return distance > 0;
 }
 
 export function interactionTarget() {
@@ -118,8 +135,9 @@ export function interactionTarget() {
     return goal;
   let closest = null,
     distance = Infinity;
-  for (const [id, p] of Object.entries(spots)) {
+  for (const id of Object.keys(spots)) {
     if (!spotActive(id)) continue;
+    const p = spotOnFloor(id, runtime.floor);
     const d = Math.hypot(player.x - p.x, player.y - p.y);
     if (d < distance) {
       distance = d;
@@ -147,6 +165,7 @@ export function frame(t) {
         d = Math.hypot(dx, dy),
         step = MOVE_SPEED * dt;
       if (d < step + 1) {
+        trackSteps(d);
         player.x = dest.x;
         player.y = dest.y;
         runtime.target.index++;
@@ -156,6 +175,7 @@ export function frame(t) {
           actions[id]();
         }
       } else {
+        trackSteps(step);
         player.x += (dx / d) * step;
         player.y += (dy / d) * step;
         moving = true;
@@ -171,12 +191,12 @@ export function frame(t) {
         let dx = sx + sy,
           dy = sy - sx,
           n = Math.hypot(dx, dy);
-        stepPlayer((dx / n) * MOVE_SPEED * dt, (dy / n) * MOVE_SPEED * dt);
-        moving = true;
+        const speed = keys.has(runtime.runKey) ? MOVE_SPEED * 1.85 : MOVE_SPEED;
+        moving = stepPlayer((dx / n) * speed * dt, (dy / n) * speed * dt);
       }
     }
   }
-  if (moving) runtime.walk += dt * 12;
+  if (moving) runtime.walk += dt * (keys.has(runtime.runKey) ? 22 : 12);
   draw(t, moving);
   updateMap();
   requestAnimationFrame(frame);

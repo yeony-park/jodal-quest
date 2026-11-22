@@ -1,7 +1,7 @@
-import { MAP_H, MAP_W, TILE, floorForScene, floors, spots } from "../data/world.js";
+import { MAP_H, MAP_W, TILE, floorForScene, floors, spotOnFloor, spots } from "../data/world.js";
 import { canvas, ctx } from "./canvas.js";
 import { player, runtime } from "../core/runtime.js";
-import { pixelPerson, rookieOutfit } from "./characters.js";
+import { pixelPerson, rookieOutfit, spriteSheet } from "./characters.js";
 import { nextTarget } from "../game/quests.js";
 import { guideTarget, interactionTarget, spotActive, spotNearby } from "./navigation.js";
 import { outlineRect } from "./contrast.js";
@@ -48,6 +48,35 @@ export function box(x, y, w, h, z, top = "#c5cbbd", left = "#899e91", right = "#
   polygon([d, c, up(c), up(d)], left);
   polygon([b, c, up(c), up(b)], right);
   polygon([up(a), up(b), up(c), up(d)], top);
+}
+
+const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+
+function drawDeskWorker(p, activity) {
+  const time = reduceMotion?.matches ? 0 : runtime.last;
+  const typing = activity === "typing";
+  const sigh = !typing && time % 5300 > 3500;
+  const x = Math.round(p.x + 18), y = Math.round(p.y);
+  ctx.fillStyle = "#697778";
+  ctx.fillRect(x - 6, y - 19, 18, 20);
+  ctx.fillRect(x + 3, y, 3, 7);
+  ctx.drawImage(spriteSheet(typing ? "typist" : "reviewer"), 0, 0, 16, 19,
+    x - 13, y - 38 + (sigh ? 3 : 0), 28, 34);
+  ctx.fillStyle = "#677979";
+  ctx.fillRect(x - 23, y - 3, 19, 5);
+  const beat = typing ? Math.floor(time / 150) % 2 : 0;
+  ctx.fillStyle = "#efba8d";
+  ctx.fillRect(x - 16, y - 6 + beat * 2, 5, 4);
+  ctx.fillRect(x - 8, y - 5 - beat * 2, 5, 4);
+  if (sigh) {
+    ctx.fillStyle = "#fffcf0";
+    ctx.fillRect(x + 7, y - 48, 25, 13);
+    ctx.fillRect(x + 8, y - 35, 4, 3);
+    ctx.fillStyle = "#536168";
+    ctx.textAlign = "center";
+    ctx.font = "10px monospace";
+    ctx.fillText("후…", x + 19, y - 38);
+  }
 }
 
 export function drawFurniture(o) {
@@ -125,6 +154,7 @@ export function drawFurniture(o) {
     return;
   }
   if (o.spot && spotNearby(o.spot)) outlineRect(p.x - 14, p.y - 24, 28, 25);
+  if (o.activity) drawDeskWorker(p, o.activity);
   ctx.fillStyle = "#263e4d";
   ctx.fillRect(p.x - 12, p.y - 22, 24, 19);
   ctx.fillStyle = "#87c4c3";
@@ -135,7 +165,7 @@ export function drawFurniture(o) {
   ctx.fillStyle = "#51676c";
   ctx.fillRect(p.x - 2, p.y - 3, 4, 5);
   ctx.fillRect(p.x - 8, p.y + 1, 16, 3);
-  if (o.w > 1) {
+  if (o.w > 1 && !o.activity) {
     const q = project((o.x + 1.45) * TILE, (o.y + 0.6) * TILE, 21);
     if (o.spot && spotNearby(o.spot)) outlineRect(q.x - 10, q.y - 10, 20, 14);
     ctx.fillStyle = "#fff1c8";
@@ -249,12 +279,12 @@ export function sceneItems(moving) {
   }
   for (const o of floor.furnishings)
     items.push({ furniture: o, x0: o.x, y0: o.y, x1: o.x + o.w, y1: o.y + o.h, draw: () => drawFurniture(o) });
-  if (runtime.state.stage !== 3) {
-    if (runtime.floor === 0) {
-      items.push(person(spots.mentor.npcX, spots.mentor.npcY, "mentor"));
-      items.push(person(spots.supplier.npcX, spots.supplier.npcY, "supplier"));
-    } else if (runtime.floor === 1) items.push(person(spots.officer.npcX, spots.officer.npcY, "officer"));
-  }
+  if (runtime.floor === 0 || runtime.state.stage === 3) {
+    items.push(person(spots.mentor.npcX, spots.mentor.npcY, "mentor"));
+    if (runtime.state.stage === 3) items.push(person(spots.mentor.x, spots.mentor.y, "rookie"));
+    else items.push(person(spots.supplier.npcX, spots.supplier.npcY, "supplier"));
+  } else if (floor.guide) items.push(person(spots.librarian.npcX, spots.librarian.npcY, "librarian"));
+  else if (runtime.floor === 1) items.push(person(spots.officer.npcX, spots.officer.npcY, "officer"));
   items.push(person(player.x, player.y, runtime.state.stage === 3 ? "supplier" : rookieOutfit(), moving));
   return items;
 }
@@ -284,7 +314,7 @@ export function draw(t, moving) {
       tile(
         x,
         y,
-        corridor ? ((x + y) % 2 ? "#b7d8d2" : "#c5e1d8") : (x + y) % 2 ? (floor.tint || "#e5e2cc") : "#f0ecd9",
+        corridor ? ((x + y) % 2 ? "#dccbad" : "#e9dcc5") : (x + y) % 2 ? (floor.tint || "#e5e2cc") : "#f0ecd9",
       );
     }
   box(0, 0, 18, 0.12, 37, "#fbf0dc", "#d6dfd6", "#b9cec5");
@@ -437,7 +467,7 @@ export function placeLabel(anchor, size, obstacles, own) {
   let rank=0;
   for(const gap of [10,26,44,66,90]) {
     const top=t.y-gap-size.h, bottom=t.y+t.h+gap, left=t.x-gap-size.w, right=t.x+t.w+gap;
-    if (own?.id === "cabinet") consider(cx-size.w/2,bottom,rank++);
+    if (own?.id === "cabinet" || own?.id === "librarian") consider(cx-size.w/2,bottom,rank++);
     consider(cx-size.w/2,top,rank++);
     for(let k=1;k<=4;k++) for(const d of [k,-k]) consider(cx-size.w/2+d*size.w/3,top,rank++);
     for(let k=0;k<=3;k++) for(const d of k?[k,-k]:[0]) {
@@ -455,8 +485,8 @@ export function positionLabels() {
   const target = guideTarget(nextTarget()), nearby = interactionTarget();
   const ids = Object.keys(spots).sort((a, b) => Number(b === target) - Number(a === target));
   for (const id of ids) {
-    const el = $("spot-" + id), s = spots[id];
-    el.hidden = !spotActive(id) || (id !== target && !spotNearby(id) && !(id === "cabinet" && runtime.floor > 1));
+    const el = $("spot-" + id), s = spotOnFloor(id, runtime.floor);
+    el.hidden = !spotActive(id) || (id !== target && !spotNearby(id) && !(id === "librarian" || (id === "cabinet" && runtime.floor > 1)));
     if (el.hidden) continue;
     el.classList.toggle("in-range", id === nearby);
     const p=project(s.npcX??s.x,s.npcY??s.y), own=visuals.find(v=>v.id===id);
