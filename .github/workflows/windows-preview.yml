@@ -1,0 +1,40 @@
+name: Windows executable
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, 'build/**']
+    paths:
+      - 'dist/**'
+      - 'packaging/windows/**'
+      - '.github/workflows/windows-preview.yml'
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build executable from the shipped game
+        run: ./packaging/windows/build.ps1
+      - name: Launch and verify the embedded game
+        shell: pwsh
+        run: |
+          $exe = Resolve-Path release/JodalQuest-Windows-x64.exe
+          $process = Start-Process $exe -PassThru
+          if (!$process.WaitForExit(30000) -or $process.ExitCode -ne 0) { throw 'Launcher failed.' }
+          $page = Get-ChildItem "$env:LOCALAPPDATA/JodalQuest/*/index.html" | Select-Object -First 1
+          if (!$page) { throw 'Missing game page.' }
+          $dist = (Resolve-Path dist).Path
+          Get-ChildItem $dist -File -Recurse | ForEach-Object {
+            $installed = Join-Path $page.DirectoryName ([IO.Path]::GetRelativePath($dist, $_.FullName))
+            if ((Get-FileHash $_.FullName).Hash -ne (Get-FileHash $installed).Hash) { throw "Mismatch: $installed" }
+          }
+          $edge = "${env:ProgramFiles(x86)}/Microsoft/Edge/Application/msedge.exe"
+          $dom = & $edge --headless --disable-gpu --no-first-run "--user-data-dir=$env:RUNNER_TEMP/jodal-edge" --dump-dom ([uri]$page.FullName).AbsoluteUri | Out-String
+          if ($dom -notmatch 'id="title-chars"[^>]*>\s*<svg') { throw 'Game did not render its title characters.' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64
+          path: release/JodalQuest-Windows-x64.exe
+          if-no-files-found: error
