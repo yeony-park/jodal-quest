@@ -41,8 +41,8 @@ export function recover() {
   const scene=recoveryScenes[runtime.state.pendingRecovery];
   if (!scene || scene.stage!==runtime.state.stage) return;
   const {name, role} = supervisor(scene.stage);
-  const address = scene.stage === 3 ? "욘 대리" : "달달 주무관";
-  speak(name, [`${address}, 실수할 수도 있죠. 그래도 다음부터는 보내기 전에 한 번 더 확인해 줘요. 이번엔 제가 할게요.`, scene.correction], () => {
+  const address = scene.stage === 3 ? "욘 대리" : "조달달 주무관";
+  speak(name, [`${address}, 실수할 수도 있죠. 이번엔 제가 할게요. 다음부터는 보내기 전에 한 번 더 확인해요.`, scene.correction], () => {
     const term = { intake: "수요기관", "spec-brand": "규격", "spec-empty": "규격", notice: "구매결의",
       opening: "예정가격", contract: "낙찰자 선정·전자계약", delivery: "검사·검수", payment: "대금 청구" }[runtime.state.pendingRecovery];
     if (term) learnTerm(term);
