@@ -641,7 +641,7 @@ async function main() {
   });
   check("Supplier cannot prepare bid without login and suitable product", () => {
     b.run("portalBid()");
-    assert.match(b.el("modal").innerHTML, /체험 로그인/);
+    assert.match(b.el("modal").innerHTML, /홈 \/ 로그인/);
     b.run("actions['portal-signin']();portalBid()");
     assert.equal(b.run("state.product"), false);
     assert.match(b.el("toast").textContent, /제품/);
