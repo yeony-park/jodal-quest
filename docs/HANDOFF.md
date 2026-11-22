@@ -4,7 +4,7 @@ Updated 2026-11-21. This build has six quests, two floors, recorded rookie repli
 
 ## Build and repository rules
 
-Use Node 22+, `npm ci`, then `npm test`. The test command rebuilds `dist` and runs 87 game checks plus distribution checks. `npm run dev` serves the game at http://127.0.0.1:8765. For offline play, open `dist/index.html` and keep the entire distribution folder together.
+Use Node 22+, `npm ci`, then `npm test`. The test command rebuilds `dist` and runs 98 game checks plus distribution checks. `npm run dev` serves the game at http://127.0.0.1:8765. For offline play, open `dist/index.html` and keep the entire distribution folder together.
 
 Edit source in `src`; regenerate `dist` with `npm run build`. Keep the CSS import order in `src/styles/index.css`. Later rules in `ending.css` override mobile inventory rules in `pixel-theme.css`; check both when changing the HUD. No new dependencies, external images, or fonts were added. The owner-supplied processed rookie voice bank is included.
 
@@ -96,7 +96,7 @@ Tests verify both production banks, nonempty voiced windows, rookie dialogue pla
 
 ## Evidence and remaining work
 
-`npm test` currently passes 87 checks plus the distribution suite. See `docs/검증기록.txt` for browser results and limits. No commit, push, PR, or deployment was performed by this worker.
+`npm test` currently passes 98 checks plus the distribution suite. See `docs/검증기록.txt` for browser results and limits. No commit, push, PR, or deployment was performed by this worker.
 
 Official reference content was supplied to the worker from a 2026-11-21 fetch :
 
