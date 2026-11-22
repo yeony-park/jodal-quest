@@ -136,7 +136,7 @@ export function reportDeliveryIssue() {
   runtime.state.deliveryIssueReported = true;
   save();
   render();
-  speak("수요기관 담당자", ["한 대가 부족한 것을 확인했어요. 계약상대자에게 보완을 요청하겠습니다.", "부족한 한 대가 도착했어요! 수요기관 연락 데스크에서 보완한 자료를 다시 확인해 주세요."], () => {}, "contact", "보완 감사합니다. 스무 대가 맞는지 다시 확인할게요.");
+  speak("수요기관 담당자", ["새봄도서관 한서진입니다. 한 대가 부족한 것을 확인했어요. 계약상대자에게 보완을 요청하겠습니다.", "부족한 한 대가 도착했어요! 수요기관 연락 데스크에서 보완한 자료를 다시 확인해 주세요."], () => {}, "contact", "보완 감사합니다. 스무 대가 맞는지 다시 확인할게요.");
 }
 
 export function inspectDelivery() {

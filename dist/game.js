@@ -781,7 +781,7 @@
       `<div class="g2b-breadcrumb">홈 / 로그인</div>
       <h3>업무 계정으로 시작</h3>
       <div class="g2b-login-card">
-        <div class="large-avatar">${face(runtime.state.stage === 3 ? "supplier" : "rookie")}</div>
+        <div class="large-avatar">${face(runtime.state.stage === 3 ? "supplier" : rookieOutfit())}</div>
         <h4>
           ${runtime.state.stage === 3 ? "욘 대리 · 새봄테크" : "조달달 주무관 · 새봄지방조달청"}
         </h4>
@@ -870,7 +870,7 @@
         참가자격과 제출서류를 확인했습니다. 새봄테크는 등록·참가 요건을 갖췄습니다.</label
       >
       <p class="g2b-caution">
-        접수는 낙찰·계약 체결을 뜻하지 않습니다.
+        모의 제출이며 실제 입찰로 전송되지 않습니다. 접수는 낙찰·계약 체결을 뜻하지 않습니다.
       </p>
       <div class="g2b-actions">
         <button class="g2b-primary" data-action="submit-bid">입찰서 제출</button
@@ -883,6 +883,7 @@
         공무원은 공고 초안을 준비하고 선배에게 검토를 요청합니다. 기업
         담당자는 게시된 공고를 검색하고 입찰서를 제출합니다.
       </p>
+      <p>실제 업무에 필요한 이용자 등록, 인증서 제출, 보증 및 세부 서류 절차는 생략되었습니다.</p>
       <button class="g2b-primary" data-action="portal-home">나라장터 첫 화면</button>`;
     show("나라장터", portalShell(content, page), "portal");
     if (page === "list") $("portal-query-label").textContent = query || "전체";
@@ -1063,7 +1064,7 @@
     runtime.state.deliveryIssueReported = true;
     save();
     render();
-    speak("수요기관 담당자", ["한 대가 부족한 것을 확인했어요. 계약상대자에게 보완을 요청하겠습니다.", "부족한 한 대가 도착했어요! 수요기관 연락 데스크에서 보완한 자료를 다시 확인해 주세요."], () => {
+    speak("수요기관 담당자", ["새봄도서관 한서진입니다. 한 대가 부족한 것을 확인했어요. 계약상대자에게 보완을 요청하겠습니다.", "부족한 한 대가 도착했어요! 수요기관 연락 데스크에서 보완한 자료를 다시 확인해 주세요."], () => {
     }, "contact", "보완 감사합니다. 스무 대가 맞는지 다시 확인할게요.");
   }
   function inspectDelivery() {
@@ -1412,7 +1413,7 @@
       speak(
         "수요기관 담당자",
         [
-          "새봄도서관입니다. 아, 요청서에 납기를 빠뜨렸네요!",
+          "새봄도서관 한서진 사서입니다. 아, 요청서에 납기를 빠뜨렸네요!",
           "계약일로부터 30일 이내에 도서관 2층 자료실로 부탁드려요. 이용자들이 문서를 읽을 때 쓸 모니터예요."
         ],
         () => {
@@ -1769,7 +1770,7 @@
         items.push(person(spots.supplier.npcX, spots.supplier.npcY, "supplier"));
       } else if (runtime.floor === 1) items.push(person(spots.officer.npcX, spots.officer.npcY, "officer"));
     }
-    items.push(person(player.x, player.y, runtime.state.stage === 3 ? "supplier" : "rookie", moving));
+    items.push(person(player.x, player.y, runtime.state.stage === 3 ? "supplier" : rookieOutfit(), moving));
     return items;
   }
   function draw(t, moving) {
@@ -2009,8 +2010,12 @@
     ".....XXX.XXX....",
     "....XXXX.XXXX..."
   ];
-  var hair = { supplier: "#49384d", mentor: "#605049", officer: "#2f3a4f" };
-  var jacket = { supplier: "#956ba5", mentor: "#c29458", officer: "#5f7f63" };
+  function rookieOutfit() {
+    if (runtime.state.stage !== LAST_STAGE) return "rookie";
+    return endingTitle(runtime.state.recoveries, runtime.state.mistakes) === "사파" ? "sapa" : "jeongpa";
+  }
+  var hair = { contact: "#685b52", sapa: "#332d40", supplier: "#49384d", mentor: "#605049", officer: "#2f3a4f" };
+  var jacket = { contact: "#478786", sapa: "#4b365a", jeongpa: "#e5eedd", supplier: "#956ba5", mentor: "#c29458", officer: "#5f7f63" };
   function pixelPalette(kind) {
     return {
       H: hair[kind] || "#243a43",
@@ -2020,6 +2025,7 @@
       J: jacket[kind] || "#3b7c91",
       W: "#f9edcf",
       A: kind === "supplier" ? "#f0cb7a" : kind === "officer" ? "#e3d9a8" : "#bd6e4b",
+      B: kind === "sapa" ? "#c57579" : "#468278",
       P: kind === "supplier" ? "#654b73" : "#3a4e54"
     };
   }
@@ -2033,6 +2039,22 @@
     if (kind === "supplier") {
       for (let y = 6; y < 15; y++) for (const x of [2, 3, 12, 13]) cells.push([x, y, "H"]);
       cells.push([12, 5, "A"], [13, 5, "A"], [12, 6, "A"]);
+    }
+    if (kind === "contact") {
+      for (let y = 2; y <= 5; y++) for (let x = 1; x <= 4; x++) cells.push([x, y, "H"]);
+      cells.push([4, 4, "W"], [5, 4, "W"], [6, 3, "W"], [9, 14, "W"], [10, 14, "W"], [9, 15, "B"], [10, 15, "B"]);
+    }
+    if (kind === "sapa" || kind === "jeongpa") {
+      for (let y = 12; y <= 20; y++) {
+        const edge = y < 17 ? 3 : 2;
+        for (let x = edge; x < 16 - edge; x++) cells.push([x, y, "J"]);
+      }
+      for (let x = 3; x <= 12; x++) cells.push([x, 17, "B"]);
+      for (let i = 0; i < 5; i++) cells.push([5 + i, 12 + i, "B"], [10 - i, 12 + i, "W"]);
+      if (kind === "sapa") {
+        for (let x = 2; x <= 13; x++) cells.push([x, 4, "B"]);
+        cells.push([13, 5, "B"], [14, 5, "B"], [14, 6, "B"], [15, 7, "B"], [12, 18, "B"], [13, 19, "B"]);
+      }
     }
     if (kind === "officer") cells.push([4, 3, "A"], [5, 3, "A"], [6, 2, "A"]);
     if (kind === "mentor")
@@ -2153,7 +2175,7 @@
     $("speech").hidden = false;
     document.body.classList.add("talking");
     $("speech-name").textContent = name;
-    $("speech-portrait").innerHTML = face(role === "contact" ? "supplier" : role);
+    $("speech-portrait").innerHTML = face(role === "rookie" ? rookieOutfit() : role);
     $("speech").focus();
     typeLine();
   }
@@ -2231,15 +2253,26 @@
   function result() {
     if (runtime.state.stage !== LAST_STAGE) return;
     const score = Math.max(60, 100 - runtime.state.mistakes * 5);
+    const title = endingTitle(runtime.state.recoveries, runtime.state.mistakes);
+    const collected = floors.filter((floor) => runtime.state.learnedTerms.includes(floor.term)).length;
+    const collectionTitle = collected === floors.length ? "캐비닛 수집왕" : collected >= Math.ceil(floors.length / 2) ? "청사 기록가" : collected > 0 ? "서류 탐색가" : "수집 준비생";
+    const note = title === "사파" ? "달달 주무관, 여러 번 초안을 다시 펼쳤지요. 잘못 적은 곳을 짚어 내고 끝까지 바로잡는 끈기, 그게 자네의 장점이에요." : title === "정파" ? "달달 주무관, 처음부터 끝까지 근거를 확인했네요. 다음에 어려운 의뢰가 와도 오늘처럼 차근차근 살펴봐요." : "달달 주무관, 실수를 알아차리고 돌아가 고친 순간을 기억해요. 다음 의뢰에서는 그 부분부터 눈에 들어올 거예요.";
     show(
-      endingTitle(runtime.state.recoveries, runtime.state.mistakes),
+      title,
       /* HTML */
       `<div class="level-up-tag">업무 완료</div>
       <div class="level-up-hero">
-        ${face("rookie")}<strong>최종 Lv. ${levelProgress().level}</strong>
+        ${face(rookieOutfit())}<strong>최종 Lv. ${levelProgress().level}</strong>
       </div>
-      <p class="center">총 ${runtime.state.xp} XP · 다음 레벨까지 ${levelProgress().next - levelProgress().current} XP</p>
+      <section class="mentor-assessment" aria-label="선배의 인물평"><h3>김주문의 인물평</h3>
+        <p>${note}</p>
+        <p class="collection-award"><strong>${collectionTitle}</strong> · 캐비닛 카드 ${collected}/${floors.length}장</p>
+        <p class="note-signed">구매팀 선배 김주문 씀</p></section>
+      <p class="center">총 ${runtime.state.xp} XP</p>
       <p class="center">이제 나도... 조달의 왕이야!</p>
+      <a class="ending-link" href="${MORE_QUESTS}" target="_blank" rel="noopener noreferrer"
+        >더 많은 퀘스트를 깨고 싶다면?</a
+      >
       <section class="achievements" aria-label="획득한 업적"><h3>획득한 업적</h3><ul>
         <li>여섯 업무 완주 · 계약부터 대금 지급까지</li>
         ${runtime.state.recoveries.length === 0 && runtime.state.mistakes === 0 ? "<li>정파 · 모든 선택을 올바른 절차로 완료</li>" : `<li>${Math.max(runtime.state.recoveries.length, runtime.state.mistakes) >= 3 ? "사파 · 수습 달인" : "수습을 배운 신입"} · ${runtime.state.recoveries.length}개 수습 완료</li>`}
@@ -2251,11 +2284,7 @@
         <div class="stat"><strong>7 / 7</strong><small>획득한 물건</small></div>
         <div class="stat"><strong>${score}</strong><small>학습 점수</small></div>
       </div>
-      <div class="success">구매 완료 · 입찰서 접수 → 심사 확인·전자계약 → 검사·검수 → 대금 지급</div>
       <details class="ending-review" open><summary>여섯 업무에서 배운 것</summary>${learningReview()}</details>
-      <a class="ending-link" href="${MORE_QUESTS}" target="_blank" rel="noopener noreferrer"
-        >더 많은 퀘스트를 깨고 싶다면?</a
-      >
       <p class="source-note">공공조달 체험 게임 · 실제 업무와 다를 수 있습니다</p>
       ${buttons([
         ["close", "사무실로 돌아가기"],

@@ -4,7 +4,7 @@ import { learnTerm } from "./learning.js";
 import { playSyllable, stopVoices } from "../audio/sound.js";
 import { close } from "./modal.js";
 import { setNotebook } from "./hud.js";
-import { face } from "../world/characters.js";
+import { face, rookieOutfit } from "../world/characters.js";
 import { canvas } from "../world/canvas.js";
 
 export function stopTalk() {
@@ -31,7 +31,7 @@ export function speak(name, lines, onDone = () => {}, role = "mentor", reply = "
   $("speech").hidden = false;
   document.body.classList.add("talking");
   $("speech-name").textContent = name;
-  $("speech-portrait").innerHTML = face(role === "contact" ? "supplier" : role);
+  $("speech-portrait").innerHTML = face(role === "rookie" ? rookieOutfit() : role);
   $("speech").focus();
   typeLine();
 }

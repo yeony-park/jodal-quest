@@ -2120,5 +2120,43 @@ a {
 .cabinet-card h3 {
   margin: 8px 0;
 }
+.mentor-assessment {
+  padding: 20px 18px 12px 40px;
+  border: 1px solid #dfd1ad;
+  border-radius: 3px 4px 12px 4px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 25px,
+      #e4a8a2 25px 27px,
+      transparent 27px),
+    repeating-linear-gradient(
+      0deg,
+      #fff8e6 0 29px,
+      #c8d7cb 29px 30px);
+  box-shadow: 2px 3px #e9dfc8;
+  font-family: var(--hand);
+  color: #3b4b41;
+}
+.mentor-assessment h3,
+.modal .mentor-assessment p {
+  margin: 0;
+  font-size: 22px;
+  line-height: 30px;
+  color: inherit;
+}
+.mentor-assessment .note-signed {
+  text-align: right;
+}
+.mentor-assessment .collection-award {
+  margin-top: 10px;
+  color: #495a59;
+}
+.collection-award strong {
+  border: 2px solid #9c5760;
+  border-radius: 3px;
+  padding: 0 5px;
+  color: #894c57;
+}
 
 /* src/styles/index.css */

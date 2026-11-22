@@ -1,7 +1,7 @@
 import { MAP_H, MAP_W, TILE, floorForScene, floors, spots } from "../data/world.js";
 import { canvas, ctx } from "./canvas.js";
 import { player, runtime } from "../core/runtime.js";
-import { pixelPerson } from "./characters.js";
+import { pixelPerson, rookieOutfit } from "./characters.js";
 import { nextTarget } from "../game/quests.js";
 import { guideTarget, interactionTarget, spotActive, spotNearby } from "./navigation.js";
 import { outlineRect } from "./contrast.js";
@@ -255,7 +255,7 @@ export function sceneItems(moving) {
       items.push(person(spots.supplier.npcX, spots.supplier.npcY, "supplier"));
     } else if (runtime.floor === 1) items.push(person(spots.officer.npcX, spots.officer.npcY, "officer"));
   }
-  items.push(person(player.x, player.y, runtime.state.stage === 3 ? "supplier" : "rookie", moving));
+  items.push(person(player.x, player.y, runtime.state.stage === 3 ? "supplier" : rookieOutfit(), moving));
   return items;
 }
 

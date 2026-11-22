@@ -941,7 +941,7 @@ async function main() {
     c.run('state.xp=750;result()');assert.match(c.el('modal').innerHTML,/최종 Lv. 6/);
     assert.equal((c.el('modal').innerHTML.match(/실제 업무와 다를 수 있습니다/g)||[]).length,1);
     assert.doesNotMatch(c.el('modal').innerHTML,/채용정보로 이동합니다|외부 사이트/);
-    assert.match(c.el('modal').innerHTML,/더 많은 퀘스트를 깨고 싶다면/);
+    assert.match(c.el('modal').innerHTML,/더 많은 퀘스트를 깨고 싶다면\?<\/a\s*>\s*<section class="achievements"/);
   });
   check("Production banks use the supplied rookie and supplier recordings", () => {
     assert.equal(b.run("voiceClips.has('supplier')"), true);
@@ -1127,6 +1127,29 @@ async function main() {
     }
     assert.equal(c.run("state.learnedTerms.length"),10);
     assert.equal(c.run("state.stage"),0);
+  });
+  check("Cabinet titles count only cabinet cards and remain independent of the character evaluation", () => {
+    const c=boot();
+    for (const [cards, title] of [[0,"수집 준비생"],[1,"서류 탐색가"],[4,"서류 탐색가"],[5,"청사 기록가"],[9,"청사 기록가"],[10,"캐비닛 수집왕"]]) {
+      for (const [mistakes, outfit] of [[0,"jeongpa"],[2,"jeongpa"],[3,"sapa"]]) {
+        c.run(`state.stage=6;state.mistakes=${mistakes};state.learnedTerms=['규격',...floors.slice(0,${cards}).map(f=>f.term)];result()`);
+        assert.match(c.el("modal").innerHTML,new RegExp(title+".*캐비닛 카드 "+cards+"/10장"));
+        assert.equal(c.run("rookieOutfit()"),outfit);
+        assert.ok(c.el("modal").innerHTML.includes(c.run(`face('${outfit}')`)));
+        assert.equal(c.run("sceneItems(false).at(-1).actor"),outfit);
+      }
+    }
+    assert.notEqual(c.run("face('jeongpa')"), c.run("face('sapa')"));
+  });
+  check("The library contact has a dedicated portrait and the floor guide stays inside the map", () => {
+    const c=boot();c.run("state.brief=true;phone()");
+    assert.equal(c.el("speech-portrait").innerHTML,c.run("face('contact')"));
+    assert.notEqual(c.run("face('contact')"),c.run("face('supplier')"));
+    c.finish();c.run("openGlossary()");
+    assert.equal((c.el("modal").innerHTML.match(/href="/g)||[]).length,1);
+    c.run("actions.map();actions['map-1']()");
+    assert.match(c.el("modal").innerHTML,/2층 계약 체험실/);
+    assert.doesNotMatch(c.el("modal").innerHTML,/https?:|data-action="floor-/);
   });
   check("Individual explanations unlock once, persist mid-dialogue and reset for a new game", () => {
     const c = boot();

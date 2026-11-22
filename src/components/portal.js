@@ -1,6 +1,6 @@
 import { beginRecovery } from "../game/recovery.js";
 import { runtime } from "../core/runtime.js";
-import { face } from "../world/characters.js";
+import { face, rookieOutfit } from "../world/characters.js";
 import { show, toast } from "./modal.js";
 import { $ } from "../core/dom.js";
 import { save } from "../core/storage.js";
@@ -89,7 +89,7 @@ export function openPortal(page = "home", query = "모니터") {
     content = /* HTML */ `<div class="g2b-breadcrumb">홈 / 로그인</div>
       <h3>업무 계정으로 시작</h3>
       <div class="g2b-login-card">
-        <div class="large-avatar">${face(runtime.state.stage === 3 ? "supplier" : "rookie")}</div>
+        <div class="large-avatar">${face(runtime.state.stage === 3 ? "supplier" : rookieOutfit())}</div>
         <h4>
           ${runtime.state.stage === 3 ? "욘 대리 · 새봄테크" : "조달달 주무관 · 새봄지방조달청"}
         </h4>
@@ -175,7 +175,7 @@ export function openPortal(page = "home", query = "모니터") {
         참가자격과 제출서류를 확인했습니다. 새봄테크는 등록·참가 요건을 갖췄습니다.</label
       >
       <p class="g2b-caution">
-        접수는 낙찰·계약 체결을 뜻하지 않습니다.
+        모의 제출이며 실제 입찰로 전송되지 않습니다. 접수는 낙찰·계약 체결을 뜻하지 않습니다.
       </p>
       <div class="g2b-actions">
         <button class="g2b-primary" data-action="submit-bid">입찰서 제출</button
@@ -187,6 +187,7 @@ export function openPortal(page = "home", query = "모니터") {
         공무원은 공고 초안을 준비하고 선배에게 검토를 요청합니다. 기업
         담당자는 게시된 공고를 검색하고 입찰서를 제출합니다.
       </p>
+      <p>실제 업무에 필요한 이용자 등록, 인증서 제출, 보증 및 세부 서류 절차는 생략되었습니다.</p>
       <button class="g2b-primary" data-action="portal-home">나라장터 첫 화면</button>`;
   show("나라장터", portalShell(content, page), "portal");
   if (page === "list") $("portal-query-label").textContent = query || "전체";
