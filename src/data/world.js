@@ -82,7 +82,7 @@ const tourFloors = [
   ["4F", "물품관리", ["물품관리과", "해외물자과"], "물품관리", ["shelf", "shelf", "desk"], ["shelf", "table", "shelf"], "#dbe9d8"],
   ["6F", "시설사업", ["설계예산검토과", "건축설비과"], "설계도서", ["table", "table", "desk"], ["desk", "table", "shelf"], "#ece1cf"],
   ["7F", "도서실", ["도서실", "서비스계약과"], "용역", ["shelf", "shelf", "shelf"], ["plant", "table", "desk"], "#e9dfcf"],
-  ["8F", "회의 공간", ["기획재정담당관실", "대회의실"], "예산", ["desk", "plant", "shelf"], ["table", "table", "table"], "#ecdfee"],
+  ["8F", "회의 공간", ["대회의실", "기획재정담당관실"], "예산", [], [], "#ebdecf"],
   ["9F", "혁신조달", ["혁신조달정책과", "운영지원과"], "혁신조달", ["table", "desk", "desk"], ["shelf", "table", "plant"], "#e9e4cf"],
 ];
 for (const [level, name, rooms, term, firstRoom, secondRoom, tint] of tourFloors) {
@@ -101,6 +101,20 @@ for (const [level, name, rooms, term, firstRoom, secondRoom, tint] of tourFloors
 const library = floors.findIndex(f => f.level === "7F");
 floors[library].guide = "문다은 자료 담당자";
 spots.librarian = {x: 112, y: 240, npcX: 112, npcY: 208, floor: library};
+
+const meetingFloor = floors.find(f => f.level === "8F");
+meetingFloor.furnishings.push(
+  {type: "projection", x: 1, y: 0, w: 6, h: 1},
+  {type: "conference", x: 1, y: 2, w: 6, h: 3},
+  {type: "plant", variety: "palm", x: 7, y: 1, w: 1, h: 1},
+  {type: "window", x: 10, y: 0, w: 7, h: 1},
+  {type: "desk", x: 11, y: 3, w: 2, h: 1},
+  {type: "shelf", x: 15, y: 1, w: 2, h: 1},
+  {type: "lounge", x: 3, y: 10, w: 4, h: 2},
+  {type: "plant", x: 7, y: 11, w: 1, h: 1},
+  {type: "coffee", x: 12, y: 10, w: 3, h: 1},
+  {type: "plant", variety: "palm", x: 16, y: 11, w: 1, h: 1},
+);
 
 const cabinetTiles = {
   B1F: [1, 1], "1F": [15, 10], "2F": [15, 1], "3F": [6, 2], "4F": [12, 11],

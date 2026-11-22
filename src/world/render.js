@@ -39,14 +39,15 @@ export function tile(x, y, color) {
   );
 }
 
-export function box(x, y, w, h, z, top = "#c5cbbd", left = "#899e91", right = "#72877e") {
+export function box(x, y, w, h, z, top = "#c5cbbd", left = "#899e91", right = "#72877e", bottom = 0) {
   const a = project(x * TILE, y * TILE),
     b = project((x + w) * TILE, y * TILE),
     c = project((x + w) * TILE, (y + h) * TILE),
     d = project(x * TILE, (y + h) * TILE),
     up = (p) => ({ x: p.x, y: p.y - z });
-  polygon([d, c, up(c), up(d)], left);
-  polygon([b, c, up(c), up(b)], right);
+  const base = (p) => ({ x: p.x, y: p.y - bottom });
+  polygon([base(d), base(c), up(c), up(d)], left);
+  polygon([base(b), base(c), up(c), up(b)], right);
   polygon([up(a), up(b), up(c), up(d)], top);
 }
 
@@ -80,6 +81,70 @@ function drawDeskWorker(p, activity) {
 }
 
 export function drawFurniture(o) {
+  if (o.type === "projection" || o.type === "window") {
+    // Wall-mounted details follow the same vanishing lines as the back wall.
+    const panel = (u, bottom, width, height, color) => {
+      const point = (a, z) => project((o.x + a) * TILE, (o.y + .6) * TILE, z);
+      polygon([point(u,bottom), point(u+width,bottom), point(u+width,bottom+height), point(u,bottom+height)], color);
+    };
+    if (o.type === "window") {
+      panel(0, 17, o.w, 40, "#73938e");
+      panel(.1, 19, o.w-.2, 36, "#c6e6e5");
+      const skyline = [8, 14, 10, 17, 12, 9, 14, 7, 11, 15, 8, 12];
+      skyline.forEach((h, i) => panel(.15 + i*.55, 19, .49, h, i%2 ? "#a7c9c4" : "#b2d0cb"));
+      for (let u = 1; u < o.w; u++) panel(u, 18, .08, 38, "#789993");
+      panel(0, 16, o.w, 3, "#dfccaf");
+      return;
+    }
+    panel(0, 1, o.w, 66, "#8d695b");
+    for (let u = .1; u < o.w; u += .24) panel(u, 1, .07, 64, "#c69879");
+    panel(.72, 13, 4.6, 50, "#385357");
+    panel(.83, 17, 4.38, 42, "#f4f4dd");
+    panel(1.06, 48, 2.5, 4, "#53847d");
+    panel(1.06, 40, 1.25, 2, "#a9c6ba");
+    panel(1.06, 34, 1.62, 2, "#a9c6ba");
+    [9, 16, 22].forEach((height, i) => panel(3.1 + i * .55, 22, .35, height, ["#d29b82", "#87b7ae", "#568981"][i]));
+    return;
+  }
+  if (o.type === "conference") {
+    const {x, y} = o;
+    const chair = (a, b, front) => {
+      box(a+.16, b+.17, .24, .28, 7, "#69766d", "#6c776f", "#536863");
+      box(a, b, .61, .54, 12, "#a1c6b7", "#648c80", "#567a73", 9);
+      box(a, b+(front ? .42 : 0), .61, .12, 23, "#8db5a4", "#638a7d", "#4c726b", 12);
+    };
+    for (let i = 0; i < 4; i++) chair(x+.6+i*1.35, y+.1, false);
+    box(x+.75, y+1.1, 4.5, .74, 16, "#bd977c", "#947664", "#806658");
+    box(x+.24, y+.77, 5.52, 1.42, 22, "#e8c5a1", "#bd957b", "#a9826c", 18);
+    box(x+.6, y+1.35, 4.8, .22, 23, "#72978a", "#79988a", "#75988b", 22);
+    for (const offset of [.7, 2.1, 4.8]) {
+      box(x+offset, y+1.76, .44, .26, 23, "#fff7df", "#ded4b9", "#c5bca9", 22);
+      box(x+offset+.08, y+1.83, .22, .03, 24, "#a3aea0", "#a3aea0", "#a3aea0", 23);
+    }
+    for (const offset of [1.55, 3.8]) {
+      box(x+offset, y+.93, .46, .32, 23, "#829698", "#667b80", "#596e72", 22);
+      box(x+offset, y+.93, .46, .06, 29, "#566e72", "#a6cec6", "#536a71", 23);
+    }
+    for (let i = 0; i < 4; i++) chair(x+.6+i*1.35, y+2.39, true);
+    return;
+  }
+  if (o.type === "lounge") {
+    box(o.x, o.y, 3.2, .85, 12, "#e4b59e", "#c5917e", "#ab796b");
+    box(o.x, o.y, 3.2, .2, 22, "#eac8af", "#cf9e87", "#b58371");
+    for (let i = 0; i < 3; i++) box(o.x+.12+i, o.y+.24, .94, .5, 15, "#f1d3bd", "#d9ac94", "#c49583", 12);
+    box(o.x+.8, o.y+1.3, 1.72, .55, 9, "#b38e72", "#967459", "#826352");
+    box(o.x+1.1, o.y+1.42, .46, .24, 11, "#90a9a1", "#758f84", "#69847b", 9);
+    return;
+  }
+  if (o.type === "coffee") {
+    const {x, y} = o;
+    box(x, y, 3, 1, 19, "#dcb99c", "#b98b70", "#a47761");
+    box(x+.15, y+.1, 2.7, .8, 21, "#f2e2c4", "#c7ac8d", "#b39b82", 19);
+    box(x+.3, y+.17, .75, .52, 30, "#647575", "#465656", "#394b4c", 21);
+    box(x+.48, y+.5, .25, .23, 25, "#faf1d9", "#d5c6ae", "#bfac97", 21);
+    for (const a of [1.5, 1.9, 2.3]) box(x+a, y+.44, .18, .2, 24, "#fff6dc", "#cfc4a8", "#bfb09a", 21);
+    return;
+  }
   if (o.type === "cabinet") {
     box(o.x, o.y, o.w, o.h, 34, "#eadbbf", "#a08b78", "#786d70");
     const opened = runtime.state.learnedTerms.includes(floors[runtime.floor].term);
@@ -317,6 +382,11 @@ export function draw(t, moving) {
         corridor ? ((x + y) % 2 ? "#dccbad" : "#e9dcc5") : (x + y) % 2 ? (floor.tint || "#e5e2cc") : "#f0ecd9",
       );
     }
+  if (floor.level === "8F") {
+    box(.55, 1.45, 6.9, 4.15, 1, "#9cafa5");
+    box(.64, 1.54, 6.72, 3.97, 1, "#e5d8b8");
+    box(.75, 1.65, 6.5, 3.75, 1, "#a8bdb0");
+  }
   box(0, 0, 18, 0.12, 37, "#fbf0dc", "#d6dfd6", "#b9cec5");
   box(0, 0, 0.12, 14, 37, "#fbf0dc", "#d6dfd6", "#b9cec5");
   // A framed noticeboard on the back wall, outside the walking and interaction layers.

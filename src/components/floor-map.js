@@ -2,7 +2,7 @@ import { player, runtime } from "../core/runtime.js";
 import { floorForScene, floorOrder, floors, MAP_H, MAP_W, spots, TILE } from "../data/world.js";
 import { show } from "./modal.js";
 
-const colors = { cabinet: "#b58443", shelf: "#94a89b", plant: "#89bba4", table: "#cfb398", display: "#b4cad9" };
+const colors = { cabinet: "#b58443", shelf: "#94a89b", plant: "#89bba4", table: "#cfb398", display: "#b4cad9", conference: "#c49a78", projection: "#598580", lounge: "#cd9e88" };
 
 function floorPlan(index, supplier) {
   const floor = floorForScene(index, runtime.state.stage);
