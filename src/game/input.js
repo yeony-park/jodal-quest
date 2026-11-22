@@ -1,5 +1,5 @@
 import { keys, runtime } from "../core/runtime.js";
-import { stopSounds, unlockAudio, updateVolume } from "../audio/sound.js";
+import { changeSoundSetting, stopEffects, stopVoices, syncMusic, unlockAudio } from "../audio/sound.js";
 import { nextLine, revealLine } from "../components/dialogue.js";
 import { close } from "../components/modal.js";
 import { $ } from "../core/dom.js";
@@ -16,7 +16,7 @@ export function physicalKey(e) {
 }
 
 export function handleKey(e) {
-  if (runtime.talkState) {
+  if (runtime.talkState && !runtime.modalOpen) {
     if (e.code === "Space" || e.key === "Enter") {
       e.preventDefault();
       if (!e.repeat) {
@@ -81,7 +81,7 @@ export function bindInput() {
     const b = e.target.closest("[data-action]");
     if (b) {
       const a = b.dataset.action;
-      if (runtime.talkState && !["talk-next", "sound"].includes(a)) return;
+      if (runtime.talkState && !runtime.modalOpen && !["talk-next", "sound"].includes(a)) return;
       unlockAudio();
       if (a.startsWith("go-")) go(a.slice(3));
       else if (actions[a]) actions[a]();
@@ -113,6 +113,7 @@ export function bindInput() {
   document.addEventListener("pointercancel", releaseTouch);
   document.addEventListener("lostpointercapture", releaseTouch);
   document.addEventListener("change", (e) => {
+    if (e.target.dataset?.sound) changeSoundSetting(e.target.dataset.sound, e.target.checked);
     if (e.target.id === "eligible") {
       runtime.state.eligibility = e.target.checked;
       save();
@@ -120,10 +121,7 @@ export function bindInput() {
     }
   });
   document.addEventListener("input", (e) => {
-    if (e.target.id === "volume") {
-      runtime.volume = Number(e.target.value) / 100;
-      updateVolume();
-    }
+    if (e.target.id === "music-volume") changeSoundSetting("musicVolume", Number(e.target.value));
   });
   document.addEventListener("keydown", handleKey);
   document.addEventListener("keyup", (e) => keys.delete(physicalKey(e)));
@@ -131,15 +129,17 @@ export function bindInput() {
     keys.clear();
     releaseTouch();
     revealLine();
-    stopSounds();
+    stopVoices();
   });
   window.addEventListener("resize", resizeWorld);
   document.addEventListener("visibilitychange", () => {
+    syncMusic();
     if (document.hidden) {
       keys.clear();
       releaseTouch();
       revealLine();
-      stopSounds();
+      stopVoices();
+      stopEffects();
     }
   });
 }

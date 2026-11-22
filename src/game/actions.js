@@ -6,8 +6,8 @@ import { startGame } from "../components/title.js";
 import { player, runtime } from "../core/runtime.js";
 import { render, setNotebook } from "../components/hud.js";
 import { $ } from "../core/dom.js";
-import { previewVoice, soundSettings, stopSounds, updateVolume } from "../audio/sound.js";
-import { nextLine, speak } from "../components/dialogue.js";
+import { previewVoice, soundSettings } from "../audio/sound.js";
+import { nextLine } from "../components/dialogue.js";
 import { go, interact } from "../world/navigation.js";
 import {
   complete,
@@ -60,11 +60,6 @@ export const actions = {
   quests: () => setNotebook($("quest-panel").hidden),
   sound: soundSettings,
   "talk-next": nextLine,
-  mute: () => {
-    runtime.muted = !runtime.muted;
-    stopSounds();
-    updateVolume();
-  },
   "voice-preview": previewVoice,
   "rookie-voice-preview": () => previewVoice("rookie"),
   guide: () => {

@@ -40,7 +40,7 @@ const source = buildSync({
   format: "iife",
   platform: "browser",
   target: "es2020",
-  loader: { ".css": "empty", ".wav": "base64" },
+  loader: { ".css": "empty", ".wav": "base64", ".mp3": "base64" },
 }).outputFiles[0].text;
 let checks = 0;
 function boot(saved = null, blocked = false, realCanvas = null, productionOnly = false) {
@@ -193,6 +193,8 @@ function boot(saved = null, blocked = false, realCanvas = null, productionOnly =
       return Promise.resolve();
     }
     decodeAudioData(bytes) {
+      if (Buffer.from(bytes).toString("ascii", 0, 4) !== "RIFF")
+        return Promise.resolve(this.createBuffer(1, 24000, 24000));
       this.decoded = this.createBuffer(1, 57600, 24000);
       const data = this.decoded.getChannelData(0);
       const wav = new DataView(bytes);
@@ -774,6 +776,14 @@ async function main() {
     b.run("finishBid()");
     assert.equal(b.run("state.history.length"), 6);
   });
+  check("Six completed quests each play one two-accent fanfare through scene changes", () => {
+    const notes = b.nodes.filter(n => n.type === "triangle");
+    assert.equal(notes.length, 6 * 6);
+    for (let i = 0; i < notes.length; i += 6) {
+      const accents = notes.slice(i, i + 6).map(n => n.args[0]);
+      assert.deepEqual(accents, [0, 0, 0, .16, .16, .16]);
+    }
+  });
   check("Completed saved game resumes at its earned level with full bag", () => {
     const c = boot(b.store.get("jodal-master-v1"));
     c.run("actions.continue()");
@@ -942,7 +952,7 @@ async function main() {
     b.run("soundSettings()");
     assert.match(b.el("modal").innerHTML, /욘 대리 목소리 듣기/);
     assert.match(b.el("modal").innerHTML, /조달달 목소리 듣기/);
-    assert.match(b.el("modal").innerHTML, /사용자가 제공한 녹음/);
+    assert.match(b.el("modal").innerHTML, /실제 녹음된 목소리/);
     assert.doesNotMatch(
       production,
       /voice-file|voice-role|voice-clear|importVoice|팀원 목소리 불러오기/,
@@ -981,13 +991,36 @@ async function main() {
   check("Invalid voice segments cannot replace an existing valid recording", () => {
     assert.equal(b.run("voiceClips.get('rookie')"), priorRookie);
   });
-  check("Mute immediately stops all samples", () => {
-    b.run("actions.mute()");
+  check("Dialogue, music and effects can be changed independently", () => {
+    const toggle = (key, checked) => b.fire("change", { target: { dataset: { sound: key }, checked } });
+    b.run("soundSettings();playSyllable('안');questFanfare()");
+    const music = b.nodes.find(n => n.loop);
+    assert.ok(music && !music.stopped);
+    toggle("dialogue", false);
     const count = b.nodes.length;
-    b.run("playSyllable('안','supplier')");
+    b.run("playSyllable('안')");
     assert.equal(b.nodes.length, count);
-    assert.equal(b.run("activeSounds.size"), 0);
-    b.run("actions.mute()");
+    assert.equal(b.run("activeVoices.size"), 0);
+    assert.ok(!music.stopped);
+    toggle("effects", false);
+    b.run("chime();questFanfare()");
+    assert.equal(b.nodes.length, count);
+    toggle("dialogue", true);
+    b.run("playSyllable('안')");
+    assert.equal(b.nodes.length, count + 1);
+    for (const value of [0, 47, 100]) {
+      b.fire("input", { target: { id: "music-volume", value: String(value) } });
+      assert.equal(b.el("music-level").textContent, value + "%");
+      assert.equal(b.nodes.filter(n => n.loop).length, 1);
+    }
+    toggle("music", false);
+    assert.ok(music.stopped);
+    assert.equal(b.run("activeVoices.size"), 1);
+    assert.deepEqual(JSON.parse(b.store.get("jodal-sound-v1")),
+      { dialogue: true, music: false, effects: false, musicVolume: 100 });
+    toggle("effects", true);
+    toggle("music", true);
+    assert.equal(b.nodes.filter(n => n.loop && !n.stopped).length, 1);
   });
   check("Default mentor voice has nonzero bounded samples", () => {
     b.run("playSyllable('안','mentor')");
@@ -997,7 +1030,7 @@ async function main() {
   });
   check("Dialogue reveal stops ongoing syllables", () => {
     b.run("speak('욘 대리',['안녕하세요'],()=>{},'supplier');revealLine()");
-    assert.equal(b.run("activeSounds.size"), 0);
+    assert.equal(b.run("activeVoices.size"), 0);
     b.finish();
   });
   check("Camera covers full desktop and mobile viewport without stretching", () => {

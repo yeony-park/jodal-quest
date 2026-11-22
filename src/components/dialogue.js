@@ -1,6 +1,6 @@
 import { keys, runtime } from "../core/runtime.js";
 import { $ } from "../core/dom.js";
-import { playSyllable, stopSounds } from "../audio/sound.js";
+import { playSyllable, stopVoices } from "../audio/sound.js";
 import { close } from "./modal.js";
 import { setNotebook } from "./hud.js";
 import { face } from "../world/characters.js";
@@ -12,7 +12,7 @@ export function stopTalk() {
   runtime.talkState = null;
   $("speech").hidden = true;
   document.body.classList.remove("talking");
-  stopSounds();
+  stopVoices();
 }
 
 // reply: 대화가 끝난 뒤 조달달이 녹음 목소리로 하는 짧은 대답. 대화마다 따로 적습니다.
@@ -48,7 +48,7 @@ export function typeLine() {
     if (runtime.talkState !== t) return;
     t.revealed++;
     $("speech-text").textContent = text.slice(0, t.revealed);
-    if (t.revealed % 2 === 1) playSyllable(text[t.revealed - 1], t.role);
+    if (!runtime.modalOpen && t.revealed % 2 === 1) playSyllable(text[t.revealed - 1], t.role);
     if (t.revealed < text.length)
       runtime.talkTimer = setTimeout(tick, /[,!?。.]$/.test(text.slice(0, t.revealed)) ? 160 : 42);
     else {
@@ -63,7 +63,7 @@ export function revealLine() {
   if (!runtime.talkState) return;
   clearTimeout(runtime.talkTimer);
   runtime.talkTimer = null;
-  stopSounds();
+  stopVoices();
   runtime.talkState.revealed = runtime.talkState.lines[runtime.talkState.index].length;
   $("speech-text").textContent = runtime.talkState.lines[runtime.talkState.index];
   $("speech-hint").textContent =
@@ -78,7 +78,7 @@ export function nextLine() {
   }
   runtime.talkState.index++;
   if (runtime.talkState.index < runtime.talkState.lines.length) {
-    stopSounds();
+    stopVoices();
     typeLine();
   } else {
     const done = runtime.talkState.onDone;

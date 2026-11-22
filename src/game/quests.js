@@ -5,7 +5,6 @@ import { runtime } from "../core/runtime.js";
 import { save } from "../core/storage.js";
 import { buttons, close, doc, show, toast } from "../components/modal.js";
 import { render, setNotebook } from "../components/hud.js";
-import { chime } from "../audio/sound.js";
 import { speak } from "../components/dialogue.js";
 import { actions } from "./actions.js";
 import { $ } from "../core/dom.js";
@@ -48,7 +47,6 @@ export function complete(title, body) {
     "advance",
     false,
   );
-  chime();
 }
 
 export function mentor() {
@@ -232,7 +230,6 @@ export function finishBid() {
   save();
   render();
   close();
-  chime();
   speak(
     "욘 대리",
     [

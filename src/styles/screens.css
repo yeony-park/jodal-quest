@@ -402,10 +402,18 @@
   margin: 18px 0;
 }
 .sound-row label {
-  flex: 0 0 80px;
+  flex-shrink: 0;
+}
+.sound-row input[type="checkbox"] {
+  accent-color: #4f7b52;
+}
+.sound-row output {
+  min-width: 4ch;
+  text-align: right;
 }
 .sound-row input[type="range"] {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   accent-color: #4f7b52;
 }
 .toast {

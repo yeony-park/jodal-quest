@@ -30,7 +30,7 @@ const options = {
   platform: "browser",
   target: "es2020",
   charset: "utf8",
-  loader: { ".wav": "base64", ".ttf": "file" },
+  loader: { ".wav": "base64", ".mp3": "base64", ".ttf": "file" },
   assetNames: "assets/[name]-[hash]",
   plugins: [
     {

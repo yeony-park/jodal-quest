@@ -3,10 +3,25 @@ import { show, toast } from "../components/modal.js";
 import { $ } from "../core/dom.js";
 import supplierVoiceData from "../../assets/audio/yon-voice-bank.wav";
 import rookieVoiceData from "../../assets/audio/jodal-voice-bank.wav";
+import officeMusic from "../../assets/audio/office-loop.mp3";
+
+const settingsKey = "jodal-sound-v1";
+const settings = { dialogue: true, music: true, effects: true, musicVolume: 35 };
+try {
+  const saved = JSON.parse(localStorage.getItem(settingsKey));
+  for (const channel of ["dialogue", "music", "effects"]) {
+    if (typeof saved?.[channel] === "boolean") settings[channel] = saved[channel];
+  }
+  if (Number.isInteger(saved?.musicVolume) && saved.musicVolume >= 0 && saved.musicVolume <= 100)
+    settings.musicVolume = saved.musicVolume;
+} catch { /* Storage may be unavailable during offline play. */ }
+
+let musicBuffer, musicGain, musicSource;
+const activeEffects = new Set();
 
 export const voiceClips = new Map();
 
-export const activeSounds = new Set();
+export const activeVoices = new Set();
 
 // Register a processed recording without changing another character's voice.
 // Offsets and duration are seconds; the recording remains an offline build asset.
@@ -30,7 +45,7 @@ export function loadSupplierVoice() {
     "supplier",
     Uint8Array.from(atob(supplierVoiceData), (c) => c.charCodeAt(0)).buffer,
     Array.from({ length: 24 }, (_, i) => i * 0.1),
-  ).catch(() => toast("녹음 재생을 지원하지 않아 기본 목소리를 사용합니다."));
+  ).catch(() => toast("음성 재생이 지원되지 않아 기본 목소리로 재생합니다."));
 }
 
 export function loadRookieVoice() {
@@ -39,7 +54,7 @@ export function loadRookieVoice() {
     "rookie",
     Uint8Array.from(atob(rookieVoiceData), (c) => c.charCodeAt(0)).buffer,
     Array.from({ length: 24 }, (_, i) => i * 0.1),
-  ).catch(() => toast("조달달 녹음을 재생하지 못해 기본 목소리를 사용합니다."));
+  ).catch(() => toast("조달달 음성을 재생할 수 없어 기본 목소리로 전환합니다."));
 }
 
 export function unlockAudio() {
@@ -48,8 +63,13 @@ export function unlockAudio() {
     if (!AC) return false;
     runtime.audioCtx = new AC();
     runtime.master = runtime.audioCtx.createGain();
-    runtime.master.gain.value = runtime.muted ? 0 : runtime.volume;
+    runtime.master.gain.value = 0.28;
     runtime.master.connect(runtime.audioCtx.destination);
+    musicGain = runtime.audioCtx.createGain();
+    musicGain.connect(runtime.audioCtx.destination);
+    runtime.audioCtx.decodeAudioData(Uint8Array.from(atob(officeMusic), c => c.charCodeAt(0)).buffer)
+      .then(buffer => { musicBuffer = buffer; syncMusic(); })
+      .catch(() => toast("배경음악을 재생할 수 없어요."));
     loadSupplierVoice();
     loadRookieVoice();
   }
@@ -60,29 +80,52 @@ export function unlockAudio() {
   return true;
 }
 
-export function stopSounds() {
-  for (const source of activeSounds) {
-    try {
-      source.stop();
-    } catch (e) {}
+export function syncMusic() {
+  if (!musicBuffer) return;
+  if (!settings.music || document.hidden) {
+    if (musicSource) {
+      musicSource.stop();
+      musicSource.disconnect();
+      musicSource = null;
+    }
+    return;
   }
-  activeSounds.clear();
+  musicGain.gain.setValueAtTime(settings.musicVolume / 100, runtime.audioCtx.currentTime);
+  if (musicSource) return;
+  musicSource = runtime.audioCtx.createBufferSource();
+  musicSource.buffer = musicBuffer;
+  musicSource.loop = true;
+  musicSource.connect(musicGain);
+  musicSource.start();
 }
 
-export function updateVolume() {
-  if (runtime.master)
-    runtime.master.gain.setValueAtTime(
-      runtime.muted ? 0 : runtime.volume,
-      runtime.audioCtx.currentTime,
-    );
-  $("sound-toggle").textContent = runtime.muted ? "♫ 꺼짐" : "♫ 소리";
-  const m = $("mute-button");
-  if (m) m.textContent = runtime.muted ? "소리 켜기" : "소리 끄기";
+function stopSources(sources) {
+  for (const source of sources) source.stop();
+  sources.clear();
+}
+
+export function stopVoices() {
+  stopSources(activeVoices);
+}
+
+export function stopEffects() {
+  stopSources(activeEffects);
+}
+
+export function changeSoundSetting(key, value) {
+  settings[key] = value;
+  if (key === "dialogue" && !value) stopVoices();
+  if (key === "effects" && !value) stopEffects();
+  if (key === "music" || key === "musicVolume") syncMusic();
+  if (key === "musicVolume") $("music-level").textContent = value + "%";
+  try {
+    localStorage.setItem(settingsKey, JSON.stringify(settings));
+  } catch { /* Keep the settings for this session. */ }
 }
 
 export function playSyllable(letter, role = "mentor", delay = 0) {
   if (
-    runtime.muted ||
+    !settings.dialogue ||
     !runtime.audioCtx ||
     runtime.audioCtx.state !== "running" ||
     /\s|[.,!?…·]/.test(letter)
@@ -128,9 +171,9 @@ export function playSyllable(letter, role = "mentor", delay = 0) {
   gain.gain.linearRampToValueAtTime(0, when + duration);
   source.connect(gain);
   gain.connect(runtime.master);
-  activeSounds.add(source);
+  activeVoices.add(source);
   source.onended = () => {
-    activeSounds.delete(source);
+    activeVoices.delete(source);
     source.disconnect();
     gain.disconnect();
   };
@@ -138,60 +181,50 @@ export function playSyllable(letter, role = "mentor", delay = 0) {
   source.stop(when + duration + 0.01);
 }
 
+function effectNote(frequency, delay, duration, level, type) {
+  const ctx = runtime.audioCtx;
+  if (!settings.effects || ctx?.state !== "running") return;
+  const source = ctx.createOscillator(), gain = ctx.createGain(), t = ctx.currentTime + delay;
+  source.type = type;
+  source.frequency.value = frequency;
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(level, t + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+  source.connect(gain);
+  gain.connect(runtime.master);
+  activeEffects.add(source);
+  source.onended = () => { activeEffects.delete(source); source.disconnect(); gain.disconnect(); };
+  source.start(t);
+  source.stop(t + duration);
+}
+
 export function chime() {
-  if (runtime.muted || !runtime.audioCtx || runtime.audioCtx.state !== "running") return;
-  [523.25, 659.25, 783.99].forEach((freq, i) => {
-    const s = runtime.audioCtx.createOscillator(),
-      g = runtime.audioCtx.createGain(),
-      t = runtime.audioCtx.currentTime + i * 0.11;
-    s.type = "sine";
-    s.frequency.value = freq;
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(0.17, t + 0.015);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-    s.connect(g);
-    g.connect(runtime.master);
-    activeSounds.add(s);
-    s.onended = () => {
-      activeSounds.delete(s);
-      s.disconnect();
-      g.disconnect();
-    };
-    s.start(t);
-    s.stop(t + 0.27);
-  });
+  [523.25, 659.25, 783.99].forEach((hz, i) => effectNote(hz, i * 0.11, 0.25, 0.17, "sine"));
+}
+
+export function questFanfare() {
+  // Two accents: a short G major chord resolves to a longer, higher C major chord.
+  for (const hz of [392, 493.88, 587.33]) effectNote(hz, 0, 0.13, 0.20, "triangle");
+  for (const hz of [523.25, 659.25, 783.99]) effectNote(hz, 0.16, 0.46, 0.24, "triangle");
 }
 
 export function soundSettings() {
-  if (runtime.talkState) {
-    runtime.muted = !runtime.muted;
-    stopSounds();
-    updateVolume();
-    toast(runtime.muted ? "대화 소리를 껐어요." : "대화 소리를 켰어요.");
-    return;
-  }
+  const toggle = (key, label) => `<label class="sound-row"><input type="checkbox"
+    data-sound="${key}" ${settings[key] ? "checked" : ""}> ${label}</label>`;
   show(
-    "사운드",
-    /* HTML */ `<p>
-        여성 기업 담당자 욘 대리는 팀원의 실제 녹음을 짧게 잘라 웅얼거리는 목소리로 말합니다.
-      </p>
+    "사운드 설정",
+    /* HTML */ `${toggle("dialogue", "캐릭터 대화소리")}
+      ${toggle("music", "배경음악")}
       <div class="sound-row">
-        <label for="volume">마스터 음량</label
-        ><input
-          id="volume"
-          type="range"
-          min="0"
-          max="70"
-          value="${Math.round(runtime.volume * 100)}"
-          aria-label="마스터 음량 · 모든 소리"
-        />
+        <label for="music-volume">배경음악 음량</label>
+        <input id="music-volume" type="range" min="0" max="100" value="${settings.musicVolume}">
+        <output id="music-level" for="music-volume">${settings.musicVolume}%</output>
       </div>
-      <p>조달달은 사용자가 제공한 녹음의 발성 조각을 사용합니다. 김주문과 다른 인물은 기본 합성 목소리를 사용합니다.</p>
+      ${toggle("effects", "효과음")}
+      <p>조달달과 욘 대리의 음성은 실제 녹음된 목소리입니다. 김주문과 그 외 인물은 기본 합성 음성이 적용됩니다.</p>
       <div class="actions">
         <button class="primary" data-action="rookie-voice-preview">조달달 목소리 듣기</button>
         <button class="primary" data-action="voice-preview">욘 대리 목소리 듣기</button
-        ><button class="secondary" data-action="mute" id="mute-button">
-          ${runtime.muted ? "소리 켜기" : "소리 끄기"}</button
         ><button class="secondary" data-action="close">닫기</button>
       </div>`,
     "sound",
@@ -201,12 +234,12 @@ export function soundSettings() {
 export async function previewVoice(role = "supplier") {
   if (!unlockAudio()) return;
   await (role === "rookie" ? runtime.rookieVoiceReady : runtime.supplierVoiceReady);
-  stopSounds();
-  if (runtime.muted) {
-    toast("소리를 켠 뒤 들어 주세요.");
+  stopVoices();
+  if (!settings.dialogue) {
+    toast("캐릭터 대화소리를 켠 뒤 들어 주세요.");
     return;
   }
-  Array.from(role === "rookie" ? "이제나도조달의왕이야" : "안녕하세요입찰에참여할게요").forEach((letter, i) =>
+  Array.from(role === "rookie" ? "이제 나도 조달의 왕이야" : "안녕하세요, 입찰에 참여할게요").forEach((letter, i) =>
     playSyllable(letter, role, i * 0.095),
   );
 }

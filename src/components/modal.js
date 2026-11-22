@@ -1,6 +1,6 @@
 import { $ } from "../core/dom.js";
 import { keys, runtime } from "../core/runtime.js";
-import { stopSounds } from "../audio/sound.js";
+import { stopVoices } from "../audio/sound.js";
 import { setNotebook } from "./hud.js";
 
 export function toast(t) {
@@ -11,7 +11,7 @@ export function toast(t) {
 }
 
 export function show(title, body, kind = "", closable = true) {
-  stopSounds();
+  stopVoices();
   setNotebook(false);
   $("game-shell").inert = true;
   keys.clear();
@@ -30,7 +30,7 @@ export function show(title, body, kind = "", closable = true) {
 export function close() {
   runtime.pendingSubmission=null;
   $("bag").classList.remove("submission-active");
-  stopSounds();
+  stopVoices();
   $("game-shell").inert = runtime.titleVisible;
   runtime.modalOpen = false;
   $("overlay").hidden = true;
@@ -63,8 +63,8 @@ export function help() {
         때마다 브라우저에 저장합니다.
       </p>
       <p>
-        <strong>사운드:</strong> 소리 버튼에서 마스터 음량을 조절하거나 두 녹음 목소리를 들어 볼 수
-        있어요. 대화 중 소리 버튼을 누르면 음소거를 전환합니다.
+        <strong>사운드:</strong> 소리 버튼에서 캐릭터 대화소리, 배경음악, 효과음을 각각 켜고 끌 수 있어요.
+        배경음악 음량은 0부터 100까지 조절할 수 있어요.
       </p>
       <p>
         <strong>이동:</strong> 방향키 또는 WASD, 휴대전화에서는 이동 버튼을 길게 눌러 걸어요. 가까운 대상과 Space 또는 E로 상호작용합니다. 대상

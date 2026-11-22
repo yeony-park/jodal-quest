@@ -100,7 +100,6 @@ export function contractGood() {
   runtime.state.stage = 5;
   save();
   render();
-  chime();
   show("전자계약 체결 완료", `<div class="success">권한 있는 계약 담당자가 낙찰예정자와 전자계약을 체결했어요.</div><p>계약서를 가방에 넣었어요. 이계약 주무관에게 다음 업무를 확인해요.</p>${xpReward()}${lessonCard(4)}${buttons([["contract-farewell", "계약서를 받고 담당자와 인사하기"]])}`, "advance", false);
 }
 
@@ -171,6 +170,5 @@ export function finishPayment() {
   save();
   render();
   close();
-  chime();
   speak("김주문", ["스무 대가 모두 도착했는지 끝까지 확인했군요. 납품 서류를 확인하고 담당자가 대금 지급 절차를 마쳤어요.", "요청서부터 계약과 납품까지, 오늘 배운 절차를 다시 떠올려 봐요."], ending);
 }
