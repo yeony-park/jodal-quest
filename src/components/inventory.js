@@ -1,4 +1,4 @@
-import { LAST_STAGE } from "../data/quests.js";
+import { levelProgress } from "../game/progression.js";
 import { runtime } from "../core/runtime.js";
 import { $ } from "../core/dom.js";
 import { buttons, show, toast } from "./modal.js";
@@ -34,12 +34,12 @@ export const inventoryItems = [
   },
   {
     name: "계약서",
-    description: "공고한 선정방식에 따른 심사를 마치고 권한 있는 담당자가 체결한 가상 전자계약. 모니터 20대, 계약 후 30일 이내 납품입니다.",
+    description: "공고한 선정방식에 따른 심사를 마치고 권한 있는 담당자가 체결한 전자계약. 모니터 20대, 계약 후 30일 이내 납품입니다.",
     color: "#c58e62",
   },
   {
     name: "완료철",
-    description: "검사·검수와 물품인수, 영수증 및 납품 서류 확인을 마치고 대금 지급까지 진행한 가상 업무 기록입니다.",
+    description: "검사·검수와 물품인수, 영수증 및 납품 서류 확인을 마치고 대금 지급까지 진행한 업무 기록입니다.",
     color: "#76a395",
   },
 ];
@@ -81,7 +81,13 @@ export function renderInventory() {
         </button>`,
     )
     .join("");
-  $("level-badge").textContent = runtime.state.stage === LAST_STAGE ? "Lv. 2" : "Lv. 1";
+  const { level, current, next } = levelProgress();
+  $("level-badge").textContent = `Lv. ${level}`;
+  $("xp-bar").value = current;
+  $("xp-bar").max = next;
+  $("xp-bar").setAttribute("aria-valuetext", `${current} / ${next} XP · 총 ${runtime.state.xp} XP`);
+  $("xp-label").textContent = `${current} / ${next} XP`;
+  $("xp-status").title = `총 ${runtime.state.xp} XP · 업무 완료 100 XP · 수습 없이 완료하면 25 XP 추가`;
 }
 
 export function inspectItem(i) {
@@ -92,7 +98,7 @@ export function inspectItem(i) {
   show(
     inventoryItems[i].name,
     /* HTML */ `<div class="large-item">${itemIcon(i)}</div>
-      <p>${i===1 && runtime.state.stage===0 ? "수요기관에 납기와 장소를 확인해 보완할 요청서 초안. 가상 구매 : 모니터 20대." : i===2 && runtime.state.stage===1 ? "성능 기준으로 수정할 규격서 초안. 선배에게 조건을 확인하세요." : inventoryItems[i].description}</p>
+      <p>${i===1 && runtime.state.stage===0 ? "수요기관에 납기와 장소를 확인해 보완할 요청서 초안. 구매 물품 : 모니터 20대." : i===2 && runtime.state.stage===1 ? "성능 기준으로 수정할 규격서 초안. 선배에게 조건을 확인하세요." : inventoryItems[i].description}</p>
       ${buttons([["close", "가방 닫기"]])}`,
     "item",
   );

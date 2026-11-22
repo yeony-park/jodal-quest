@@ -41,8 +41,7 @@ export function portalShell(content, page) {
     </nav>
     <div class="g2b-content">${content}</div>
     <footer class="g2b-footer">
-      ${supplier ? "기업 입찰 참여" : "조달청 공고 초안 준비"} 체험 · 가상 구매 1건 ·
-      ${page === "home" ? "팝업 없는 시작 화면" : "세부 서류와 인증 절차는 축약했습니다."}
+      ${supplier ? "새봄테크 · 기업 입찰 참여" : "새봄지방조달청 · 공고 초안 준비"}
     </footer>`;
 }
 
@@ -96,10 +95,10 @@ export function openPortal(page = "home", query = "모니터") {
           ${runtime.state.stage === 3 ? "욘 대리 · 새봄테크" : "조달달 주무관 · 새봄지방조달청"}
         </h4>
         <p>
-          실제 아이디·비밀번호·인증서는 입력하지 않습니다.<br />미리 준비된 가상 계정으로
+          실제 아이디·비밀번호·인증서는 입력하지 않습니다.<br />미리 준비된 업무 계정으로
           진행합니다.
         </p>
-        <button class="g2b-primary" data-action="portal-signin">가상 계정으로 로그인</button>
+        <button class="g2b-primary" data-action="portal-signin">업무 계정으로 로그인</button>
       </div>`;
   else if (page === "draft")
     content = /* HTML */ `<div class="g2b-breadcrumb">홈 / 발주 / 공고 초안</div>
@@ -115,7 +114,7 @@ export function openPortal(page = "home", query = "모니터") {
             min="1"
             max="100"
             value="${runtime.state.noticeChecked ? 20 : 2}"
-          /><small>요청서: 20대</small>
+          />
         </div>
         <div><label>물품 규격</label><span>24형 이상 / FHD 이상 / HDMI</span></div>
         <div><label>납품기한</label><span>계약일로부터 30일 이내</span></div>
@@ -171,11 +170,11 @@ export function openPortal(page = "home", query = "모니터") {
           <label>구매 물품</label
           ><span>모니터 20대 / ${runtime.state.product ? "새봄 M24" : "적합 제품 미선택"}</span>
         </div>
-        <div><label>입찰총액</label><span>18,400,000원 (부가세 포함·가상 금액)</span></div>
+        <div><label>입찰총액</label><span>18,400,000원 (부가세 포함)</span></div>
       </div>
       <label class="checkline"
         ><input id="eligible" type="checkbox" ${runtime.state.eligibility ? "checked" : ""} />공고의
-        참가자격과 제출서류를 확인했습니다. 가상 기업은 등록·요건을 갖춘 것으로 설정합니다.</label
+        참가자격과 제출서류를 확인했습니다. 새봄테크는 등록·참가 요건을 갖췄습니다.</label
       >
       <p class="g2b-caution">
         모의 제출이며 실제 입찰로 전송되지 않습니다. 접수는 낙찰·계약 체결을 뜻하지 않습니다.

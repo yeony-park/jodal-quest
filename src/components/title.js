@@ -29,6 +29,7 @@ export function startGame(isNew) {
   close();
   if (isNew) {
     runtime.state = fresh();
+    runtime.lastXP = "";
     runtime.floor = 0;
     runtime.target = null;
     runtime.state.started = true;

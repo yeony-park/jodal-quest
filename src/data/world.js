@@ -21,7 +21,7 @@ export const spots = {
 export const floors = [
   {
     level: "5F",
-    caption: "새봄지방조달청 · 5층 구매팀",
+    caption: "5층 구매팀",
     corridorCols: [5, 11],
     partitions: [
       { axis: "h", at: 5, from: 0, to: 18, doors: [2, 8, 14], z: 17 },
@@ -30,14 +30,6 @@ export const floors = [
       { axis: "v", at: 11, from: 0, to: 5, z: 28 },
       { axis: "v", at: 5, from: 10, to: 14, z: 18 },
       { axis: "v", at: 11, from: 10, to: 14, z: 18 },
-    ],
-    labels: [
-      ["0505 공사원가", 2.5, 1],
-      ["0506 보건의료", 8.5, 1],
-      ["0507 전기전자", 14.5, 1],
-      ["0504 구매총괄", 2.5, 13],
-      ["0503 조달개혁", 8.5, 13],
-      ["0502 건설환경", 14.5, 13],
     ],
     furnishings: [
       { type: "shelf", x: 1, y: 1, w: 3, h: 1 },
@@ -55,19 +47,13 @@ export const floors = [
   },
   {
     level: "3F",
-    caption: "새봄지방조달청 · 3층 개찰·계약 창구",
+    caption: "3층 계약팀",
     corridorCols: [9],
     partitions: [
       { axis: "h", at: 5, from: 0, to: 18, doors: [3, 13], z: 17 },
       { axis: "h", at: 9, from: 0, to: 18, doors: [8, 14], z: 10 },
       { axis: "v", at: 9, from: 0, to: 5, z: 28 },
       { axis: "v", at: 11, from: 10, to: 14, z: 18 },
-    ],
-    labels: [
-      ["0303 조달가격조사", 4, 1],
-      ["0305 디지털조달", 13.5, 1],
-      ["0304 공정조달", 5, 13],
-      ["0306 조달관리", 14.5, 13],
     ],
     furnishings: [
       { type: "shelf", x: 1, y: 1, w: 3, h: 1 },

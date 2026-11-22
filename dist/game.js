@@ -6,7 +6,7 @@
       title: "급한 납기 초안 수습",
       action: "intake-good",
       consequence: "7일로 적은 초안을 본 도서관 담당자가 원래 요청한 일정과 다르다며 검토를 멈췄어요.",
-      correction: "수요기관에 납기와 장소를 확인해요. 이 가상 의뢰의 납기는 계약 후 30일 이내, 장소는 도서관 2층 자료실이에요. 확인한 내용으로 요청서를 보완해 검토를 받아요.",
+      correction: "수요기관에 납기와 장소를 확인해요. 이번 의뢰의 납기는 계약 후 30일 이내, 장소는 도서관 2층 자료실이에요. 확인한 내용으로 요청서를 보완해 검토를 받아요.",
       button: "확인한 납기와 장소로 요청서 보완",
       source: "2. 조달요청 · 납기 등 요청 내용 기재"
     },
@@ -60,7 +60,7 @@
       title: "접수와 계약 혼동 수습",
       action: "contract-good",
       consequence: "접수증만 보고 계약 완료라고 쓴 초안이 반려됐어요. 담당자가 심사·전자계약 기록을 요청했어요.",
-      correction: "입찰 뒤 공고한 선정방식에 따른 심사를 확인해요. 이 가상 사례는 심사를 마쳤으므로 권한 있는 담당자가 낙찰예정자와 전자계약을 체결해요.",
+      correction: "입찰 뒤 공고한 선정방식에 따른 심사를 확인해요. 이번 구매 건은 심사를 마쳤으므로 권한 있는 담당자가 낙찰예정자와 전자계약을 체결해요.",
       button: "심사 확인 후 담당자가 전자계약 체결",
       source: "8. 입찰 → 9. 낙찰자선정 및 계약체결"
     },
@@ -94,6 +94,9 @@
     started: false,
     stage: 0,
     floor: 0,
+    xp: 0,
+    questMistakes: 0,
+    contractFarewell: false,
     awardBrief: false,
     openingChecked: false,
     deliveryIssueReported: false,
@@ -163,6 +166,7 @@
   var player = { x: 464, y: 144 };
   var runtime = {
     state: fresh(),
+    lastXP: "",
     pendingSubmission: null,
     submittedSteps: /* @__PURE__ */ new Set(),
     floor: 0,
@@ -197,7 +201,7 @@
   function loadGame() {
     try {
       const s = JSON.parse(localStorage.getItem(KEY));
-      if (s && s.version === 1 && (s.recoveries === void 0 || Array.isArray(s.recoveries) && s.recoveries.length <= Object.keys(recoveryScenes).length && s.recoveries.every((id) => typeof id === "string" && Object.hasOwn(recoveryScenes, id)) && new Set(s.recoveries).size === s.recoveries.length) && (s.pendingRecovery === void 0 || s.pendingRecovery === null || typeof s.pendingRecovery === "string" && Object.hasOwn(recoveryScenes, s.pendingRecovery) && recoveryScenes[s.pendingRecovery].stage === s.stage) && Number.isInteger(s.stage) && s.stage >= 0 && s.stage <= LAST_STAGE && (s.floor === void 0 || s.floor === 0 || s.floor === 1) && ["awardBrief", "openingChecked", "deliveryIssueReported", "inspectionChecked"].every(
+      if (s && s.version === 1 && (s.recoveries === void 0 || Array.isArray(s.recoveries) && s.recoveries.length <= Object.keys(recoveryScenes).length && s.recoveries.every((id) => typeof id === "string" && Object.hasOwn(recoveryScenes, id)) && new Set(s.recoveries).size === s.recoveries.length) && (s.pendingRecovery === void 0 || s.pendingRecovery === null || typeof s.pendingRecovery === "string" && Object.hasOwn(recoveryScenes, s.pendingRecovery) && recoveryScenes[s.pendingRecovery].stage === s.stage) && (s.xp === void 0 || Number.isInteger(s.xp) && s.xp >= s.stage * 100 && s.xp <= s.stage * 125 && s.xp % 25 === 0) && (s.questMistakes === void 0 || Number.isInteger(s.questMistakes) && s.questMistakes >= 0 && s.questMistakes <= s.mistakes) && Number.isInteger(s.stage) && s.stage >= 0 && s.stage <= LAST_STAGE && (s.floor === void 0 || s.floor === 0 || s.floor === 1) && ["contractFarewell", "awardBrief", "openingChecked", "deliveryIssueReported", "inspectionChecked"].every(
         (k) => s[k] === void 0 || typeof s[k] === "boolean"
       ) && [
         "started",
@@ -208,7 +212,7 @@
         "product",
         "eligibility"
       ].every((k) => typeof s[k] === "boolean") && Number.isInteger(s.mistakes) && s.mistakes >= 0 && Array.isArray(s.history) && s.history.every((x) => typeof x === "string")) {
-        runtime.state = { ...fresh(), ...s };
+        runtime.state = { ...fresh(), ...s, xp: s.xp ?? s.stage * 100, questMistakes: s.questMistakes ?? s.mistakes };
         runtime.floor = s.stage === 3 ? 0 : runtime.state.floor;
         runtime.state.floor = runtime.floor;
         runtime.loaded = s.started;
@@ -245,7 +249,7 @@
   var floors = [
     {
       level: "5F",
-      caption: "새봄지방조달청 · 5층 구매팀",
+      caption: "5층 구매팀",
       corridorCols: [5, 11],
       partitions: [
         { axis: "h", at: 5, from: 0, to: 18, doors: [2, 8, 14], z: 17 },
@@ -254,14 +258,6 @@
         { axis: "v", at: 11, from: 0, to: 5, z: 28 },
         { axis: "v", at: 5, from: 10, to: 14, z: 18 },
         { axis: "v", at: 11, from: 10, to: 14, z: 18 }
-      ],
-      labels: [
-        ["0505 공사원가", 2.5, 1],
-        ["0506 보건의료", 8.5, 1],
-        ["0507 전기전자", 14.5, 1],
-        ["0504 구매총괄", 2.5, 13],
-        ["0503 조달개혁", 8.5, 13],
-        ["0502 건설환경", 14.5, 13]
       ],
       furnishings: [
         { type: "shelf", x: 1, y: 1, w: 3, h: 1 },
@@ -279,19 +275,13 @@
     },
     {
       level: "3F",
-      caption: "새봄지방조달청 · 3층 개찰·계약 창구",
+      caption: "3층 계약팀",
       corridorCols: [9],
       partitions: [
         { axis: "h", at: 5, from: 0, to: 18, doors: [3, 13], z: 17 },
         { axis: "h", at: 9, from: 0, to: 18, doors: [8, 14], z: 10 },
         { axis: "v", at: 9, from: 0, to: 5, z: 28 },
         { axis: "v", at: 11, from: 10, to: 14, z: 18 }
-      ],
-      labels: [
-        ["0303 조달가격조사", 4, 1],
-        ["0305 디지털조달", 13.5, 1],
-        ["0304 공정조달", 5, 13],
-        ["0306 조달관리", 14.5, 13]
       ],
       furnishings: [
         { type: "shelf", x: 1, y: 1, w: 3, h: 1 },
@@ -308,6 +298,26 @@
   ];
   var furnishings = floors[0].furnishings;
 
+  // src/game/progression.js
+  var XP_PER_QUEST = 100;
+  var CLEAN_BONUS = 25;
+  var XP_PER_LEVEL = 150;
+  function levelProgress(xp = runtime.state.xp) {
+    return { level: 1 + Math.floor(xp / XP_PER_LEVEL), current: xp % XP_PER_LEVEL, next: XP_PER_LEVEL };
+  }
+  function awardQuestXP() {
+    const previous = levelProgress().level;
+    const clean = runtime.state.mistakes === runtime.state.questMistakes && !runtime.state.recoveries.some((id) => recoveryScenes[id].stage === runtime.state.stage) && !runtime.state.pendingRecovery;
+    runtime.state.xp += XP_PER_QUEST + (clean ? CLEAN_BONUS : 0);
+    runtime.state.questMistakes = runtime.state.mistakes;
+    const level = levelProgress().level;
+    runtime.lastXP = `${XP_PER_QUEST} XP${clean ? ` + 수습 없이 완료 보너스 ${CLEAN_BONUS} XP` : ""}${level > previous ? ` · 레벨 업! Lv. ${level}` : ""}`;
+    toast(runtime.lastXP);
+  }
+  function xpReward() {
+    return `<p class="xp-reward" role="status">${runtime.lastXP || ""}</p>`;
+  }
+
   // src/data/learning.js
   var PROCEDURE_SOURCE = "https://www.pps.go.kr/kor/content.do?key=00179";
   var LAYOUT_SOURCE = "https://www.pps.go.kr/kor/content.do?key=00139";
@@ -320,7 +330,7 @@
     "납품한 물품을 검사·검수하고 인수해요. 영수증과 납품 서류를 확인한 뒤 대금 청구·지급 절차를 진행해요."
   ];
   var glossary = [
-    ["수요기관", "필요한 물품의 품명·규격·납기·예산 등을 적어 조달을 요청하는 기관이에요. 게임에서는 가상 새봄도서관이에요."],
+    ["수요기관", "필요한 물품의 품명·규격·납기·예산 등을 적어 조달을 요청하는 기관이에요. 이번 수요기관은 새봄도서관이에요."],
     ["규격", "구매할 물품의 크기·성능 등 필요한 조건이에요. 이 게임에서는 24형 이상·FHD 이상·HDMI 연결을 확인해요."],
     ["구매결의", "수요기관명, 물품의 규격·수량, 계약방법, 낙찰자 선정방식, 예산, 입찰일시, 납품기한 등을 정리해요."],
     ["예정가격", "입찰 전에 결정하는 가격이에요. 공식 절차에서는 작성한 예비가격 중 추첨된 가격을 산술평균해 정해요."],
@@ -341,7 +351,6 @@
     <div class="glossary">${glossary.map(([term, meaning]) => `<details><summary>${term}</summary><p>${meaning}</p></details>`).join("")}</div>
     <p class="source-note">기준 자료 : 조달청 물품구매 총액계약 업무처리절차 · 2026-11-21 확인<br />
     <a href="${PROCEDURE_SOURCE}" target="_blank" rel="noopener noreferrer">공식 업무처리절차 보기</a> · <a href="${LAYOUT_SOURCE}" target="_blank" rel="noopener noreferrer">층별배치도 보기</a></p>
-    <p class="source-note">새봄지방조달청·도서관·기업·금액은 가상 설정이에요. 층별배치도를 참고해 재구성했고, 심사 세부 내용과 대기 시간은 줄였어요.</p>
     ${buttons([["close", "수첩 닫기"]])}`, "glossary");
   }
 
@@ -378,12 +387,12 @@
     },
     {
       name: "계약서",
-      description: "공고한 선정방식에 따른 심사를 마치고 권한 있는 담당자가 체결한 가상 전자계약. 모니터 20대, 계약 후 30일 이내 납품입니다.",
+      description: "공고한 선정방식에 따른 심사를 마치고 권한 있는 담당자가 체결한 전자계약. 모니터 20대, 계약 후 30일 이내 납품입니다.",
       color: "#c58e62"
     },
     {
       name: "완료철",
-      description: "검사·검수와 물품인수, 영수증 및 납품 서류 확인을 마치고 대금 지급까지 진행한 가상 업무 기록입니다.",
+      description: "검사·검수와 물품인수, 영수증 및 납품 서류 확인을 마치고 대금 지급까지 진행한 업무 기록입니다.",
       color: "#76a395"
     }
   ];
@@ -423,7 +432,13 @@
         </button>`
       )
     ).join("");
-    $("level-badge").textContent = runtime.state.stage === LAST_STAGE ? "Lv. 2" : "Lv. 1";
+    const { level, current, next } = levelProgress();
+    $("level-badge").textContent = `Lv. ${level}`;
+    $("xp-bar").value = current;
+    $("xp-bar").max = next;
+    $("xp-bar").setAttribute("aria-valuetext", `${current} / ${next} XP · 총 ${runtime.state.xp} XP`);
+    $("xp-label").textContent = `${current} / ${next} XP`;
+    $("xp-status").title = `총 ${runtime.state.xp} XP · 업무 완료 100 XP · 수습 없이 완료하면 25 XP 추가`;
   }
   function inspectItem(i) {
     if (!ownedItems()[i]) {
@@ -434,7 +449,7 @@
       inventoryItems[i].name,
       /* HTML */
       `<div class="large-item">${itemIcon(i)}</div>
-      <p>${i === 1 && runtime.state.stage === 0 ? "수요기관에 납기와 장소를 확인해 보완할 요청서 초안. 가상 구매 : 모니터 20대." : i === 2 && runtime.state.stage === 1 ? "성능 기준으로 수정할 규격서 초안. 선배에게 조건을 확인하세요." : inventoryItems[i].description}</p>
+      <p>${i === 1 && runtime.state.stage === 0 ? "수요기관에 납기와 장소를 확인해 보완할 요청서 초안. 구매 물품 : 모니터 20대." : i === 2 && runtime.state.stage === 1 ? "성능 기준으로 수정할 규격서 초안. 선배에게 조건을 확인하세요." : inventoryItems[i].description}</p>
       ${buttons([["close", "가방 닫기"]])}`,
       "item"
     );
@@ -518,6 +533,7 @@
     close();
     if (isNew) {
       runtime.state = fresh();
+      runtime.lastXP = "";
       runtime.floor = 0;
       runtime.target = null;
       runtime.state.started = true;
@@ -582,8 +598,7 @@
     </nav>
     <div class="g2b-content">${content}</div>
     <footer class="g2b-footer">
-      ${supplier ? "기업 입찰 참여" : "조달청 공고 초안 준비"} 체험 · 가상 구매 1건 ·
-      ${page === "home" ? "팝업 없는 시작 화면" : "세부 서류와 인증 절차는 축약했습니다."}
+      ${supplier ? "새봄테크 · 기업 입찰 참여" : "새봄지방조달청 · 공고 초안 준비"}
     </footer>`
     );
   }
@@ -639,10 +654,10 @@
           ${runtime.state.stage === 3 ? "욘 대리 · 새봄테크" : "조달달 주무관 · 새봄지방조달청"}
         </h4>
         <p>
-          실제 아이디·비밀번호·인증서는 입력하지 않습니다.<br />미리 준비된 가상 계정으로
+          실제 아이디·비밀번호·인증서는 입력하지 않습니다.<br />미리 준비된 업무 계정으로
           진행합니다.
         </p>
-        <button class="g2b-primary" data-action="portal-signin">가상 계정으로 로그인</button>
+        <button class="g2b-primary" data-action="portal-signin">업무 계정으로 로그인</button>
       </div>`;
     else if (page === "draft")
       content = /* HTML */
@@ -659,7 +674,7 @@
             min="1"
             max="100"
             value="${runtime.state.noticeChecked ? 20 : 2}"
-          /><small>요청서: 20대</small>
+          />
         </div>
         <div><label>물품 규격</label><span>24형 이상 / FHD 이상 / HDMI</span></div>
         <div><label>납품기한</label><span>계약일로부터 30일 이내</span></div>
@@ -717,11 +732,11 @@
           <label>구매 물품</label
           ><span>모니터 20대 / ${runtime.state.product ? "새봄 M24" : "적합 제품 미선택"}</span>
         </div>
-        <div><label>입찰총액</label><span>18,400,000원 (부가세 포함·가상 금액)</span></div>
+        <div><label>입찰총액</label><span>18,400,000원 (부가세 포함)</span></div>
       </div>
       <label class="checkline"
         ><input id="eligible" type="checkbox" ${runtime.state.eligibility ? "checked" : ""} />공고의
-        참가자격과 제출서류를 확인했습니다. 가상 기업은 등록·요건을 갖춘 것으로 설정합니다.</label
+        참가자격과 제출서류를 확인했습니다. 새봄테크는 등록·참가 요건을 갖췄습니다.</label
       >
       <p class="g2b-caution">
         모의 제출이며 실제 입찰로 전송되지 않습니다. 접수는 낙찰·계약 체결을 뜻하지 않습니다.
@@ -796,7 +811,11 @@
   // src/game/procurement.js
   function elevator() {
     if (runtime.state.stage === 3) return;
-    show("엘리베이터 · 어느 층으로 갈까요?", `<p>현재 ${floors[runtime.floor].level}입니다. 가상 지방청의 업무 공간이에요.</p>
+    if (runtime.state.stage === 5 && runtime.floor === 1 && !runtime.state.contractFarewell) {
+      contractFarewell();
+      return;
+    }
+    show("엘리베이터 · 어느 층으로 갈까요?", `<p>현재 ${floors[runtime.floor].level}입니다.</p>
     ${buttons([[runtime.floor === 0 ? "floor-1" : "floor-0", runtime.floor === 0 ? "3층 · 개찰·계약 창구" : "5층 · 구매팀·납품 확인"], ["close", "이번 층에 머무르기", true]])}`, "elevator");
   }
   function travelTo(floor) {
@@ -817,8 +836,12 @@
   }
   function officer() {
     if (runtime.floor !== 1) return;
+    if (runtime.state.stage === 5 && !runtime.state.contractFarewell) {
+      contractFarewell();
+      return;
+    }
     if (runtime.state.stage !== 4) {
-      speak("이계약 주무관", ["여기는 가상의 개찰·계약 창구예요. 입찰서 접수 뒤 공고한 선정방식에 따른 심사와 계약 절차를 확인해요."], () => {
+      speak("이계약 주무관", ["여기는 계약팀이에요. 입찰서 접수 뒤 공고한 선정방식에 따른 심사와 계약 절차를 확인해요."], () => {
       }, "officer", "네, 순서를 기억해 둘게요.");
       return;
     }
@@ -826,7 +849,7 @@
       speak("이계약 주무관", [
         "3층에 온 걸 환영해요. 입찰서 접수 다음에는 낙찰자 선정과 계약 절차가 남아 있어요.",
         "예정가격은 입찰 전에 결정해 두었어요. 먼저 옆의 개찰·계약 자료에서 순서를 확인해 주세요.",
-        "이 가상 사례에서는 공고한 낙찰자 선정방식에 따른 심사를 마친 뒤 전자계약을 진행합니다."
+        "이번 구매 건은 공고한 낙찰자 선정방식에 따른 심사를 마친 뒤 전자계약을 진행합니다."
       ], () => {
         runtime.state.awardBrief = true;
         save();
@@ -839,14 +862,18 @@
       }, "officer", "네, 자료를 먼저 보고 올게요.");
       return;
     }
-    show("입찰서 접수 다음은?", `${doc("가상 계약 검토 기록", [
+    speak("이계약 주무관", [
+      "예정가격 자료를 확인했군요. 입찰 전에 결정한 기록을 확인하는 순서를 잘 지켰어요.",
+      "이번 건은 공고한 낙찰자 선정방식에 따른 심사를 마쳤고, 새봄테크가 낙찰예정자예요.",
+      "접수증과 심사 결과, 납품 조건을 대조해 볼까요? 확인한 뒤 권한 있는 담당자가 전자계약을 체결합니다."
+    ], () => show("입찰서 접수 다음은?", `${doc("계약 검토 기록", [
       ["구매 물품", "새봄도서관 모니터 20대"],
-      ["심사 상태", "공고한 낙찰자 선정방식에 따른 심사 완료 (가상)"],
-      ["낙찰예정자", "새봄테크 (가상 기업)"],
+      ["심사 상태", "공고한 낙찰자 선정방식에 따른 심사 완료"],
+      ["낙찰예정자", "새봄테크"],
       ["납품 조건", "계약일로부터 30일 이내 · 24형 이상 / FHD 이상 / HDMI"]
     ])}<p>권한 있는 계약 담당자는 어떤 절차를 진행할까요?</p><div class="choices">
     <button class="choice" data-action="contract-bad">입찰서가 접수됐으니 계약도 끝났다고 기록한다</button>
-    <button class="choice" data-action="contract-good">심사 결과를 확인하고 낙찰예정자와 전자계약을 체결한다</button></div>`, "contract");
+    <button class="choice" data-action="contract-good">심사 결과를 확인하고 낙찰예정자와 전자계약을 체결한다</button></div>`, "contract"), "officer", "접수증과 심사 결과를 확인하고 계약 절차를 진행할게요.");
   }
   function bidroom() {
     if (runtime.floor !== 1) return;
@@ -857,7 +884,7 @@
     show("입찰 전에 정한 가격을 확인해요", `${doc("개찰 단계 학습 메모", [
       ["공식 업무 순서", "예정가격결정 → 입찰 → 낙찰자 선정 및 계약체결"],
       ["현재 확인할 것", "입찰 전에 결정해 둔 예정가격과 공고한 선정방식"],
-      ["사례", "새봄도서관 모니터 20대 · 가상 구매"]
+      ["사례", "새봄도서관 모니터 20대"]
     ])}<p>예정가격은 언제 결정할까요?</p><div class="choices">
     <button class="choice" data-action="opening-good">입찰 전에 결정해 두고, 지금 그 자료를 확인한다</button>
     <button class="choice" data-action="opening-bad">기업의 입찰서를 받은 다음 원하는 금액으로 정한다</button></div>`, "opening");
@@ -867,24 +894,38 @@
     runtime.state.openingChecked = true;
     save();
     render();
-    show("예정가격 확인 완료", `<div class="success">예정가격은 입찰 전에 결정해 두었어요.</div><p>공고한 낙찰자 선정방식에 따른 심사를 마친 가상 사례를 계약 담당자와 확인해요.</p>${buttons([["close", "계약 담당자에게 돌아가기"]])}`);
+    show("예정가격 확인 완료", `<div class="success">예정가격은 입찰 전에 결정해 두었어요.</div><p>공고한 낙찰자 선정방식에 따른 심사를 마친 구매 건을 계약 담당자와 확인해요.</p>${buttons([["close", "계약 담당자에게 돌아가기"]])}`);
   }
   function contractGood() {
     if (runtime.state.stage !== 4 || runtime.floor !== 1 || !runtime.state.openingChecked) return;
-    runtime.state.history.push("선정방식에 따른 심사 확인 및 가상 전자계약 체결");
+    runtime.state.history.push("선정방식에 따른 심사 확인 및 전자계약 체결");
+    awardQuestXP();
     runtime.state.stage = 5;
     save();
     render();
     chime();
-    show("가상 전자계약 체결 완료", `<div class="success">권한 있는 계약 담당자가 낙찰예정자와 전자계약을 체결했어요.</div><p>이제 엘리베이터로 5층에 돌아가 수요기관의 납품 자료를 확인해 주세요. 계약 뒤 납품까지의 시간은 게임에서 축약했어요.</p>${lessonCard(4)}${buttons([["advance", "납품 확인하러 가기"]])}`, "advance", false);
+    show("전자계약 체결 완료", `<div class="success">권한 있는 계약 담당자가 낙찰예정자와 전자계약을 체결했어요.</div><p>계약서를 가방에 넣었어요. 이계약 주무관에게 다음 업무를 확인해요.</p>${xpReward()}${lessonCard(4)}${buttons([["contract-farewell", "계약서를 받고 담당자와 인사하기"]])}`, "advance", false);
+  }
+  function contractFarewell() {
+    if (runtime.state.stage !== 5 || runtime.floor !== 1) return;
+    speak("이계약 주무관", [
+      "계약서 받았죠? 모니터 20대와 계약일로부터 30일 이내라는 납품 조건을 기억해 주세요.",
+      "수고했어요, 조달달 주무관. 이제 엘리베이터로 5층 구매팀에 돌아가세요.",
+      "수요기관 연락 데스크에서 납품 자료를 확인하고, 계약서의 규격과 수량에 맞게 도착했는지 대조해 주세요.",
+      "부족한 물품이 있으면 보완을 요청하고, 검사·검수와 물품인수를 확인한 뒤 납품 서류를 살펴봐요."
+    ], () => {
+      runtime.state.contractFarewell = true;
+      save();
+      render();
+    }, "officer", "감사합니다! 계약서를 챙겨서 5층으로 돌아갈게요. 연락 데스크에서 납품 자료부터 확인하겠습니다.");
   }
   function delivery() {
     if (runtime.state.stage !== 5 || runtime.floor !== 0) return;
     const corrected = runtime.state.deliveryIssueReported;
-    show("수요기관의 납품 확인 요청", `${doc("납품·검사·검수 자료 (가상)", [
+    show("수요기관의 납품 확인 요청", `${doc("납품·검사·검수 자료", [
       ["계약 수량", "모니터 20대"],
       ["실제 도착", corrected ? "모니터 20대 · 부족분 보완 완료" : "모니터 19대 · 1대 부족"],
-      ["규격·납기", "24형 / FHD / HDMI · 계약 후 20일 (가상)"],
+      ["규격·납기", "24형 / FHD / HDMI · 계약 후 20일"],
       ["담당", "검사공무원 · 물품출납공무원"]
     ])}<p>${corrected ? "보완한 납품 자료가 도착했어요. 다음 절차는?" : "수량을 대조했더니 한 대가 부족해요. 어떻게 할까요?"}</p>
     <div class="choices">${corrected ? '<button class="choice" data-action="delivery-good">검사·검수 담당자가 계약 내용과 일치함을 확인하고 물품을 인수한다</button>' : '<button class="choice" data-action="delivery-report">수요기관·계약상대자에게 부족분 보완을 요청한다</button><button class="choice" data-action="delivery-bad">19대만 도착했지만 20대를 모두 받았다고 기록한다</button>'}</div>`, "delivery");
@@ -894,7 +935,7 @@
     runtime.state.deliveryIssueReported = true;
     save();
     render();
-    speak("수요기관 담당자", ["한 대가 부족한 것을 확인했어요. 계약상대자에게 보완을 요청하겠습니다.", "부족한 한 대가 도착했어요! 수요기관 연락 데스크에서 보완한 자료를 다시 확인해 주세요. 게임에서는 대기 시간을 축약했어요."], () => {
+    speak("수요기관 담당자", ["한 대가 부족한 것을 확인했어요. 계약상대자에게 보완을 요청하겠습니다.", "부족한 한 대가 도착했어요! 수요기관 연락 데스크에서 보완한 자료를 다시 확인해 주세요."], () => {
     }, "contact", "보완 감사합니다. 스무 대가 맞는지 다시 확인할게요.");
   }
   function inspectDelivery() {
@@ -910,17 +951,18 @@
       show("대금 지급 전 확인", `<p>수요기관의 납품 자료부터 확인하세요. 검사·검수와 물품인수 후 영수증과 납품 서류를 확인해요.</p>${buttons([["close", "납품 확인하러 가기"]])}`);
       return;
     }
-    show("납품 서류와 대금 청구 확인", `${doc("가상 계약 종결 검토", [
+    show("납품 서류와 대금 청구 확인", `${doc("계약 종결 검토", [
       ["검사·검수 및 인수", "모니터 20대 · 완료"],
       ["영수증·납품 서류", "수요기관 영수증 발급 · 서류 하자 없음"],
-      ["대금 청구", "계약상대자가 조달청에 청구 (가상 사례)"]
+      ["대금 청구", "계약상대자가 조달청에 청구"]
     ])}<p>권한 있는 담당자의 다음 업무로 알맞은 것은?</p><div class="choices">
     <button class="choice" data-action="payment-bad">납품 서류를 생략하고 입찰서만 보고 지급한다</button>
     <button class="choice" data-action="payment-good">확인한 납품 서류로 계약종결 서류를 작성하고 대금 지급 절차를 진행한다</button></div>`, "payment");
   }
   function finishPayment() {
     if (runtime.state.stage !== 5 || runtime.floor !== 0 || !runtime.state.inspectionChecked) return;
-    runtime.state.history.push("검사·검수 및 물품인수 확인, 가상 대금 지급");
+    runtime.state.history.push("검사·검수 및 물품인수 확인, 대금 지급");
+    awardQuestXP();
     runtime.state.stage = 6;
     save();
     render();
@@ -981,6 +1023,7 @@
     "floor-0": () => travelTo(0),
     "floor-1": () => travelTo(1),
     officer,
+    "contract-farewell": contractFarewell,
     bidroom,
     "opening-good": openingGood,
     "opening-bad": () => wrong("예정가격은 입찰 전에 결정해 둡니다. 입찰서를 받은 뒤 임의로 바꾸지 않아요.", "bidroom"),
@@ -1150,6 +1193,7 @@
     if (runtime.state.stage === 2) return !runtime.state.noticeChecked ? "terminal" : "mentor";
     if (runtime.state.stage === 3) return !runtime.state.product ? "doc" : "terminal";
     if (runtime.state.stage === 4) return !runtime.state.awardBrief ? "officer" : !runtime.state.openingChecked ? "bidroom" : "officer";
+    if (runtime.state.stage === 5 && runtime.floor === 1 && !runtime.state.contractFarewell) return "officer";
     if (runtime.state.stage === 5) return !runtime.state.inspectionChecked ? "phone" : "terminal";
     return "result";
   }
@@ -1163,6 +1207,7 @@
     runtime.state.history.push(
       ["요청서 확인 및 접수 준비", "경쟁 가능한 규격 수정", "검토·결재 후 공고 게시"][completed]
     );
+    awardQuestXP();
     runtime.state.stage++;
     save();
     render();
@@ -1173,7 +1218,7 @@
       <p>
         ${completed === 2 ? "검토·결재를 거쳐 공고가 게시됐습니다. 다음 장면에서는 기업 담당자로 전환합니다." : "퀘스트 완료! 진행 상황을 이 브라우저에 저장했습니다."}
       </p>
-      ${lessonCard(completed)}
+      ${xpReward()}${lessonCard(completed)}
       ${buttons([["advance", completed === 2 ? "기업 담당자로 전환" : "다음 퀘스트"]])}`,
       "advance",
       false
@@ -1267,7 +1312,7 @@
     return doc("물품 구매 요청서", [
       ["수요기관", "새봄도서관"],
       ["구매 물품", "이용자용 모니터 20대"],
-      ["배정 예산", "20,000,000원 (가상 설정)"],
+      ["배정 예산", "20,000,000원"],
       ["사용 목적", "자료실에서 문서·자료 열람"],
       ["납품기한", runtime.state.contact ? "계약일로부터 30일 이내" : "미기재 · 확인 필요"],
       ["납품 장소", runtime.state.contact ? "새봄도서관 2층 자료실" : "새봄도서관"]
@@ -1296,7 +1341,7 @@
           ["구매 수량", "20대"],
           ["필요 성능", "24형 이상 · FHD 이상 · HDMI 연결"],
           ["납품기한", "계약일로부터 30일 이내"]
-        ])}${doc("제품 자료 (가상)", [
+        ])}${doc("제품 자료", [
           ["새봄 M24", "24형 / FHD / HDMI · 20대 공급 · 계약 후 20일 내 납품"],
           ["새봄 C22", "22형 / FHD / HDMI · 20대 공급 · 계약 후 20일 내 납품"]
         ])}<div class="choices"><button class="choice" data-action="product-good">새봄 M24 · 24형 / FHD / HDMI</button><button class="choice" data-action="product-bad">새봄 C22 · 22형 / FHD / HDMI</button></div>`
@@ -1350,6 +1395,7 @@
       return;
     }
     runtime.state.history.push("기업 모의 입찰서 접수");
+    awardQuestXP();
     runtime.state.stage = 4;
     runtime.portalSignedIn = false;
     save();
@@ -1366,7 +1412,7 @@
         runtime.floor = 0;
         runtime.state.floor = 0;
         render();
-        show("모의 입찰서 접수 완료", `<div class="success">입찰서가 접수됐어요. 이어서 낙찰자 선정과 계약 절차를 배워요.</div>${lessonCard(3)}${buttons([["return-rookie", "조달달로 돌아가 다음 업무 받기"]])}`, "advance", false);
+        show("모의 입찰서 접수 완료", `<div class="success">입찰서가 접수됐어요. 이어서 낙찰자 선정과 계약 절차를 배워요.</div>${xpReward()}${lessonCard(3)}${buttons([["return-rookie", "조달달로 돌아가 다음 업무 받기"]])}`, "advance", false);
       },
       "supplier"
     );
@@ -1450,13 +1496,13 @@
     if (o.type === "table") return;
     const p = project((o.x + 0.5) * TILE, (o.y + 0.5) * TILE, 21);
     if (o.type === "phone") {
-      if (o.spot && spotActive(o.spot)) outlineRect(p.x - 14, p.y - 14, 28, 17);
+      if (o.spot && spotNearby(o.spot)) outlineRect(p.x - 14, p.y - 14, 28, 17);
       ctx.fillStyle = "#2f5356";
       ctx.fillRect(p.x - 9, p.y - 8, 18, 9);
       ctx.fillRect(p.x - 12, p.y - 12, 24, 5);
       return;
     }
-    if (o.spot && spotActive(o.spot)) outlineRect(p.x - 14, p.y - 24, 28, 25);
+    if (o.spot && spotNearby(o.spot)) outlineRect(p.x - 14, p.y - 24, 28, 25);
     ctx.fillStyle = "#263e4d";
     ctx.fillRect(p.x - 12, p.y - 22, 24, 19);
     ctx.fillStyle = "#87c4c3";
@@ -1469,21 +1515,12 @@
     ctx.fillRect(p.x - 8, p.y + 1, 16, 3);
     if (o.w > 1) {
       const q = project((o.x + 1.45) * TILE, (o.y + 0.6) * TILE, 21);
-      if (o.spot && spotActive(o.spot)) outlineRect(q.x - 10, q.y - 10, 20, 14);
+      if (o.spot && spotNearby(o.spot)) outlineRect(q.x - 10, q.y - 10, 20, 14);
       ctx.fillStyle = "#fff1c8";
       ctx.fillRect(q.x - 8, q.y - 8, 16, 10);
       ctx.fillStyle = "#b1ad8a";
       ctx.fillRect(q.x - 5, q.y - 5, 10, 2);
     }
-  }
-  function roomLabel(label, x, y) {
-    const p = project(x * TILE, y * TILE);
-    ctx.fillStyle = "#f7f4ddd9";
-    ctx.fillRect(Math.round(p.x - 43), Math.round(p.y - 10), 86, 17);
-    ctx.font = "10px monospace";
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#527060";
-    ctx.fillText(label, Math.round(p.x), Math.round(p.y + 2));
   }
   function drawElevator() {
     const wall = 0.12 * TILE, face2 = (y, z) => project(wall, y * TILE, z);
@@ -1605,9 +1642,8 @@
     box(0, 0, 18, 0.12, 37, "#e0e5d0", "#b6c2b2", "#9cae9f");
     box(0, 0, 0.12, 14, 37, "#e0e5d0", "#b6c2b2", "#9cae9f");
     if (runtime.state.stage !== 3) drawElevator();
-    for (const [label, x, y] of floor.labels) roomLabel(label, x, y);
     const items = sceneItems(moving), dest = spots[guideTarget(nextTarget())];
-    if (dest && !runtime.modalOpen && !runtime.talkState) drawFloorMarker(dest, items);
+    if (dest && spotNearby(guideTarget(nextTarget())) && !runtime.modalOpen && !runtime.talkState) drawFloorMarker(dest, items);
     for (const item of paintOrder(items)) item.draw();
     const p = project(player.x, player.y);
     ctx.fillStyle = "#fff4d7";
@@ -1741,14 +1777,14 @@
   }
   function positionLabels() {
     const visuals = labelVisuals(), obstacles = [...visuals];
-    for (const el of document.querySelectorAll?.(".minimap,.goal-bar,.top-controls,.inventory,.bottom-controls,.mobile-controls") || []) {
+    for (const el of document.querySelectorAll?.(".minimap,.goal-bar,.top-controls,.inventory,.bottom-controls,.mobile-controls,.scene-clock") || []) {
       const r = el.getBoundingClientRect();
       if (r.width && r.height) obstacles.push({ x: r.x, y: r.y, w: r.width, h: r.height });
     }
     const target = guideTarget(nextTarget()), ids = Object.keys(spots).sort((a, b) => a === target ? -1 : b === target ? 1 : 0);
     for (const id of ids) {
       const el = $("spot-" + id), s = spots[id];
-      el.hidden = !spotActive(id);
+      el.hidden = !spotActive(id) || id !== target && !spotNearby(id);
       if (el.hidden) continue;
       const p = project(s.npcX ?? s.x, s.npcY ?? s.y), own = visuals.find((v) => v.id === id);
       const anchor = { x: (p.x - runtime.view.x) * runtime.view.scale, y: own ? own.y - 10 : (p.y - 65 - runtime.view.y) * runtime.view.scale };
@@ -1919,7 +1955,7 @@
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.imageSmoothingEnabled = false;
-    const npc = kind !== "rookie" && !(kind === "supplier" && runtime.state.stage === 3);
+    const npc = kind !== "rookie" && !(kind === "supplier" && runtime.state.stage === 3) && spotNearby(kind);
     const pad = npc ? Math.round(4 * k) : 0;
     ctx.drawImage(npc ? outlinedSprite(kind, walkPose(moving)) : spriteSheet(kind, walkPose(moving)), left - pad, top - pad, width + pad * 2, height + pad * 2);
     ctx.restore();
@@ -2022,11 +2058,11 @@
     show(
       endingTitle(runtime.state.recoveries, runtime.state.mistakes),
       /* HTML */
-      `<div class="level-up-tag">LEVEL UP!</div>
+      `<div class="level-up-tag">업무 완료</div>
       <div class="level-up-hero">
-        ${face("rookie")}<strong>Lv. 1 <span>〉</span> Lv. 2</strong>
+        ${face("rookie")}<strong>최종 Lv. ${levelProgress().level}</strong>
       </div>
-      <div class="level-progress"><i></i></div>
+      <p class="center">총 ${runtime.state.xp} XP · 다음 레벨까지 ${levelProgress().next - levelProgress().current} XP</p>
       <p class="center">이제 나도... 조달의 왕이야!</p>
       <section class="achievements" aria-label="획득한 업적"><h3>획득한 업적</h3><ul>
         <li>여섯 업무 완주 · 계약부터 대금 지급까지</li>
@@ -2039,12 +2075,12 @@
         <div class="stat"><strong>7 / 7</strong><small>획득한 물건</small></div>
         <div class="stat"><strong>${score}</strong><small>학습 점수</small></div>
       </div>
-      <div class="success">가상 구매 완료 · 입찰서 접수 → 심사 확인·전자계약 → 검사·검수 → 대금 지급</div>
+      <div class="success">구매 완료 · 입찰서 접수 → 심사 확인·전자계약 → 검사·검수 → 대금 지급</div>
       <details class="ending-review" open><summary>여섯 업무에서 배운 것</summary>${learningReview()}</details>
       <a class="ending-link" href="${MORE_QUESTS}" target="_blank" rel="noopener noreferrer"
         >더 많은 퀘스트를 깨고 싶다면?</a
       >
-      <p class="ending-destination">조달청 채용정보로 이동합니다 · 외부 사이트</p>
+      <p class="source-note">공공조달 체험 게임 · 실제 업무와 다를 수 있습니다</p>
       ${buttons([
         ["close", "사무실로 돌아가기"],
         ["restart", "다시 플레이", true]
@@ -2054,6 +2090,11 @@
   }
 
   // src/world/navigation.js
+  var MOVE_SPEED = 145;
+  function spotNearby(id) {
+    const spot = spots[id];
+    return spotActive(id) && Math.hypot(player.x - spot.x, player.y - spot.y) <= 2 * TILE;
+  }
   function cellBlocked(x, y, floor = runtime.floor) {
     if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H) return true;
     const f = floors[floor];
@@ -2153,7 +2194,7 @@
     let moving = false;
     if (!runtime.modalOpen && !runtime.talkState && !runtime.titleVisible && runtime.state.started) {
       if (runtime.target) {
-        const dest = runtime.target.path[runtime.target.index], dx = dest.x - player.x, dy = dest.y - player.y, d = Math.hypot(dx, dy), step = 145 * dt;
+        const dest = runtime.target.path[runtime.target.index], dx = dest.x - player.x, dy = dest.y - player.y, d = Math.hypot(dx, dy), step = MOVE_SPEED * dt;
         if (d < step + 1) {
           player.x = dest.x;
           player.y = dest.y;
@@ -2172,7 +2213,7 @@
         let sx = Number(keys.has("d") || keys.has("arrowright")) - Number(keys.has("a") || keys.has("arrowleft")), sy = Number(keys.has("s") || keys.has("arrowdown")) - Number(keys.has("w") || keys.has("arrowup"));
         if (sx || sy) {
           let dx = sx + sy, dy = sy - sx, n = Math.hypot(dx, dy);
-          stepPlayer(dx / n * 105 * dt, dy / n * 105 * dt);
+          stepPlayer(dx / n * MOVE_SPEED * dt, dy / n * MOVE_SPEED * dt);
           moving = true;
         }
       }
@@ -2235,16 +2276,16 @@
         </li>`
       )
     ).join("");
-    $("location").textContent = runtime.state.stage === 3 ? "새봄테크 · 영업팀 사무실" : floors[runtime.floor].caption;
-    $("player-label").textContent = runtime.state.stage === 3 ? "욘 대리 · 기업 담당자" : "플레이어 · 조달달 / 신입 9급 주무관";
+    $("location").textContent = runtime.state.stage === 3 ? "새봄테크 영업팀" : floors[runtime.floor].caption;
+    $("player-label").textContent = runtime.state.stage === 3 ? "욘 대리 · 기업 담당자" : "조달달 · 신입 9급 주무관";
     $("scene-time").textContent = [
       "DAY 01 · 09:00",
       "DAY 01 · 10:00",
-      "공고 준비 · 시간 축약",
-      "입찰 참여 · 시간 축약",
-      "개찰·계약 · 시간 축약",
-      "납품·대금 지급 · 시간 축약",
-      "전체 업무 완료"
+      "DAY 02 · 09:00",
+      "DAY 03 · 14:00",
+      "DAY 04 · 10:00",
+      "DAY 24 · 14:00",
+      "DAY 24 · 17:00"
     ][runtime.state.stage];
     $("spot-doc").textContent = runtime.state.stage === 3 ? "제품 자료 · 내 책상" : runtime.state.stage === 1 ? "규격서 · 내 책상" : "요청서 · 내 책상";
     const target = guideTarget(nextTarget());
@@ -2252,7 +2293,7 @@
       $("spot-" + id).classList.toggle("target", target === id);
     $("guide-button").textContent = runtime.state.stage === LAST_STAGE ? "완료 기록 보기" : target === "elevator" ? "엘리베이터로 이동" : "다음 목표로 이동";
     $("quest-label").textContent = runtime.state.stage === LAST_STAGE ? "완료" : `퀘스트 ${runtime.state.stage + 1}`;
-    const goalLabels = { mentor: "김주문에게 업무 듣기", phone: runtime.state.stage === 5 ? "5층 · 납품 자료 확인" : "수요기관에 연락", doc: runtime.state.stage === 3 ? "공고에 맞는 제품 고르기" : "내 책상 자료 확인", terminal: runtime.state.stage === 5 ? "5층 · 대금 청구 확인" : "업무용 모니터 사용", officer: "3층 · 계약 담당자 만나기", bidroom: "3층 · 개찰·계약 자료 확인", result: "완료 기록 다시 보기" };
+    const goalLabels = { mentor: "김주문에게 업무 듣기", phone: runtime.state.stage === 5 ? "5층 · 납품 자료 확인" : "수요기관에 연락", doc: runtime.state.stage === 3 ? "공고에 맞는 제품 고르기" : "내 책상 자료 확인", terminal: runtime.state.stage === 5 ? "5층 · 대금 청구 확인" : "업무용 모니터 사용", officer: runtime.state.stage === 5 ? "3층 · 계약 담당자와 인사하기" : "3층 · 계약 담당자 만나기", bidroom: "3층 · 개찰·계약 자료 확인", result: "완료 기록 다시 보기" };
     $("current-goal").textContent = goalLabels[nextTarget()];
     $("quick-guide").textContent = $("guide-button").textContent;
     renderInventory();
@@ -2310,7 +2351,7 @@
     return (
       /* HTML */
       `<div class="document">
-    <div class="doc-header"><strong>${title}</strong><small>게임용 가상 문서</small></div>
+    <div class="doc-header"><strong>${title}</strong><small>업무 문서</small></div>
     ${rows.map(([a, b]) => (
         /* HTML */
         `<div class="row"><span>${a}</span><b>${b}</b></div>`
@@ -2351,7 +2392,7 @@
         저장 후에는 사무실로 돌아와 선배에게 검토를 요청하세요.
       </p>
       <p>
-        <strong>공간:</strong> 조달청 본청 5층과 3층 배치를 참고한 가상 지방청입니다. 엘리베이터로 층을 옮겨요.
+        <strong>공간:</strong> 새봄지방조달청 5층 구매팀과 3층 계약팀입니다. 엘리베이터로 층을 옮겨요.
         기업 단계는 별도 사무실로 전환하며 공간 배치는 체험을 위해 재사용합니다.
       </p>
       <p>
@@ -2359,7 +2400,7 @@
         모드나 저장 제한 환경에서는 이어하기가 제한됩니다.
       </p>
       <p>
-        <strong>업무 범위:</strong> 요청 접수 → 규격 검토 → 공고 → 기업 입찰 참여 → 낙찰자 선정·전자계약 → 검사·검수·대금 지급을 체험해요. 심사 세부 내용과 대기 시간은 줄였어요.
+        <strong>업무 범위:</strong> 요청 접수 → 규격 검토 → 공고 → 기업 입찰 참여 → 낙찰자 선정·전자계약 → 검사·검수·대금 지급을 체험해요.
       </p>
       <p>
         원자료:
@@ -2554,6 +2595,10 @@
   }
 
   // src/game/input.js
+  function physicalKey(e) {
+    const code = { KeyW: "w", KeyA: "a", KeyS: "s", KeyD: "d", KeyQ: "q", KeyE: "e" }[e.code];
+    return code || e.key.toLowerCase();
+  }
   function handleKey(e) {
     if (runtime.talkState) {
       if (e.code === "Space" || e.key === "Enter") {
@@ -2582,7 +2627,7 @@
       return;
     }
     if (runtime.titleVisible) return;
-    const k = e.key.toLowerCase();
+    const k = physicalKey(e);
     if (k === "q") {
       e.preventDefault();
       if (!e.repeat) setNotebook($("quest-panel").hidden);
@@ -2651,7 +2696,7 @@
       }
     });
     document.addEventListener("keydown", handleKey);
-    document.addEventListener("keyup", (e) => keys.delete(e.key.toLowerCase()));
+    document.addEventListener("keyup", (e) => keys.delete(physicalKey(e)));
     window.addEventListener("blur", () => {
       keys.clear();
       releaseTouch();

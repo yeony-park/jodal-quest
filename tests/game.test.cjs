@@ -309,12 +309,12 @@ async function main() {
     b.drawEvents.length = 0;
     b.run("draw(1,false)");
     assert.ok(b.drawEvents.indexOf("target") >= 0);
-    assert.ok(b.drawEvents.indexOf("target") < b.drawEvents.indexOf("sprite"));
+    assert.ok(b.drawEvents.indexOf("target") < b.drawEvents.lastIndexOf("sprite"));
   });
   check("Malformed recovery IDs cannot enable Continue or trap a resumed game", () => {
     for(const fields of [{pendingRecovery:['spec-brand']},{recoveries:[['spec-brand']]},{pendingRecovery:{id:'spec-brand'}},{recoveries:[null]},{recoveries:[1]}]) {
       const saved=JSON.parse(b.run('JSON.stringify(fresh())'));
-      Object.assign(saved,{stage:1,started:true,brief:true},fields);
+      Object.assign(saved,{stage:1,xp:100,started:true,brief:true},fields);
       const c=boot(JSON.stringify(saved));
       assert.equal(c.run('loaded'),false,JSON.stringify(fields));
       c.run('actions.continue()');
@@ -322,7 +322,7 @@ async function main() {
       assert.equal(c.run('state.pendingRecovery'),null);
     }
     const saved=JSON.parse(b.run('JSON.stringify(fresh())'));
-    Object.assign(saved,{stage:1,started:true,brief:true,pendingRecovery:'spec-brand'});
+    Object.assign(saved,{stage:1,xp:100,started:true,brief:true,pendingRecovery:'spec-brand'});
     const c=boot(JSON.stringify(saved));c.run('actions.continue();recover()');c.finish();c.run('finishRecovery()');
     assert.equal(c.run('state.stage'),2);
     assert.equal(c.run('state.pendingRecovery'),null);
@@ -332,12 +332,12 @@ async function main() {
     const counts={};
     for(const id of ['phone','doc','terminal']) {
       c.drawEvents.length=0;
-      c.run(`drawFurniture(floors[0].furnishings.find(o=>o.spot==='${id}'))`);
+      c.run(`player.x=spots.${id}.x;player.y=spots.${id}.y;drawFurniture(floors[0].furnishings.find(o=>o.spot==='${id}'))`);
       counts[id]=c.drawEvents.filter(e=>e==='target').length;
     }
     assert.equal(counts.phone,0);assert.ok(counts.doc>0);assert.ok(counts.terminal>0);
     c.run('state.stage=1');c.drawEvents.length=0;
-    c.run("drawFurniture(floors[0].furnishings.find(o=>o.spot==='phone'))");
+    c.run("player.x=spots.phone.x;player.y=spots.phone.y;drawFurniture(floors[0].furnishings.find(o=>o.spot==='phone'))");
     assert.ok(c.drawEvents.includes('target'));
   });
   check("Mentor and monitor labels clear silhouettes and each other at desktop and phone sizes", () => {
@@ -421,7 +421,7 @@ async function main() {
   check("Each recovery teaches a corrective step and rejoins one storyline exactly once", () => {
     for(const id of b.run("Object.keys(recoveryScenes)")) {
       const c=boot();
-      c.run(`Object.assign(state,{stage:recoveryScenes['${id}'].stage,brief:true,contact:true,specAdvice:true,noticeChecked:false,product:false,awardBrief:true,openingChecked:true,deliveryIssueReported:true,inspectionChecked:true});runtime.floor=state.stage===4?1:0;beginRecovery('${id}')`);
+      c.run(`Object.assign(state,{stage:recoveryScenes['${id}'].stage,brief:true,contact:true,specAdvice:true,noticeChecked:false,product:false,awardBrief:true,openingChecked:true,deliveryIssueReported:true,inspectionChecked:true});runtime.floor=state.stage===4?1:0;state.xp=state.stage*100;beginRecovery('${id}')`);
       const originalStage=c.run("state.stage");
       assert.equal(c.run("state.pendingRecovery"),id);
       assert.equal(c.run("state.mistakes"),1);
@@ -443,7 +443,7 @@ async function main() {
   check("Version one stages zero through six load with safe new defaults", () => {
     for(let stage=0;stage<=6;stage++) {
       const old=JSON.parse(b.run('JSON.stringify(fresh())')); old.stage=stage;old.started=true;
-      delete old.recoveries;delete old.pendingRecovery;
+      delete old.recoveries;delete old.pendingRecovery;delete old.xp;delete old.questMistakes;delete old.contractFarewell;
       const c=boot(JSON.stringify(old));
       assert.equal(c.run('state.stage'),stage);
       assert.equal(c.run('state.recoveries.length'),0);
@@ -598,7 +598,7 @@ async function main() {
   });
   check("Draft workflow uses mock login", () => {
     b.run("portalWork()");
-    assert.match(b.el("modal").innerHTML, /가상 계정으로 로그인/);
+    assert.match(b.el("modal").innerHTML, /업무 계정으로 로그인/);
     b.run("actions['portal-signin']()");
     assert.match(b.el("modal").innerHTML, /공고 초안/);
   });
@@ -724,12 +724,17 @@ async function main() {
     b.run("bidroom();actions['opening-bad']()");
     assert.equal(b.run("state.openingChecked"), false);
     assert.match(b.el("modal").innerHTML, /순서 오류/);
-    b.run("finishRecovery();officer();actions['contract-bad']()");
+    b.run("finishRecovery();officer()");
+    b.finish();
+    b.run("actions['contract-bad']()");
     assert.equal(b.run("state.stage"), 4);
     b.run("finishRecovery()");
     assert.equal(b.run("state.stage"), 5);
     assert.equal(b.run("state.history.length"), 5);
     assert.equal(b.run("ownedItems().filter(Boolean).length"), 6);
+    assert.equal(b.run("guideTarget(nextTarget())"), "officer");
+    b.run("actions['contract-farewell']()");
+    b.finish();
     assert.equal(b.run("guideTarget(nextTarget())"), "elevator");
   });
   check("Payment and inspection cannot skip delivery correction or the return to 5F", () => {
@@ -756,24 +761,153 @@ async function main() {
     assert.equal(b.run("state.history.length"), 6);
     assert.equal(b.run("ownedItems().filter(Boolean).length"), 7);
   });
-  check("Ending restores rookie and includes exact line and level up", () => {
+  check("Ending restores rookie and includes exact line and earned level", () => {
     b.finish();
     assert.equal(b.run("modalKind"), "result");
     assert.match(b.el("modal").innerHTML, /이제 나도... 조달의 왕이야!/);
-    assert.match(b.el("modal").innerHTML, /LEVEL UP!/);
-    assert.equal(b.el("level-badge").textContent, "Lv. 2");
+    assert.match(b.el("modal").innerHTML, /최종 Lv. 5/);
+    assert.equal(b.el("level-badge").textContent, "Lv. 5");
     assert.match(b.el("modal").innerHTML, /https:\/\/www.pps.go.kr\/kor\/bbs\/list.do\?key=00645/);
-    assert.match(b.el("modal").innerHTML, /채용정보/);
+    assert.doesNotMatch(b.el("modal").innerHTML, /채용정보로 이동합니다|외부 사이트/);
   });
   check("Repeated submit cannot duplicate completed history", () => {
     b.run("finishBid()");
     assert.equal(b.run("state.history.length"), 6);
   });
-  check("Completed saved game resumes at level two with full bag", () => {
+  check("Completed saved game resumes at its earned level with full bag", () => {
     const c = boot(b.store.get("jodal-master-v1"));
     c.run("actions.continue()");
     assert.equal(c.run("modalKind"), "result");
     assert.equal(c.run("ownedItems().filter(Boolean).length"), 7);
+  });
+  check("Physical WASD, Q and E work with Hangul and Process key values and release cleanly", () => {
+    const c=boot();c.run('state.started=true;titleVisible=false;player.x=272;player.y=240');
+    for(const [code,key] of [['KeyW','ㅈ'],['KeyA','ㅁ'],['KeyS','ㄴ'],['KeyD','ㅇ'],['KeyW','Process']]) {
+      c.run('player.x=272;player.y=240;runtime.last=965');
+      const e={code,key,target:{tagName:'CANVAS'},preventDefault(){}};
+      c.fire('keydown',e);c.run('frame(1000)');
+      assert.ok(c.run('Math.hypot(player.x-272,player.y-240)')>4);
+      c.fire('keyup',e);
+      const position=c.run('JSON.stringify(player)');c.run('frame(1035)');
+      assert.equal(c.run('JSON.stringify(player)'),position);
+      assert.equal(c.run('keys.size'),0);
+    }
+    c.el('quest-panel').hidden=true;
+    c.fire('keydown',{code:'KeyQ',key:'ㅂ',target:{tagName:'CANVAS'},preventDefault(){}});
+    assert.equal(c.el('quest-panel').hidden,false);
+    c.run('state.brief=true;player.x=spots.phone.x;player.y=spots.phone.y');
+    c.fire('keydown',{code:'KeyE',key:'ㄷ',target:{tagName:'CANVAS'},preventDefault(){}});
+    assert.equal(c.run('talkState.name'),'수요기관 담당자');
+  });
+  check("Manual, arrow and auto movement all travel at 145 world pixels per second", () => {
+    const c=boot();c.run('state.started=true;titleVisible=false');
+    const distances=[];
+    for(const key of ['w','arrowup','auto']) {
+      c.run(`keys.clear();target=null;player.x=272;player.y=240;runtime.last=965;${key==='auto'?'target={id:"doc",path:[{x:372,y:240}],index:0}':`keys.add('${key}')`};frame(1000)`);
+      distances.push(c.run('Math.hypot(player.x-272,player.y-240)'));
+    }
+    distances.forEach(d=>assert.ok(Math.abs(d-145*0.035)<1e-8));
+  });
+  check("NPC and furniture outlines appear only inside the two-tile interaction radius", () => {
+    const c=boot();c.run('state.stage=1;view.scale=1;view.dpr=1');
+    for(const id of ['phone','doc','terminal']) {
+      for(const [offset,expected] of [[64,true],[65,false],[250,false]]) {
+        c.drawEvents.length=0;
+        c.run(`player.x=spots.${id}.x+${offset};player.y=spots.${id}.y;drawFurniture(floors[0].furnishings.find(o=>o.spot==='${id}'))`);
+        assert.equal(c.drawEvents.includes('target'),expected,id+' '+offset);
+      }
+    }
+    for(const id of ['mentor','supplier','officer']) {
+      c.run(`runtime.floor=spots.${id}.floor`);
+      for(const [offset,width] of [[0,20],[65,16]]) {
+        c.run(`player.x=spots.${id}.x+${offset};player.y=spots.${id}.y;pixelPerson(spots.${id}.npcX,spots.${id}.npcY,'${id}')`);
+        assert.equal(c.drawCalls.at(-1)[0].width,width);
+      }
+    }
+  });
+  check("Only the distant goal keeps its name and minimap dot while nearby names appear", () => {
+    const c=boot();c.run('state.stage=1;player.x=16;player.y=240;render();updateMap()');
+    assert.equal(c.el('spot-mentor').hidden,false);
+    assert.equal(c.el('spot-terminal').hidden,true);
+    assert.equal(c.el('mini-target').style.display,'');
+    c.run('player.x=spots.terminal.x;player.y=spots.terminal.y;updateMap()');
+    assert.equal(c.el('spot-terminal').hidden,false);
+    assert.equal(c.el('spot-mentor').hidden,false);
+    assert.equal(c.el('spot-doc').hidden,true);
+  });
+  check("Rooms have no department signs and map captions follow the active office", () => {
+    const c=boot();assert.equal(c.run("floors.every(f=>!f.labels)"),true);
+    for(const [stage,floor,label] of [[1,0,'5층 구매팀'],[4,1,'3층 계약팀'],[3,0,'새봄테크 영업팀']]) {
+      c.run(`state.stage=${stage};runtime.floor=${floor};render()`);
+      assert.ok(c.el('location').textContent.includes(label));
+    }
+    assert.doesNotMatch(production,/0502|0503|0303|건설환경|조달개혁/);
+  });
+  check("Portal draft requires checking the request without a quantity answer hint", () => {
+    const c=boot();c.run('state.stage=2;portalSignedIn=true;openPortal("draft")');
+    assert.match(c.el('modal').innerHTML,/portal-quantity/);
+    assert.doesNotMatch(c.el('modal').innerHTML,/요청서\s*:\s*20|<small>[^<]*20대/);
+  });
+  check("3F officer explains the price review and sees the rookie off before the elevator becomes the goal", () => {
+    const c=boot();c.run('Object.assign(state,{started:true,stage:4,xp:400,awardBrief:true,openingChecked:true});runtime.floor=state.floor=1;officer()');
+    assert.equal(c.run('talkState.role'),'officer');assert.ok(c.run('talkState.lines.length')>=3);
+    c.finish();assert.equal(c.run('modalKind'),'contract');
+    c.run('contractGood()');assert.equal(c.run('state.stage'),5);
+    assert.equal(c.run('nextTarget()'),'officer');
+    const resumed=boot(c.store.get('jodal-master-v1'));resumed.run('actions.continue()');
+    assert.equal(resumed.run('nextTarget()'),'officer');
+    c.run("actions['contract-farewell']()");
+    assert.ok(c.run('talkState.lines.length')>=4);
+    assert.match(c.run('talkState.lines.join(" ")'),/5층.*납품/);
+    c.run('while(talkState && talkState.role!=="rookie"){revealLine();nextLine();}');
+    assert.equal(c.run('talkState.role'),'rookie');
+    assert.equal(c.run('state.contractFarewell'),false);assert.equal(c.run('nextTarget()'),'officer');
+    c.finish();assert.equal(c.run('state.contractFarewell'),true);
+    assert.equal(c.run('guideTarget(nextTarget())'),'elevator');
+  });
+  check("Quest completions award XP, clean bonuses, visible progress and level-up notices", () => {
+    const c=boot();c.run('Object.assign(state,{started:true,brief:true,contact:true});actions["intake-good"]()');
+    assert.equal(c.run('state.xp'),125);assert.equal(c.el('xp-bar').value,125);
+    assert.match(c.el('modal').innerHTML,/수습 없이 완료 보너스 25 XP/);
+    c.run('state.specAdvice=true;actions["spec-good"]()');
+    assert.equal(c.run('state.xp'),250);assert.equal(c.el('level-badge').textContent,'Lv. 2');
+    assert.equal(c.el('xp-bar').value,100);assert.match(c.el('modal').innerHTML,/레벨 업! Lv. 2/);
+    assert.equal(JSON.parse(c.store.get('jodal-master-v1')).xp,250);
+    c.run('actions["spec-good"]()');assert.equal(c.run('state.xp'),250);
+    c.run('actions.new()');assert.equal(c.run('state.xp'),0);
+  });
+  check("Recovery removes only that quest's bonus, including after reload", () => {
+    const c=boot();c.run('Object.assign(state,{started:true,brief:true,contact:true});beginRecovery("intake")');
+    const d=boot(c.store.get('jodal-master-v1'));d.run('actions.continue();finishRecovery()');
+    assert.equal(d.run('state.xp'),100);
+    d.run('state.specAdvice=true;actions["spec-good"]()');assert.equal(d.run('state.xp'),225);
+    const legacy=JSON.parse(c.store.get('jodal-master-v1'));delete legacy.xp;delete legacy.questMistakes;
+    const e=boot(JSON.stringify(legacy));e.run('actions.continue();finishRecovery()');
+    assert.equal(e.run('state.xp'),100);
+  });
+  check("Pre-change version-one saves retain progress and receive base XP for completed quests", () => {
+    for(let stage=0;stage<=6;stage++) {
+      const old=JSON.parse(b.run('JSON.stringify(fresh())'));Object.assign(old,{started:true,stage});
+      delete old.xp;delete old.questMistakes;delete old.contractFarewell;
+      const c=boot(JSON.stringify(old));assert.equal(c.run('loaded'),true);
+      assert.equal(c.run('state.stage'),stage);assert.equal(c.run('state.xp'),stage*100);
+      c.run('actions.continue()');assert.equal(c.el('level-badge').textContent,'Lv. '+(1+Math.floor(stage*100/150)));
+    }
+    const old=JSON.parse(b.run('JSON.stringify(fresh())'));old.started=true;
+    for(const fields of [{xp:-1},{xp:'100'},{xp:Infinity},{questMistakes:1},{contractFarewell:'yes'}])
+      assert.equal(boot(JSON.stringify({...old,...fields})).run('loaded'),false);
+  });
+  check("In-game notices keep the story clock and one accuracy note each on title and ending", () => {
+    assert.doesNotMatch(production,/축약|가상|대기 시간은 줄|심사 세부 내용과 대기/);
+    assert.doesNotMatch(html,/축약|가상/);
+    assert.equal((html.match(/실제 업무와 다를 수 있습니다/g)||[]).length,1);
+    const c=boot();for(let stage=0;stage<=6;stage++) {
+      c.run(`state.stage=${stage};render()`);assert.match(c.el('scene-time').textContent,/^DAY \d{2} · \d{2}:\d{2}$/);
+    }
+    c.run('state.xp=750;result()');assert.match(c.el('modal').innerHTML,/최종 Lv. 6/);
+    assert.equal((c.el('modal').innerHTML.match(/실제 업무와 다를 수 있습니다/g)||[]).length,1);
+    assert.doesNotMatch(c.el('modal').innerHTML,/채용정보로 이동합니다|외부 사이트/);
+    assert.match(c.el('modal').innerHTML,/더 많은 퀘스트를 깨고 싶다면/);
   });
   check("Production banks use the supplied rookie and supplier recordings", () => {
     assert.equal(b.run("voiceClips.has('supplier')"), true);
@@ -924,7 +1058,7 @@ async function main() {
     b.run("openGlossary()");
     assert.match(b.el("modal").innerHTML, /예정가격/);
     assert.match(b.el("modal").innerHTML, /key=00179/);
-    assert.match(b.el("modal").innerHTML, /가상 설정/);
+    assert.match(b.el("modal").innerHTML, /공식 업무처리절차/);
   });
   check("Corrupted save still allows a new game", () => {
     const c = boot("{broken");

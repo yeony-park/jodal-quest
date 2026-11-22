@@ -3,7 +3,7 @@ import { canvas, ctx } from "./canvas.js";
 import { player, runtime } from "../core/runtime.js";
 import { pixelPerson } from "./characters.js";
 import { nextTarget } from "../game/quests.js";
-import { guideTarget, spotActive } from "./navigation.js";
+import { guideTarget, spotActive, spotNearby } from "./navigation.js";
 import { outlineRect } from "./contrast.js";
 import { $ } from "../core/dom.js";
 
@@ -73,13 +73,13 @@ export function drawFurniture(o) {
   if (o.type === "table") return;
   const p = project((o.x + 0.5) * TILE, (o.y + 0.5) * TILE, 21);
   if (o.type === "phone") {
-    if (o.spot && spotActive(o.spot)) outlineRect(p.x - 14, p.y - 14, 28, 17);
+    if (o.spot && spotNearby(o.spot)) outlineRect(p.x - 14, p.y - 14, 28, 17);
     ctx.fillStyle = "#2f5356";
     ctx.fillRect(p.x - 9, p.y - 8, 18, 9);
     ctx.fillRect(p.x - 12, p.y - 12, 24, 5);
     return;
   }
-  if (o.spot && spotActive(o.spot)) outlineRect(p.x - 14, p.y - 24, 28, 25);
+  if (o.spot && spotNearby(o.spot)) outlineRect(p.x - 14, p.y - 24, 28, 25);
   ctx.fillStyle = "#263e4d";
   ctx.fillRect(p.x - 12, p.y - 22, 24, 19);
   ctx.fillStyle = "#87c4c3";
@@ -92,7 +92,7 @@ export function drawFurniture(o) {
   ctx.fillRect(p.x - 8, p.y + 1, 16, 3);
   if (o.w > 1) {
     const q = project((o.x + 1.45) * TILE, (o.y + 0.6) * TILE, 21);
-    if (o.spot && spotActive(o.spot)) outlineRect(q.x - 10, q.y - 10, 20, 14);
+    if (o.spot && spotNearby(o.spot)) outlineRect(q.x - 10, q.y - 10, 20, 14);
     ctx.fillStyle = "#fff1c8";
     ctx.fillRect(q.x - 8, q.y - 8, 16, 10);
     ctx.fillStyle = "#b1ad8a";
@@ -245,9 +245,8 @@ export function draw(t, moving) {
   box(0, 0, 18, 0.12, 37, "#e0e5d0", "#b6c2b2", "#9cae9f");
   box(0, 0, 0.12, 14, 37, "#e0e5d0", "#b6c2b2", "#9cae9f");
   if (runtime.state.stage !== 3) drawElevator();
-  for (const [label, x, y] of floor.labels) roomLabel(label, x, y);
   const items = sceneItems(moving), dest = spots[guideTarget(nextTarget())];
-  if (dest && !runtime.modalOpen && !runtime.talkState) drawFloorMarker(dest, items);
+  if (dest && spotNearby(guideTarget(nextTarget())) && !runtime.modalOpen && !runtime.talkState) drawFloorMarker(dest, items);
   for (const item of paintOrder(items)) item.draw();
   const p = project(player.x, player.y);
   ctx.fillStyle = "#fff4d7";
@@ -396,12 +395,12 @@ export function placeLabel(anchor, size, obstacles, own) {
 
 export function positionLabels() {
   const visuals=labelVisuals(), obstacles=[...visuals];
-  for(const el of document.querySelectorAll?.(".minimap,.goal-bar,.top-controls,.inventory,.bottom-controls,.mobile-controls") || []) {
+  for(const el of document.querySelectorAll?.(".minimap,.goal-bar,.top-controls,.inventory,.bottom-controls,.mobile-controls,.scene-clock") || []) {
     const r=el.getBoundingClientRect();if(r.width&&r.height)obstacles.push({x:r.x,y:r.y,w:r.width,h:r.height});
   }
   const target=guideTarget(nextTarget()), ids=Object.keys(spots).sort((a,b)=>(a===target?-1:b===target?1:0));
   for(const id of ids) {
-    const el=$("spot-"+id), s=spots[id];el.hidden=!spotActive(id);if(el.hidden)continue;
+    const el=$("spot-"+id), s=spots[id];el.hidden=!spotActive(id) || (id !== target && !spotNearby(id));if(el.hidden)continue;
     const p=project(s.npcX??s.x,s.npcY??s.y), own=visuals.find(v=>v.id===id);
     const anchor={x:(p.x-runtime.view.x)*runtime.view.scale,y:own?own.y-10:(p.y-65-runtime.view.y)*runtime.view.scale};
     if(own)anchor.x=own.x+own.w/2;

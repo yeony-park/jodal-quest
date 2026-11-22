@@ -7,6 +7,13 @@ import { actions } from "../game/actions.js";
 import { draw, updateMap } from "./render.js";
 import { LAST_STAGE } from "../data/quests.js";
 
+export const MOVE_SPEED = 145;
+
+export function spotNearby(id) {
+  const spot = spots[id];
+  return spotActive(id) && Math.hypot(player.x - spot.x, player.y - spot.y) <= 2 * TILE;
+}
+
 export function cellBlocked(x, y, floor = runtime.floor) {
   if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H) return true;
   const f = floors[floor];
@@ -129,7 +136,7 @@ export function frame(t) {
         dx = dest.x - player.x,
         dy = dest.y - player.y,
         d = Math.hypot(dx, dy),
-        step = 145 * dt;
+        step = MOVE_SPEED * dt;
       if (d < step + 1) {
         player.x = dest.x;
         player.y = dest.y;
@@ -155,7 +162,7 @@ export function frame(t) {
         let dx = sx + sy,
           dy = sy - sx,
           n = Math.hypot(dx, dy);
-        stepPlayer((dx / n) * 105 * dt, (dy / n) * 105 * dt);
+        stepPlayer((dx / n) * MOVE_SPEED * dt, (dy / n) * MOVE_SPEED * dt);
         moving = true;
       }
     }

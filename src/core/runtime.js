@@ -6,6 +6,7 @@ export const player = { x: 464, y: 144 };
 
 export const runtime = {
   state: fresh(),
+  lastXP: "",
   pendingSubmission: null,
   submittedSteps: new Set(),
   floor: 0,

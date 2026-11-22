@@ -1953,5 +1953,51 @@ a {
 #submission-hint {
   min-height: 3em;
 }
+#xp-status {
+  display: inline-flex;
+  flex-direction: column;
+  width: 95px;
+  gap: 2px;
+  font: 10px monospace;
+  color: #3f5542;
+}
+#xp-bar {
+  width: 100%;
+  height: 9px;
+  accent-color: #eed179;
+}
+.xp-reward {
+  color: #396043;
+  font-weight: 700;
+}
+@media (max-width: 1240px) {
+  #player-label {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  #player-label {
+    display: none;
+  }
+  #xp-status {
+    width: 70px;
+    font-size: 9px;
+    flex-shrink: 0;
+  }
+  .level-up-hero strong {
+    font-size: 26px;
+  }
+}
+.scene-clock {
+  position: absolute;
+  right: 0;
+  top: 52px;
+  color: #263e35;
+  background: #fff2d8;
+  padding: 3px 8px;
+  white-space: nowrap;
+  font: 12px monospace;
+  border-radius: 3px;
+}
 
 /* src/styles/index.css */

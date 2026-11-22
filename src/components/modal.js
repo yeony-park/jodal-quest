@@ -46,7 +46,7 @@ export function buttons(items) {
 
 export function doc(title, rows) {
   return /* HTML */ `<div class="document">
-    <div class="doc-header"><strong>${title}</strong><small>게임용 가상 문서</small></div>
+    <div class="doc-header"><strong>${title}</strong><small>업무 문서</small></div>
     ${rows.map(([a, b]) => /* HTML */ `<div class="row"><span>${a}</span><b>${b}</b></div>`).join("")}
   </div>`;
 }
@@ -83,7 +83,7 @@ export function help() {
         저장 후에는 사무실로 돌아와 선배에게 검토를 요청하세요.
       </p>
       <p>
-        <strong>공간:</strong> 조달청 본청 5층과 3층 배치를 참고한 가상 지방청입니다. 엘리베이터로 층을 옮겨요.
+        <strong>공간:</strong> 새봄지방조달청 5층 구매팀과 3층 계약팀입니다. 엘리베이터로 층을 옮겨요.
         기업 단계는 별도 사무실로 전환하며 공간 배치는 체험을 위해 재사용합니다.
       </p>
       <p>
@@ -91,7 +91,7 @@ export function help() {
         모드나 저장 제한 환경에서는 이어하기가 제한됩니다.
       </p>
       <p>
-        <strong>업무 범위:</strong> 요청 접수 → 규격 검토 → 공고 → 기업 입찰 참여 → 낙찰자 선정·전자계약 → 검사·검수·대금 지급을 체험해요. 심사 세부 내용과 대기 시간은 줄였어요.
+        <strong>업무 범위:</strong> 요청 접수 → 규격 검토 → 공고 → 기업 입찰 참여 → 낙찰자 선정·전자계약 → 검사·검수·대금 지급을 체험해요.
       </p>
       <p>
         원자료:

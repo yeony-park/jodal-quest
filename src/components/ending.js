@@ -1,3 +1,4 @@
+import { levelProgress } from "../game/progression.js";
 import { endingTitle, recoveryScenes } from "../data/recovery.js";
 import { learningReview } from "./learning.js";
 import { LAST_STAGE } from "../data/quests.js";
@@ -30,11 +31,11 @@ export function result() {
   const score = Math.max(60, 100 - runtime.state.mistakes * 5);
   show(
     endingTitle(runtime.state.recoveries,runtime.state.mistakes),
-    /* HTML */ `<div class="level-up-tag">LEVEL UP!</div>
+    /* HTML */ `<div class="level-up-tag">업무 완료</div>
       <div class="level-up-hero">
-        ${face("rookie")}<strong>Lv. 1 <span>〉</span> Lv. 2</strong>
+        ${face("rookie")}<strong>최종 Lv. ${levelProgress().level}</strong>
       </div>
-      <div class="level-progress"><i></i></div>
+      <p class="center">총 ${runtime.state.xp} XP · 다음 레벨까지 ${levelProgress().next - levelProgress().current} XP</p>
       <p class="center">이제 나도... 조달의 왕이야!</p>
       <section class="achievements" aria-label="획득한 업적"><h3>획득한 업적</h3><ul>
         <li>여섯 업무 완주 · 계약부터 대금 지급까지</li>
@@ -47,12 +48,12 @@ export function result() {
         <div class="stat"><strong>7 / 7</strong><small>획득한 물건</small></div>
         <div class="stat"><strong>${score}</strong><small>학습 점수</small></div>
       </div>
-      <div class="success">가상 구매 완료 · 입찰서 접수 → 심사 확인·전자계약 → 검사·검수 → 대금 지급</div>
+      <div class="success">구매 완료 · 입찰서 접수 → 심사 확인·전자계약 → 검사·검수 → 대금 지급</div>
       <details class="ending-review" open><summary>여섯 업무에서 배운 것</summary>${learningReview()}</details>
       <a class="ending-link" href="${MORE_QUESTS}" target="_blank" rel="noopener noreferrer"
         >더 많은 퀘스트를 깨고 싶다면?</a
       >
-      <p class="ending-destination">조달청 채용정보로 이동합니다 · 외부 사이트</p>
+      <p class="source-note">공공조달 체험 게임 · 실제 업무와 다를 수 있습니다</p>
       ${buttons([
         ["close", "사무실로 돌아가기"],
         ["restart", "다시 플레이", true],
