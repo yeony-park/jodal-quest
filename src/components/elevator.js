@@ -26,7 +26,7 @@ export function playLiftArrival(level, onOpen = () => {}) {
   $("lift-indicator").textContent = level;
   $("lift-arrival").hidden = false;
   $("game-shell").inert = true;
-  const timing = {delay: 350, duration: 900, easing: "ease-in-out", fill: "both"};
+  const timing = {delay: 900, duration: 900, easing: "ease-in-out", fill: "both"};
   doors = [left, right].map((door, i) => door.animate(
     [{transform: "translateX(0)"}, {transform: i ? "translateX(100%)" : "translateX(-100%)"}], timing));
   doors[0].onfinish = () => {
