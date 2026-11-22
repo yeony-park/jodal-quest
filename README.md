@@ -1,24 +1,41 @@
-# jodal-quest
+# 조달의 달인
 
-2026 조달청 AI 게임·콘텐츠 공모전 AI 게임 부문 출품용 웹 게임 「조달의 달인」입니다.
-가상 지방조달청 신입 조달달이 요청서부터 계약·납품·대금 지급까지 여섯 업무를 배웁니다.
+신입 주무관 조달달의 첫 의뢰는 새봄도서관에서 보낸 모니터 20대 구매 요청서입니다. 납품기한이 비어 있습니다. 첫 업무는 새봄도서관 사서에게 전화해 그 빈칸을 채우는 일입니다.
 
-## 실행과 개발
+## 게임 실행하기
 
-`dist/index.html`을 브라우저로 여세요. HTML·CSS·JavaScript·글꼴이 있는 `dist` 전체를 함께 유지하세요.
-루트의 `index.html`은 개발용 조립 템플릿입니다. Windows EXE 제작과 검증은 남아 있습니다.
+**[Windows x64 실행 파일 다운로드](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/JodalQuest-Windows-x64.exe)** · [첫 프리뷰 릴리스](https://github.com/yeony-park/jodal-quest/releases/tag/v0.1.0-preview.1)
 
-Node.js 22 이상에서 실행합니다. 개발 의존성은 lockfile로 고정한 esbuild 하나입니다.
+1. Windows에서 내려받은 `JodalQuest-Windows-x64.exe`를 더블클릭하세요. 기본 브라우저에 게임이 열립니다.
+2. **게임 시작하기**를 누르세요. 대상 이름을 클릭하면 캐릭터가 그곳으로 걸어갑니다. 대사는 **Space**로 넘깁니다.
+3. 다음에 같은 EXE를 같은 브라우저로 열고 **이어서 하기**를 누르면 마지막에 저장한 업무부터 계속합니다.
 
-```sh
-npm ci
-npm run dev   # http://127.0.0.1:8765
-npm test      # 빌드 + 게임 검사 + 배포 자산 검사
-npm run build # dist 재생성
-```
+**Mac 등에서 브라우저로 실행하려면** [게임 소스 ZIP](https://github.com/yeony-park/jodal-quest/archive/refs/tags/v0.1.0-preview.1.zip)을 내려받아 압축을 풀고 폴더 안의 `dist/index.html`을 여세요. 게임 파일과 글꼴은 `dist` 안에 함께 들어 있습니다. 비공개 저장소의 다운로드는 접근 권한이 있는 GitHub 계정으로 로그인해야 합니다.
 
-`src`를 수정하고 빌드하세요. `dist`는 자동 생성 결과이며 저장소에 포함합니다.
-`src/styles/index.css`의 CSS import 순서는 유지하세요.
+## 58초 예고편
+
+[![새봄지방조달청의 첫 출근. 조달의 달인 예고편 다운로드](docs/media/trailer-cover.jpg)](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/JodalQuest-Trailer.mp4)
+
+**[예고편 MP4 다운로드 · 58초 · 소리 있음](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/JodalQuest-Trailer.mp4)**
+
+## 플레이할 때 눈여겨볼 두 장면
+
+**가방에서 직접 건네는 요청서.** 한서진 사서에게 확인한 납품기한을 기억해 두세요. 내 책상으로 돌아와 가방에서 요청서를 골라 내면, 방금 나눈 대화가 서류의 한 줄이 됩니다. [플레이 영상 MP4](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/first-request.mp4)
+
+![가방에서 요청서를 꺼내 납품기한을 확인하고 첫 업무를 마치는 장면](docs/media/first-request.gif)
+
+**7층 도서실의 캐비닛.** 엘리베이터에서 7층을 골라 보세요. 도서실 캐비닛에서 찾은 ‘용역’ 카드가 내 수첩에 남습니다. 층마다 다른 카드를 모으면 엔딩에서 수집 칭호도 받을 수 있습니다. [플레이 영상 MP4](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/cabinet.mp4)
+
+![층별 지도에서 7층을 골라 캐비닛의 용어 카드를 수첩에 담는 장면](docs/media/cabinet.gif)
+
+## 누가 무엇을 만들었나요?
+
+| 기여자 | 맡은 작업 | 제작 기록 |
+| --- | --- | --- |
+| yeony-park (Yeonjeong Park) | 첫 플레이 버전의 사무실·캐릭터·퀘스트와 게임 코드 구조를 만들었습니다. 이후 청사 10개 층과 캐비닛 수집, 배경음악·효과음, 시작 화면과 엔딩 인물평을 추가하고 Windows 실행 파일과 플레이 영상·예고편을 제작했습니다. | [첫 플레이 버전](https://github.com/yeony-park/jodal-quest/commit/7e42b1d) · [청사 탐색과 엔딩](https://github.com/yeony-park/jodal-quest/pull/4) · [Windows 빌드](https://github.com/yeony-park/jodal-quest/actions/runs/44974824971) |
+| hyonsho | 계약·납품 구간을 추가해 여섯 퀘스트를 완성하고, 가방 서류 제출, 실수 수습, 조달달의 녹음 기반 대화, 경험치·레벨과 모바일 조작을 구현했습니다. 플레이 테스트를 바탕으로 목표 안내와 나라장터 문구도 다듬었습니다. | [퀘스트 확장](https://github.com/yeony-park/jodal-quest/pull/1) · [플레이 테스트 반영](https://github.com/yeony-park/jodal-quest/pull/2) · [나라장터 문구](https://github.com/yeony-park/jodal-quest/pull/3) |
+
+조달달과 욘 대리의 목소리에는 팀에서 제공한 녹음을 사용했습니다. 녹음 제작 기록은 캐릭터별로 남아 있습니다. [팀원 음성 안내](docs/팀원음성안내.txt)
 
 ## 플레이
 
@@ -40,7 +57,7 @@ Space는 문장 전체 보기·다음 대사, Q는 퀘스트 노트입니다. �
 수습 0개는 정파, 1~2개는 정파 · 수습을 배운 신입, 3개 이상은 사파 칭호를 받으며 엔딩 줄 노트에 인물평과 캐비닛 카드 수집 칭호를 표시합니다. 이전 저장의 오답 횟수도 칭호에 반영합니다.
 상호작용 대상의 밝은 테두리와 이름은 두 칸 이내에서 표시합니다. 다음 목표 이름과 미니맵 점은 거리와 관계없이 표시하고 목표 이름만 깜박입니다. 동작 줄이기 설정에서는 깜박임을 끕니다.
 모의 입찰서 접수 뒤 별도 심사와 계약 절차가 이어집니다. 인물·기관·기업·제품·금액·문서는 가상 설정입니다.
-실제 업무와 다를 수 있다는 안내는 타이틀과 엔딩에 한 번씩 표시합니다. 업무 중에는 날짜·시간을 표시합니다.
+실제 업무와 다를 수 있다는 안내는 시작 화면의 물음표 도움말과 엔딩에 표시합니다. 업무 중에는 날짜·시간을 표시합니다.
 미니맵을 누르면 층별 지도가 열립니다. 엘리베이터를 타고 지하 1층부터 9층까지 둘러보며 자료 캐비닛에서 용어 카드 10장을 모을 수 있습니다.
 퀘스트마다 100 XP를 받고 수습 없이 마치면 25 XP를 더 받습니다. 150 XP마다 레벨이 오르며 레벨 배지 옆에서 경험치를 확인합니다. 엔딩은 최종 레벨을 표시합니다.
 
@@ -50,16 +67,30 @@ Space는 문장 전체 보기·다음 대사, Q는 퀘스트 노트입니다. �
 같은 브라우저·같은 주소에서 이어하기를 이용하세요. 퀘스트·확인 항목·현재 층·수습 기록·진행 중인 수습·경험치·2층 배웅 대화 완료 여부를 저장합니다. 위치와 로그인은 실행할 때 초기화합니다.
 
 조달달은 사용자가 제공한 녹음, 욘 대리는 기존 팀원 녹음의 발성 조각을 사용합니다. 김주문과 다른 인물은 합성 발성 효과를 사용합니다.
-두 음성 뱅크를 JavaScript에 내장해 파일 직접 실행에서도 재생합니다. 조달달로 플레이하는 대화마다 그 대화에 맞는 조달달의 짧은 답변이 이어집니다. 두 녹음의 기본 재생 속도는 1.4이며 소리 설정의 두 미리듣기와 효과음은 마스터 음량을 따릅니다.
+두 음성 뱅크를 JavaScript에 내장해 파일 직접 실행에서도 재생합니다. 조달달로 플레이하는 대화마다 그 대화에 맞는 조달달의 짧은 답변이 이어집니다. 두 녹음의 기본 재생 속도는 1.4이며 대화 음성·배경음악·효과음은 각각 켜거나 끌 수 있습니다. 배경음악 음량은 0~100으로 조절합니다.
 원본 전체 녹음은 배포하지 않고 가공한 발성 조각을 JavaScript에 내장합니다. 사용자가 제공한 조달달 발성 조각 24개를 추가했습니다.
 기존 Gaegu Regular 글꼴의 허가문은 `assets/FONT-LICENSE.txt`와 `dist/FONT-LICENSE.txt`에 있습니다.
 
-## 구조와 검증
+## 개발과 검증
+
+Node.js 22 이상에서 실행합니다. 개발 의존성은 lockfile로 고정한 esbuild 하나입니다.
+
+```sh
+npm ci
+npm run dev   # http://127.0.0.1:8765
+npm test      # 빌드 + 게임 검사 + 배포 자산 검사
+npm run build # dist 재생성
+```
+
+`src`를 수정하고 빌드하세요. `dist`는 자동 생성 결과이며 저장소에 포함합니다.
+`src/styles/index.css`의 CSS import 순서는 유지하세요.
+
+Windows에서 배포본을 다시 패키징하려면 저장소 루트에서 PowerShell로 `.\packaging\windows\build.ps1`을 실행하세요. 결과는 `release/JodalQuest-Windows-x64.exe`입니다.
 
 `src/components`는 화면, `src/game`은 퀘스트·입력, `src/world`는 Canvas·이동, `src/data`는 퀘스트·학습·층 배치, `src/core`는 상태·저장, `src/audio`는 소리입니다.
 추가 계약·납품 로직은 `src/game/procurement.js`, 학습 자료는 `src/data/learning.js`에 있습니다.
 
-게임 검사 87개와 배포 자산 검사가 통과했습니다. 캐릭터의 각 자세 연결, 픽셀 정렬, 양쪽 층 이동, 저장 호환, 여섯 퀘스트, 터치 입력, 독립 음성 뱅크를 검사합니다.
+게임 검사 93개와 배포 자산 검사가 통과했습니다. 캐릭터의 각 자세 연결, 픽셀 정렬, 청사 층간 이동, 저장 호환, 여섯 퀘스트, 터치 입력, 독립 음성 뱅크를 검사합니다.
 브라우저 실기 결과와 남은 확인은 [검증 기록](docs/검증기록.txt)에 기록합니다.
 
 - [개발 인수인계](docs/HANDOFF.md)
@@ -71,4 +102,4 @@ Space는 문장 전체 보기·다음 대사, Q는 퀘스트 노트입니다. �
 공식 참고 자료는 2026-11-21 확인 기준입니다.
 [조달청 총액계약 업무처리절차](https://www.pps.go.kr/kor/content.do?key=00179), [조달청 층별배치도](https://www.pps.go.kr/kor/content.do?key=00139), [나라장터](https://www.g2b.go.kr/)를 참고했습니다.
 맵은 본청의 층별 대표 공간을 재구성했습니다. 2층은 게임 전용 계약 체험실이고 엔딩 외부 링크는 [조달청 채용정보](https://www.pps.go.kr/kor/bbs/list.do?key=00645)입니다.
-공개 배포, EXE 패키징, 공모전 접수와 시연 영상 제작은 남아 있습니다.
+이 게임은 2026 조달청 AI 게임·콘텐츠 공모전 AI 게임 부문 출품을 위해 제작했습니다.
