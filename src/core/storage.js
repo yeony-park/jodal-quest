@@ -31,7 +31,7 @@ export function loadGame() {
       s.stage >= 0 &&
       s.stage <= LAST_STAGE &&
       (s.floor === undefined || (Number.isInteger(s.floor) && s.floor >= 0 && s.floor < floors.length)) &&
-      ["contractFarewell", "awardBrief", "openingChecked", "deliveryIssueReported", "inspectionChecked"].every(
+      ["contractFarewell", "awardBrief", "openingChecked", "deliveryIssueReported", "deliverySurpriseSeen", "inspectionChecked"].every(
         (k) => s[k] === undefined || typeof s[k] === "boolean",
       ) &&
       [

@@ -45,7 +45,7 @@
     },
     {
       level: "2F",
-      caption: "2층 계약 체험실",
+      caption: "2층 계약팀",
       rooms: ["계약 상담석", "개찰·계약 자료실"],
       term: "계약상대자",
       corridorCols: [9],
@@ -264,6 +264,7 @@
     awardBrief: false,
     openingChecked: false,
     deliveryIssueReported: false,
+    deliverySurpriseSeen: false,
     inspectionChecked: false,
     brief: false,
     contact: false,
@@ -302,7 +303,7 @@
     },
     {
       title: "이번에는 기업의 시선으로",
-      desc: "이제 공급기업 담당자의 입장이 되어 볼까요? 공고와 자사 제품을 확인한 뒤 모의 입찰서를 제출해 보세요.",
+      desc: "이제 공급기업 담당자의 입장이 되어 볼까요? 공고와 자사 제품을 확인한 뒤 입찰서를 제출해 보세요.",
       memo: "입찰서 제출은 낙찰이나 계약 체결이 아니에요. 이후 별도 심사와 절차가 이어져요.",
       dialogue: "이제 공급기업 담당자의 시선으로 볼까요? 공고에 맞는 제품인지, 참가 준비가 되었는지 확인하세요."
     },
@@ -364,7 +365,7 @@
   function loadGame() {
     try {
       const s = JSON.parse(localStorage.getItem(KEY));
-      if (s && s.version === 1 && (s.recoveries === void 0 || Array.isArray(s.recoveries) && s.recoveries.length <= Object.keys(recoveryScenes).length && s.recoveries.every((id) => typeof id === "string" && Object.hasOwn(recoveryScenes, id)) && new Set(s.recoveries).size === s.recoveries.length) && (s.pendingRecovery === void 0 || s.pendingRecovery === null || typeof s.pendingRecovery === "string" && Object.hasOwn(recoveryScenes, s.pendingRecovery) && recoveryScenes[s.pendingRecovery].stage === s.stage) && (s.xp === void 0 || Number.isInteger(s.xp) && s.xp >= s.stage * 100 && s.xp <= s.stage * 125 && s.xp % 25 === 0) && (s.questMistakes === void 0 || Number.isInteger(s.questMistakes) && s.questMistakes >= 0 && s.questMistakes <= s.mistakes) && Number.isInteger(s.stage) && s.stage >= 0 && s.stage <= LAST_STAGE && (s.floor === void 0 || Number.isInteger(s.floor) && s.floor >= 0 && s.floor < floors.length) && ["contractFarewell", "awardBrief", "openingChecked", "deliveryIssueReported", "inspectionChecked"].every(
+      if (s && s.version === 1 && (s.recoveries === void 0 || Array.isArray(s.recoveries) && s.recoveries.length <= Object.keys(recoveryScenes).length && s.recoveries.every((id) => typeof id === "string" && Object.hasOwn(recoveryScenes, id)) && new Set(s.recoveries).size === s.recoveries.length) && (s.pendingRecovery === void 0 || s.pendingRecovery === null || typeof s.pendingRecovery === "string" && Object.hasOwn(recoveryScenes, s.pendingRecovery) && recoveryScenes[s.pendingRecovery].stage === s.stage) && (s.xp === void 0 || Number.isInteger(s.xp) && s.xp >= s.stage * 100 && s.xp <= s.stage * 125 && s.xp % 25 === 0) && (s.questMistakes === void 0 || Number.isInteger(s.questMistakes) && s.questMistakes >= 0 && s.questMistakes <= s.mistakes) && Number.isInteger(s.stage) && s.stage >= 0 && s.stage <= LAST_STAGE && (s.floor === void 0 || Number.isInteger(s.floor) && s.floor >= 0 && s.floor < floors.length) && ["contractFarewell", "awardBrief", "openingChecked", "deliveryIssueReported", "deliverySurpriseSeen", "inspectionChecked"].every(
         (k) => s[k] === void 0 || typeof s[k] === "boolean"
       ) && [
         "started",
@@ -645,7 +646,6 @@
     const controls = riding && index !== runtime.floor ? [[`floor-${index}`, `${floor.level} 이동`], ["close", "닫기", true]] : [["close", "닫기", true]];
     show(riding ? "엘리베이터" : "층별 지도", `${tabs}<h3 class="floor-caption">${supplier ? "새봄테크" : floor.caption}</h3>
     <p class="floor-rooms">${rooms}</p>${floorPlan(index, supplier)}${legend}
-    ${!supplier && index === 1 ? "<small>게임 속 계약 업무를 위한 체험 공간</small>" : ""}
     ${buttons(controls)}`, riding ? "elevator" : "map");
   }
 
@@ -870,7 +870,7 @@
         참가자격과 제출서류를 확인했습니다. 새봄테크는 등록·참가 요건을 갖췄습니다.</label
       >
       <p class="g2b-caution">
-        모의 입찰이므로 실제 입찰 시스템으로 전송되지 않습니다. 또한 입찰서 접수가 곧 낙찰이나 계약 체결을 의미하지는 않습니다.
+        입찰서 접수 후 별도 심사와 낙찰자 선정·계약 절차가 이어집니다.
       </p>
       <div class="g2b-actions">
         <button class="g2b-primary" data-action="submit-bid">입찰서 제출</button
@@ -883,7 +883,6 @@
         공무원은 공고 초안을 준비하고 선배에게 검토를 요청합니다. 기업
         담당자는 게시된 공고를 검색하고 입찰서를 제출합니다.
       </p>
-      <p>실제 업무에 필요한 이용자 등록, 인증서 제출, 보증 및 세부 서류 절차는 생략되었습니다.</p>
       <button class="g2b-primary" data-action="portal-home">나라장터 첫 화면</button>`;
     show("나라장터", portalShell(content, page), "portal");
     if (page === "list") $("portal-query-label").textContent = query || "전체";
@@ -1049,15 +1048,36 @@
     }, "officer", "감사합니다! 계약서를 챙겨서 5층으로 돌아갈게요. 연락 데스크에서 납품 자료부터 확인하겠습니다.");
   }
   function delivery() {
-    if (runtime.state.stage !== 5 || runtime.floor !== 0) return;
+    if (runtime.state.stage !== 5 || runtime.floor !== 0 || runtime.modalKind === "delivery-surprise") return;
     const corrected = runtime.state.deliveryIssueReported;
-    show("수요기관의 납품 확인 요청", `${doc("납품·검사·검수 자료", [
+    const record = doc("납품·검사·검수 자료", [
       ["계약 수량", "모니터 20대"],
       ["실제 도착", corrected ? "모니터 20대 · 부족분 보완 완료" : "모니터 19대 · 1대 부족"],
       ["규격·납기", "24형 / FHD / HDMI · 계약 후 20일"],
       ["담당", "검사공무원 · 물품출납공무원"]
-    ])}<p>${corrected ? "보완한 납품 자료가 도착했어요. 다음 절차는?" : "수량을 대조했더니 한 대가 부족해요. 어떻게 할까요?"}</p>
-    <div class="choices">${corrected ? '<button class="choice" data-action="delivery-good">검사·검수 담당자가 계약 내용과 일치함을 확인하고 물품을 인수한다</button>' : '<button class="choice" data-action="delivery-report">수요기관·계약상대자에게 부족분 보완을 요청한다</button><button class="choice" data-action="delivery-bad">19대만 도착했지만 20대를 모두 받았다고 기록한다</button>'}</div>`, "delivery");
+    ]);
+    const choices = `<p>${corrected ? "보완한 납품 자료가 도착했어요. 다음 절차는?" : "수량을 대조했더니 한 대가 부족해요. 어떻게 할까요?"}</p>
+    <div class="choices">${corrected ? '<button class="choice" data-action="delivery-good">검사·검수 담당자가 계약 내용과 일치함을 확인하고 물품을 인수한다</button>' : '<button class="choice" data-action="delivery-report">수요기관·계약상대자에게 부족분 보완을 요청한다</button><button class="choice" data-action="delivery-bad">19대만 도착했지만 20대를 모두 받았다고 기록한다</button>'}</div>`;
+    const showRecord = () => show("수요기관의 납품 확인 요청", `<div class="delivery-record">${record}${choices}</div>`, "delivery");
+    if (corrected || runtime.state.deliverySurpriseSeen) {
+      showRecord();
+      return;
+    }
+    const state = runtime.state;
+    state.deliverySurpriseSeen = true;
+    save();
+    show("수요기관의 납품 확인 요청", `<div class="delivery-reveal">${record}</div>`, "delivery-surprise", false);
+    const active = () => runtime.state === state && runtime.modalOpen && runtime.modalKind === "delivery-surprise";
+    setTimeout(() => {
+      if (!active()) return;
+      show("납품 확인 중", `<div class="delivery-closeup" role="status">
+      <div class="delivery-face" role="img" aria-label="입을 벌리고 땀을 흘리며 놀란 조달달">${face("rookie", "surprised")}</div>
+      <div><p>조달달</p><strong>잠깐만요.<br>한 대가 비었어요!</strong></div>
+    </div>`, "delivery-surprise", false);
+      setTimeout(() => {
+        if (active()) showRecord();
+      }, 900);
+    }, 240);
   }
   function reportDeliveryIssue() {
     if (runtime.state.stage !== 5 || runtime.floor !== 0) return;
@@ -2078,22 +2098,28 @@
         cells.push([x, y, "H"]);
     return cells;
   }
-  function face(kind = "rookie") {
+  function face(kind = "rookie", expression = "neutral") {
     const palette = pixelPalette(kind);
+    const surprised = expression === "surprised";
+    const cells = spriteCells(kind).filter(([, y]) => !surprised || y < 14);
+    if (surprised) {
+      cells.push([7, 9, "X"], [8, 9, "X"], [7, 10, "X"], [8, 10, "X"]);
+    }
     return (
       /* HTML */
       `<svg
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 20 28"
+    viewBox="${surprised ? "0 0 20 16" : "0 0 20 28"}"
     shape-rendering="crispEdges"
     aria-hidden="true"
   >
-    ${spriteCells(kind).map(
+    ${cells.map(
         ([x, y, c]) => (
           /* HTML */
           `<rect x="${x + 2}" y="${y + 2}" width="1" height="1" fill="${palette[c]}" />`
         )
       ).join("")}
+    ${surprised ? '<g class="surprise-sweat" fill="#3585bc"><rect x="15" y="6" width="1" height="1"/><rect x="14" y="7" width="2" height="2"/></g>' : ""}
   </svg>`
     );
   }
@@ -2605,7 +2631,7 @@
         저장 후에는 사무실로 돌아와 선배에게 검토를 요청하세요.
       </p>
       <p>
-        <strong>공간:</strong> 미니맵을 눌러 층별 지도를 보세요. 5층 구매팀과 2층 계약 체험실에서 업무를 진행하고, 다른 층의 자료 캐비닛에서는 용어 카드를 찾을 수 있어요.
+        <strong>공간:</strong> 미니맵을 눌러 층별 지도를 보세요. 5층 구매팀과 2층 계약팀에서 업무를 진행하고, 다른 층의 자료 캐비닛에서는 용어 카드를 찾을 수 있어요.
         기업 체험 단계에서는 별도의 사무실로 화면이 전환됩니다. (원활한 체험을 위해 기존 사무실 구조를 활용합니다.)
       </p>
       <p>
@@ -2850,6 +2876,10 @@
     return code || e.key.toLowerCase();
   }
   function handleKey(e) {
+    if (runtime.modalKind === "delivery-surprise") {
+      e.preventDefault();
+      return;
+    }
     if (runtime.talkState && !runtime.modalOpen) {
       if (e.code === "Space" || e.key === "Enter") {
         e.preventDefault();
@@ -2900,6 +2930,10 @@
   }
   function bindInput() {
     document.addEventListener("click", (e) => {
+      if (runtime.modalKind === "delivery-surprise") {
+        e.preventDefault();
+        return;
+      }
       const b = e.target.closest("[data-action]");
       if (b) {
         const a = b.dataset.action;

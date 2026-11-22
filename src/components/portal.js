@@ -175,7 +175,7 @@ export function openPortal(page = "home", query = "모니터") {
         참가자격과 제출서류를 확인했습니다. 새봄테크는 등록·참가 요건을 갖췄습니다.</label
       >
       <p class="g2b-caution">
-        모의 입찰이므로 실제 입찰 시스템으로 전송되지 않습니다. 또한 입찰서 접수가 곧 낙찰이나 계약 체결을 의미하지는 않습니다.
+        입찰서 접수 후 별도 심사와 낙찰자 선정·계약 절차가 이어집니다.
       </p>
       <div class="g2b-actions">
         <button class="g2b-primary" data-action="submit-bid">입찰서 제출</button
@@ -187,7 +187,6 @@ export function openPortal(page = "home", query = "모니터") {
         공무원은 공고 초안을 준비하고 선배에게 검토를 요청합니다. 기업
         담당자는 게시된 공고를 검색하고 입찰서를 제출합니다.
       </p>
-      <p>실제 업무에 필요한 이용자 등록, 인증서 제출, 보증 및 세부 서류 절차는 생략되었습니다.</p>
       <button class="g2b-primary" data-action="portal-home">나라장터 첫 화면</button>`;
   show("나라장터", portalShell(content, page), "portal");
   if (page === "list") $("portal-query-label").textContent = query || "전체";

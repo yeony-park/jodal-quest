@@ -868,7 +868,7 @@ async function main() {
   });
   check("Rooms have no department signs and map captions follow the active office", () => {
     const c=boot();assert.equal(c.run("floors.every(f=>!f.labels)"),true);
-    for(const [stage,floor,label] of [[1,0,'5층 구매팀'],[4,1,'2층 계약 체험실'],[3,0,'새봄테크 영업팀']]) {
+    for(const [stage,floor,label] of [[1,0,'5층 구매팀'],[4,1,'2층 계약팀'],[3,0,'새봄테크 영업팀']]) {
       c.run(`state.stage=${stage};runtime.floor=${floor};render()`);
       assert.ok(c.el('location').textContent.includes(label));
     }
@@ -932,6 +932,15 @@ async function main() {
     assert.doesNotMatch(production.replace("체험을 위해 가상으로 설정되었습니다.", ""),/축약|가상|대기 시간은 줄|심사 세부 내용과 대기/);
     assert.doesNotMatch(html,/축약|가상/);
     assert.doesNotMatch(html,/실제 업무와 다를 수 있습니다/);
+    const screens = boot();
+    for (const open of ["openPortal('bid')", "openPortal('guide')", "showFloorMap(1)"]) {
+      screens.run(open);
+      assert.doesNotMatch(screens.el('modal').innerHTML, /축약|가상|모의|체험|게임 속|절차는 생략/);
+    }
+    screens.run("openPortal('bid')");
+    assert.match(screens.el('modal').innerHTML, /입찰서 접수 후 별도 심사와 낙찰자 선정·계약 절차가 이어집니다/);
+    assert.doesNotMatch(screens.run('JSON.stringify(quests)'), /축약|가상|모의|체험|게임 속/);
+    assert.doesNotMatch(screens.run('floors.map(f => f.caption).join(" ")'), /축약|가상|모의|체험|게임 속/);
     const help = boot(); help.run("actions['title-help']()");
     assert.match(help.el("modal").innerHTML, /실제 업무와 다를 수 있습니다/);
     assert.match(help.el("modal").innerHTML, /Space.*클릭 또는 방향키로 이동/);
@@ -1148,7 +1157,7 @@ async function main() {
     c.finish();c.run("openGlossary()");
     assert.equal((c.el("modal").innerHTML.match(/href="/g)||[]).length,1);
     c.run("actions.map();actions['map-1']()");
-    assert.match(c.el("modal").innerHTML,/2층 계약 체험실/);
+    assert.match(c.el("modal").innerHTML,/2층 계약팀/);
     assert.doesNotMatch(c.el("modal").innerHTML,/https?:|data-action="floor-/);
   });
   check("Individual explanations unlock once, persist mid-dialogue and reset for a new game", () => {
@@ -1220,6 +1229,84 @@ async function main() {
     assert.equal(b.run("ownedItems().filter(Boolean).length"), 0);
     assert.equal(b.run("portalSignedIn"), false);
     assert.equal(b.el("level-badge").textContent, "Lv. 1");
+  });
+  check("First shortage reveals the record, blocks cut input and returns using timers", () => {
+    const c = boot();
+    c.run('Object.assign(state,{started:true,stage:5,xp:500,contractFarewell:true});actions.continue()');
+    c.timers.clear();
+    c.run('delivery()');
+    assert.equal(c.run('modalKind'), 'delivery-surprise');
+    assert.match(c.el('modal').innerHTML, /계약 수량.*20대[^]*실제 도착.*19대/);
+    assert.doesNotMatch(c.el('modal').innerHTML, /<button/);
+    assert.equal(c.run('state.deliverySurpriseSeen'), true);
+    c.run('delivery()');
+    assert.equal(c.timers.size, 1);
+    let prevented = 0;
+    for (const key of [' ', 'Enter', 'Escape', 'Tab'])
+      c.fire('keydown', {key, code:key === ' ' ? 'Space' : key, preventDefault(){prevented++}});
+    const click = () => c.fire('click', {
+      preventDefault(){prevented++},
+      target:{closest(){return {dataset:{action:'delivery-report'}}}},
+    });
+    click();
+    assert.equal(prevented, 5);
+    assert.equal(c.run('state.deliveryIssueReported'), false);
+    [...c.timers.values()].at(-1)();
+    assert.match(c.el('modal').innerHTML, /delivery-closeup[^]*한 대가 비었어요/);
+    assert.doesNotMatch(c.el('modal').innerHTML, /<button/);
+    assert.match(c.el('modal').innerHTML, /viewBox="0 0 20 16"[^]*surprise-sweat/);
+    click();
+    assert.equal(c.run('state.deliveryIssueReported'), false);
+    [...c.timers.values()].at(-1)();
+    assert.equal(c.run('modalKind'), 'delivery');
+    assert.match(c.el('modal').innerHTML, /20대[^]*19대[^]*data-action="delivery-report"/);
+  });
+  check("Reopening or reloading a seen shortage and corrected deliveries skip the cut", () => {
+    const c = boot();
+    c.run('Object.assign(state,{started:true,stage:5,xp:500});actions.continue();delivery();close();delivery()');
+    assert.equal(c.run('modalKind'), 'delivery');
+    const resumed = boot(c.store.get('jodal-master-v1'));
+    resumed.run('actions.continue();delivery()');
+    assert.equal(resumed.run('modalKind'), 'delivery');
+    c.run('close();state.deliverySurpriseSeen=false;state.deliveryIssueReported=true;delivery()');
+    assert.equal(c.run('modalKind'), 'delivery');
+    assert.match(c.el('modal').innerHTML, /20대 · 부족분 보완 완료/);
+    assert.doesNotMatch(c.el('modal').innerHTML, /19대|delivery-closeup|delivery-reveal/);
+  });
+  check("Old version-one saves default the surprise flag and malformed flags are rejected", () => {
+    const old = JSON.parse(b.run('JSON.stringify(fresh())'));
+    Object.assign(old,{started:true,stage:5,xp:500});
+    delete old.deliverySurpriseSeen;
+    const c = boot(JSON.stringify(old));
+    assert.equal(c.run('loaded'), true);
+    assert.equal(c.run('state.deliverySurpriseSeen'), false);
+    c.run('actions.continue();delivery()');
+    assert.equal(c.run('modalKind'), 'delivery-surprise');
+    for (const value of [1, 'true', null, []]) {
+      const invalid = boot(JSON.stringify({...old,deliverySurpriseSeen:value}));
+      assert.equal(invalid.run('loaded'), false);
+    }
+  });
+  check("Cut timers leave closed, replaced and reset scenes alone", () => {
+    for (const cancel of ['close()', 'show("다른 자료","자료")', 'runtime.state=fresh()']) {
+      const c = boot();
+      c.run('Object.assign(state,{started:true,stage:5,xp:500});actions.continue();delivery()');
+      c.run(cancel);
+      const before = c.el('modal').innerHTML;
+      [...c.timers.values()].at(-1)();
+      assert.equal(c.el('modal').innerHTML, before);
+    }
+    const c = boot();
+    c.run('Object.assign(state,{started:true,stage:5,xp:500});actions.continue();delivery()');
+    [...c.timers.values()].at(-1)();
+    c.run('close()');
+    [...c.timers.values()].at(-1)();
+    assert.equal(c.run('modalOpen'), false);
+  });
+  check("Starting a new game resets the seen shortage flag", () => {
+    const c = boot();
+    c.run('state.deliverySurpriseSeen=true;actions.new()');
+    assert.equal(c.run('state.deliverySurpriseSeen'), false);
   });
   check("Offline distribution needs no remote requests or audio fetch", () => {
     assert.doesNotMatch(html, /(?:src|href)="https?:/);

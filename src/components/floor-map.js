@@ -39,6 +39,5 @@ export function showFloorMap(index = runtime.floor, riding = false) {
     : [["close", "닫기", true]];
   show(riding ? "엘리베이터" : "층별 지도", `${tabs}<h3 class="floor-caption">${supplier ? "새봄테크" : floor.caption}</h3>
     <p class="floor-rooms">${rooms}</p>${floorPlan(index, supplier)}${legend}
-    ${!supplier && index === 1 ? "<small>게임 속 계약 업무를 위한 체험 공간</small>" : ""}
     ${buttons(controls)}`, riding ? "elevator" : "map");
 }

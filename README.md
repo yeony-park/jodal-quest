@@ -14,9 +14,11 @@
 
 ## 60초 예고편
 
-[![새봄지방조달청의 첫 출근. 조달의 달인 예고편 다운로드](docs/media/trailer-cover.jpg)](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/JodalQuest-Trailer.mp4)
+[![새봄지방조달청의 첫 출근. 조달의 달인 예고편 다운로드](docs/media/trailer-cover.jpg)](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/JodalQuest-Trailer-crossfade.mp4)
 
-**[예고편 MP4 다운로드 · 60초 · 소리 있음](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/JodalQuest-Trailer.mp4)**
+**[예고편 MP4 다운로드 · 60초 · 소리 있음](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/JodalQuest-Trailer-crossfade.mp4)** · [1080p](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/JodalQuest-Trailer-1080p.mp4) · [첫 편집본](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/JodalQuest-Trailer.mp4)
+
+장면이 바뀌는 열 곳은 0.3초 동안 앞뒤 장면이 겹치며 넘어갑니다. 1080p 파일은 같은 영상을 1920x1080으로 확대한 것입니다.
 
 첫 출근한 조달달의 표정부터 납품 당일 모자란 한 대까지, 실제 플레이에 픽셀 컷을 더했습니다. 43초부터는 정파·캐비닛 수집왕·사파의 세 갈래 보상을 볼 수 있습니다. 영상 자막에는 [Galmuri](https://github.com/quiple/galmuri) 글꼴을 썼습니다.
 
@@ -43,8 +45,8 @@
 
 **납품 수량이 어긋나는 순간을 게임 안에서도 연출해 주세요.** 여섯 번째 퀘스트에서 조달달은 계약한 모니터 20대 중 19대만 도착한 걸 발견합니다. 표정과 연출 타이밍은 [도트 예고편 00:35–00:40](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/JodalQuest-Trailer.mp4)을 참고해 주세요.
 
-- [ ] **화면 흔들림** — ‘실제 도착 19대’가 처음 보일 때 화면을 짧게 한 번 흔들어 주세요. 부족분을 보완한 뒤 20대를 다시 확인할 때는 평소처럼 보여 주세요. [납품 확인 장면의 `delivery()`](src/game/procurement.js)
-- [ ] **조달달 얼굴 줌인** — 흔들림 직후 놀란 조달달의 얼굴을 도트가 선명하게 보이도록 확대해 주세요. 표정이 한 박자 보인 뒤 납품 자료로 돌아와 플레이어가 보완 요청을 고를 수 있게 해 주세요. [캐릭터 초상화의 `face()`](src/world/characters.js)
+- [x] **화면 흔들림** — ‘실제 도착 19대’가 처음 보일 때 화면을 짧게 한 번 흔들어 주세요. 부족분을 보완한 뒤 20대를 다시 확인할 때는 평소처럼 보여 주세요. [납품 확인 장면의 `delivery()`](src/game/procurement.js)
+- [x] **조달달 얼굴 줌인** — 흔들림 직후 놀란 조달달의 얼굴을 도트가 선명하게 보이도록 확대해 주세요. 표정이 한 박자 보인 뒤 납품 자료로 돌아와 플레이어가 보완 요청을 고를 수 있게 해 주세요. [캐릭터 초상화의 `face()`](src/world/characters.js)
 
 **플레이 확인** — PC와 휴대폰에서 연출이 끝나면 계약 수량과 도착 수량을 다시 읽고 ‘부족분 보완을 요청한다’를 누를 수 있어야 합니다. 기기의 ‘동작 줄이기’를 켜면 놀란 표정을 정지 컷으로 보여 주세요.
 
@@ -101,7 +103,7 @@ Windows에서 배포본을 다시 패키징하려면 저장소 루트에서 Powe
 `src/components`는 화면, `src/game`은 퀘스트·입력, `src/world`는 Canvas·이동, `src/data`는 퀘스트·학습·층 배치, `src/core`는 상태·저장, `src/audio`는 소리입니다.
 추가 계약·납품 로직은 `src/game/procurement.js`, 학습 자료는 `src/data/learning.js`에 있습니다.
 
-게임 검사 93개와 배포 자산 검사가 통과했습니다. 캐릭터의 각 자세 연결, 픽셀 정렬, 청사 층간 이동, 저장 호환, 여섯 퀘스트, 터치 입력, 독립 음성 뱅크를 검사합니다.
+게임 검사 98개와 배포 자산 검사가 통과했습니다. 캐릭터의 각 자세 연결, 픽셀 정렬, 청사 층간 이동, 저장 호환, 여섯 퀘스트, 터치 입력, 독립 음성 뱅크를 검사합니다.
 브라우저 실기 결과와 남은 확인은 [검증 기록](docs/검증기록.txt)에 기록합니다.
 
 - [개발 인수인계](docs/HANDOFF.md)
@@ -112,5 +114,5 @@ Windows에서 배포본을 다시 패키징하려면 저장소 루트에서 Powe
 
 공식 참고 자료는 2026-11-21 확인 기준입니다.
 [조달청 총액계약 업무처리절차](https://www.pps.go.kr/kor/content.do?key=00179), [조달청 층별배치도](https://www.pps.go.kr/kor/content.do?key=00139), [나라장터](https://www.g2b.go.kr/)를 참고했습니다.
-맵은 본청의 층별 대표 공간을 재구성했습니다. 2층은 게임 전용 계약 체험실이고 엔딩 외부 링크는 [조달청 채용정보](https://www.pps.go.kr/kor/bbs/list.do?key=00645)입니다.
+맵은 본청의 층별 대표 공간을 재구성했습니다. 2층 계약팀은 게임 전용 공간이고 엔딩 외부 링크는 [조달청 채용정보](https://www.pps.go.kr/kor/bbs/list.do?key=00645)입니다.
 이 게임은 2026 조달청 AI 게임·콘텐츠 공모전 AI 게임 부문 출품을 위해 제작했습니다.

@@ -106,20 +106,26 @@ export function spriteCells(kind) {
   return cells;
 }
 
-export function face(kind = "rookie") {
+export function face(kind = "rookie", expression = "neutral") {
   const palette = pixelPalette(kind);
+  const surprised = expression === "surprised";
+  const cells = spriteCells(kind).filter(([, y]) => !surprised || y < 14);
+  if (surprised) {
+    cells.push([7, 9, "X"], [8, 9, "X"], [7, 10, "X"], [8, 10, "X"]);
+  }
   return /* HTML */ `<svg
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 20 28"
+    viewBox="${surprised ? "0 0 20 16" : "0 0 20 28"}"
     shape-rendering="crispEdges"
     aria-hidden="true"
   >
-    ${spriteCells(kind)
+    ${cells
       .map(
         ([x, y, c]) =>
           /* HTML */ `<rect x="${x + 2}" y="${y + 2}" width="1" height="1" fill="${palette[c]}" />`,
       )
       .join("")}
+    ${surprised ? '<g class="surprise-sweat" fill="#3585bc"><rect x="15" y="6" width="1" height="1"/><rect x="14" y="7" width="2" height="2"/></g>' : ""}
   </svg>`;
 }
 
