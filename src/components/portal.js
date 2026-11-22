@@ -171,8 +171,7 @@ export function openPortal(page = "home", query = "모니터") {
         <div><label>입찰총액</label><span>18,400,000원 (부가세 포함)</span></div>
       </div>
       <label class="checkline"
-        ><input id="eligible" type="checkbox" ${runtime.state.eligibility ? "checked" : ""} />공고의
-        참가자격과 제출서류를 확인했습니다. 새봄테크는 등록·참가 요건을 갖췄습니다.</label
+        ><input id="eligible" type="checkbox" ${runtime.state.eligibility ? "checked" : ""} />공고의 참가자격과 제출서류를 확인했어요. 새봄테크는 등록·참가 요건을 모두 갖췄습니다.</label
       >
       <p class="g2b-caution">
         입찰서 접수 후 별도 심사와 낙찰자 선정·계약 절차가 이어집니다.
@@ -184,11 +183,12 @@ export function openPortal(page = "home", query = "모니터") {
   else
     content = /* HTML */ `<h3>나라장터 이용 안내</h3>
       <p>
-        공무원은 공고 초안을 준비하고 선배에게 검토를 요청합니다. 기업
-        담당자는 게시된 공고를 검색하고 입찰서를 제출합니다.
+        공무원은 공고 초안을 준비해 선배에게 검토를 요청하고, 기업 담당자는 게시된 공고를 검색해 입찰서를 제출합니다.
       </p>
       <button class="g2b-primary" data-action="portal-home">나라장터 첫 화면</button>`;
-  show("나라장터", portalShell(content, page), "portal");
+  const paper = runtime.modalKind === "portal" && $("modal").querySelectorAll(":scope > .submitted-paper")[0];
+  show("나라장터", `<div class="portal-workspace">${portalShell(content, page)}</div>`, "portal");
+  if (paper) $("modal").append(paper);
   if (page === "list") $("portal-query-label").textContent = query || "전체";
 }
 

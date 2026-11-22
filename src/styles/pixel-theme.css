@@ -386,3 +386,56 @@ body:has(#first-day:not([hidden])) #game-shell { visibility: hidden; }
   #first-day img { height: 80%; object-position: center center; }
 }
 
+
+.decision-scene { display: grid; grid-template-columns: clamp(66px, 19%, 122px) minmax(0, 1fr); gap: clamp(9px, 2.5vw, 22px); align-items: start; }
+.decision-actor { margin: 0; text-align: center; background: #ebeedb; border: 2px solid #879b80; box-shadow: 3px 3px #cad0b8; }
+.decision-actor svg { display: block; width: 100%; max-height: 148px; }
+.decision-actor figcaption { padding: 4px 2px; color: #2b493d; background: #d5e2c7; font-weight: bold; }
+.decision-turn { min-width: 0; }
+.decision-turn .decision-thought { background: #fff9e9; color: #493b39; border: 2px solid #c5aa89; padding: 10px 12px; margin: 0 0 1em; box-shadow: 3px 3px #f0dfc8; }
+.decision-turn h3 { margin: 0 0 7px; }
+.decision-turn .choice { width: 100%; text-align: left; padding-left: 1.65em; position: relative; }
+.decision-turn .choice:is(:hover,:focus-visible)::before { content: "▸"; position: absolute; left: .52em; }
+.decision-document { margin-top: 13px; }
+.decision-document summary { cursor: pointer; color: #495c51; }
+.decision-impact .decision-actor { background: #ffe6d7; border-color: #ab796b; }
+.decision-impact .decision-thought { border-color: #b87364; }
+@media (prefers-reduced-motion: no-preference) {
+  .decision-impact { animation: decision-impact .3s ease-out; }
+  @keyframes decision-impact { 20% { transform: translateX(-6px); } 46% { transform: translateX(5px); } 76% { transform: translateX(-2px); } }
+}
+@media (max-width: 480px) {
+  .decision-turn { display: contents; }
+  .decision-turn > * { grid-column: 1 / -1; }
+  .decision-turn .decision-thought { grid-column: 2; grid-row: 1; margin: 0; align-self: center; }
+  .decision-turn h3, .decision-document { margin: 0; }
+}
+
+#modal:has(#deadline-form) { width: min(900px, 100%); }
+#deadline-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(130px, .55fr); gap: 10px; align-items: start; margin: 10px 0; }
+#deadline-form .document { margin: 0; padding: 12px; }
+#deadline-form .row { grid-template-columns: 62px minmax(0, 1fr); padding: 6px 0; gap: 6px; }
+.deadline-entry { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+#deadline-days { font: inherit; width: 3.5em; padding: 4px; border: 0; border-bottom: 2px solid #766a50; background: #fff8dc; color: #244b49; }
+#deadline-form > .choice, #deadline-hint { grid-column: 1 / -1; }
+#deadline-hint { color: #86412c; margin: 0; }
+#deadline-hint:empty { display: none; }
+.deadline-keypad { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; padding: 7px; border: 2px solid #a4ae99; background: #dce4d4; border-radius: 6px; }
+.deadline-keypad button { min-height: 42px; padding: 2px; font: bold 18px monospace; color: #394739; border: 1px solid #969e8e; background: #fffdf2; box-shadow: 0 2px #9da78f; border-radius: 4px; }
+.deadline-keypad button:active { transform: translateY(2px); box-shadow: none; }
+.deadline-keypad [data-deadline-key="0"] { grid-column: span 2; }
+@media (max-width: 630px) {
+  #modal:has(#deadline-form) { padding: 14px; }
+  .decision-scene:has(#deadline-form) { grid-template-columns: 60px minmax(0, 1fr); }
+  .decision-scene:has(#deadline-form) .decision-turn { display: contents; }
+  .decision-scene:has(#deadline-form) .decision-turn > * { grid-column: 1 / -1; }
+  .decision-scene:has(#deadline-form) .decision-thought { grid-column: 2; grid-row: 1; align-self: center; margin: 0; }
+  #deadline-form { grid-template-columns: minmax(0, 1fr) clamp(108px, 32vw, 155px); gap: 6px; }
+  #deadline-form .document { padding: 8px; }
+  #deadline-form .doc-header { padding-bottom: 5px; }
+  #deadline-form .row { display: block; font-size: 13px; padding: 3px 0; }
+  #deadline-form .row > span { display: block; }
+  #deadline-form .row > b { overflow-wrap: anywhere; }
+  .deadline-keypad { padding: 4px; gap: 4px; }
+}
+

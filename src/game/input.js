@@ -1,11 +1,13 @@
+import { deadlineEdited, pressDeadlineKey } from "../components/deadline.js";
 import { keys, runtime } from "../core/runtime.js";
-import { changeSoundSetting, stopEffects, stopVoices, syncMusic, unlockAudio } from "../audio/sound.js";
+import { changeSoundSetting, playPaperTurn, stopEffects, stopVoices, syncMusic, unlockAudio } from "../audio/sound.js";
 import { nextLine, revealLine } from "../components/dialogue.js";
 import { close } from "../components/modal.js";
 import { $ } from "../core/dom.js";
 import { render, setNotebook } from "../components/hud.js";
 import { go, interact, stepPlayer } from "../world/navigation.js";
 import { canvas } from "../world/canvas.js";
+import { handOverDocument, selectDocument } from "./submission.js";
 import { actions } from "./actions.js";
 import { save } from "../core/storage.js";
 import { resizeWorld } from "../world/render.js";
@@ -15,12 +17,32 @@ export function physicalKey(e) {
   return code || e.key.toLowerCase();
 }
 
+const doubleTapWindow = 300;
+let lastMoveKey = null, lastMoveTime = -Infinity;
+
+function pressMove(key, time) {
+  if (keys.has(key)) return;
+  runtime.runKey = key === lastMoveKey && time - lastMoveTime <= doubleTapWindow ? key : null;
+  if (runtime.runKey) {
+    const dx = ["d", "arrowright", "s", "arrowdown"].includes(key) ? 10 : -10;
+    const dy = ["s", "arrowdown", "a", "arrowleft"].includes(key) ? 10 : -10;
+    stepPlayer(dx, dy);
+  }
+  lastMoveKey = key;
+  lastMoveTime = time;
+  keys.add(key);
+}
+
 export function handleKey(e) {
   if (runtime.modalKind === "delivery-surprise") {
     e.preventDefault();
     return;
   }
   if (runtime.talkState && !runtime.modalOpen) {
+    if (runtime.talkState.lines[runtime.talkState.index]?.dialing) {
+      if (e.key === "Escape") actions["hang-up"]();
+      return;
+    }
     if (e.code === "Space" || e.key === "Enter") {
       e.preventDefault();
       if (!e.repeat) {
@@ -32,8 +54,17 @@ export function handleKey(e) {
   }
   if (runtime.modalOpen) {
     if (e.key === "Escape" && !["advance", "feedback", "recovery"].includes(runtime.modalKind)) close();
+    if ((e.key === "ArrowDown" || e.key === "ArrowUp") && e.target?.tagName !== "INPUT") {
+      const options = [...$("modal").querySelectorAll(".decision-scene .choice")];
+      if (options.length) {
+        e.preventDefault();
+        const index = options.indexOf(document.activeElement);
+        const next = e.key === "ArrowDown" ? index + 1 : index < 0 ? -1 : index - 1;
+        options[(next + options.length) % options.length].focus();
+      }
+    }
     if (e.key === "Tab") {
-      const list = [...$("modal").querySelectorAll("button,a,input,select")].filter(
+      const list = [...$("modal").querySelectorAll("button,a,input,select,summary")].filter(
           (el) => !el.disabled,
         ),
         first = list[0],
@@ -73,7 +104,7 @@ export function handleKey(e) {
         interact();
       }
     } else {
-      keys.add(k);
+      if (!e.repeat) pressMove(k, e.timeStamp ?? Date.now());
       runtime.target = null;
       canvas.focus({ preventScroll: true });
     }
@@ -81,15 +112,52 @@ export function handleKey(e) {
 }
 
 export function bindInput() {
+  document.addEventListener("submit", (e) => {
+    if (e.target.id !== "deadline-form") return;
+    e.preventDefault();
+    if (runtime.modalKind === "intake") actions["intake-submit"]();
+    else if (runtime.state.pendingRecovery === "intake") actions["recover-finish"]();
+  });
+  document.addEventListener("toggle", (e) => {
+    if (e.target.open && e.target.matches?.(".decision-document")) playPaperTurn();
+  }, true);
+  document.addEventListener("dragstart", (e) => {
+    const slot = e.target.closest("#bag [draggable=true]");
+    if (!slot || !runtime.pendingSubmission) return;
+    const item = Number(slot.dataset.action.slice(5));
+    selectDocument(item, true);
+    e.dataTransfer.setData("application/x-jodal-item", String(item));
+    e.dataTransfer.effectAllowed = "move";
+  });
+  document.addEventListener("dragover", (e) => {
+    if (e.target.closest("#handoff-tray") && e.dataTransfer.types.includes("application/x-jodal-item")) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+    }
+  });
+  document.addEventListener("drop", (e) => {
+    if (!e.target.closest("#handoff-tray") || !e.dataTransfer.types.includes("application/x-jodal-item")) return;
+    e.preventDefault();
+    if (e.dataTransfer.getData("application/x-jodal-item") === String(runtime.pendingSubmission?.selected))
+      handOverDocument(true);
+  });
   document.addEventListener("click", (e) => {
     if (runtime.modalKind === "delivery-surprise") {
       e.preventDefault();
       return;
     }
+    const key = e.target.closest("[data-deadline-key]");
+    if (key) {
+      unlockAudio();
+      pressDeadlineKey(key.dataset.deadlineKey);
+      return;
+    }
     const b = e.target.closest("[data-action]");
     if (b) {
       const a = b.dataset.action;
-      if (runtime.talkState && !runtime.modalOpen && !["talk-next", "sound", "glossary", "map"].includes(a)) return;
+      if (runtime.talkState?.lines[runtime.talkState.index]?.dialing && a !== "hang-up") return;
+      if (!$("first-day").hidden && runtime.talkState && a !== "talk-next") return;
+      if (runtime.talkState && !runtime.modalOpen && !["hang-up", "talk-next", "sound", "glossary", "map"].includes(a)) return;
       unlockAudio();
       if (a.startsWith("go-")) go(a.slice(3));
       else if (actions[a]) actions[a]();
@@ -114,7 +182,7 @@ export function bindInput() {
     releaseTouch();
     runtime.target = null;
     runtime.touchKey = { left: "arrowleft", right: "arrowright", up: "arrowup", down: "arrowdown" }[control.dataset.move];
-    keys.add(runtime.touchKey);
+    pressMove(runtime.touchKey, e.timeStamp ?? Date.now());
     control.setPointerCapture?.(e.pointerId);
   });
   document.addEventListener("pointerup", releaseTouch);
@@ -129,6 +197,7 @@ export function bindInput() {
     }
   });
   document.addEventListener("input", (e) => {
+    if (e.target.id === "deadline-days" && !e.isComposing) deadlineEdited();
     if (e.target.id === "music-volume") changeSoundSetting("musicVolume", Number(e.target.value));
   });
   document.addEventListener("keydown", handleKey);
@@ -136,6 +205,7 @@ export function bindInput() {
   window.addEventListener("blur", () => {
     keys.clear();
     releaseTouch();
+    lastMoveKey = null;
     revealLine();
     stopVoices();
   });
@@ -145,6 +215,7 @@ export function bindInput() {
     if (document.hidden) {
       keys.clear();
       releaseTouch();
+      lastMoveKey = null;
       revealLine();
       stopVoices();
       stopEffects();
