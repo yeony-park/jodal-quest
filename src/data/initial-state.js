@@ -19,5 +19,6 @@ export const fresh = () => ({
   mistakes: 0,
   recoveries: [],
   pendingRecovery: null,
+  learnedTerms: [],
   history: [],
 });

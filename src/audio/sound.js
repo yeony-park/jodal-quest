@@ -239,7 +239,7 @@ export async function previewVoice(role = "supplier") {
     toast("캐릭터 대화소리를 켠 뒤 들어 주세요.");
     return;
   }
-  Array.from(role === "rookie" ? "이제 나도 조달의 왕이야" : "안녕하세요, 입찰에 참여할게요").forEach((letter, i) =>
+  Array.from(role === "rookie" ? "이제나도조달의왕이야" : "안녕하세요입찰에참여할게요").forEach((letter, i) =>
     playSyllable(letter, role, i * 0.095),
   );
 }

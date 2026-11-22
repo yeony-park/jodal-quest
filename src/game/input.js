@@ -81,7 +81,7 @@ export function bindInput() {
     const b = e.target.closest("[data-action]");
     if (b) {
       const a = b.dataset.action;
-      if (runtime.talkState && !runtime.modalOpen && !["talk-next", "sound"].includes(a)) return;
+      if (runtime.talkState && !runtime.modalOpen && !["talk-next", "sound", "glossary", "map"].includes(a)) return;
       unlockAudio();
       if (a.startsWith("go-")) go(a.slice(3));
       else if (actions[a]) actions[a]();

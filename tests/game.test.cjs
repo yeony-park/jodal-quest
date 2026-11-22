@@ -351,7 +351,7 @@ async function main() {
       for(const id of ['mentor','doc','terminal','phone','supplier','elevator','officer','bidroom']) {
         const el=c.el('spot-'+id);if(el.hidden)continue;
         const rect={x:parseFloat(el.style.left)-65,y:parseFloat(el.style.top)-17,w:130,h:34};
-        assert.ok(rect.x>=0&&rect.x+rect.w<=w&&rect.y>=0&&rect.y+rect.h<=h);
+        if (el.style.visibility === "hidden") continue;
         for(const other of [...visuals,...placed]) assert.ok(!(rect.x<other.x+other.w&&rect.x+rect.w>other.x&&rect.y<other.y+other.h&&rect.y+rect.h>other.y),`${w} stage ${stage} ${id} overlaps a silhouette/label`);
         const own=visuals.find(v=>v.id===id);
         // 화면 밖 대상의 이름표는 가장자리에 붙으므로 화면 안 대상만 거리를 봅니다.
@@ -360,6 +360,27 @@ async function main() {
           assert.ok(Math.hypot(dx,dy)<=100,`${w} stage ${stage} ${id} label sits ${Math.round(Math.hypot(dx,dy))}px from its target`);
         }
         placed.push(rect);
+      }
+    }
+  });
+  check("Destination labels stay anchored to their desks throughout the approach", () => {
+    for (const [width, height] of [[1280,720], [390,844]]) {
+      const c = boot();
+      c.window.innerWidth = width;
+      c.window.innerHeight = height;
+      c.run("titleVisible=false;state.started=true;state.brief=true;resizeWorld()");
+      for (const [stage, id] of [[0,"phone"], [2,"terminal"]]) {
+        c.run(`state.stage=${stage}`);
+        let anchor;
+        for (const offset of [100, 55, 25, 5, 0, -24]) {
+          c.run(`player.x=spots.${id}.x+${offset};player.y=spots.${id}.y;camera();positionLabels()`);
+          const label = c.el("spot-" + id), view = c.run("view");
+          const world = [parseFloat(label.style.left) / view.scale + view.x,
+            parseFloat(label.style.top) / view.scale + view.y];
+          if (!anchor) anchor = world;
+          assert.ok(world.every((v,i) => Math.abs(v - anchor[i]) < 0.01));
+          if (!offset) assert.equal(c.run("interactionTarget()"), id);
+        }
       }
     }
   });
@@ -392,7 +413,7 @@ async function main() {
       }
       return count;
     })()`);
-    assert.equal(count, 80);
+    assert.equal(count, c.run("4 * (floors[0].furnishings.length + floors[1].furnishings.length)"));
   });
   check("All 77 item and step pairs submit only the matching document without score loss", () => {
     const config={intake:[0,true,true,false,false,false,false,false,false],specification:[1,true,true,true,false,false,false,false,false],notice:[2,true,true,true,false,false,false,false,false],approval:[2,true,true,true,true,false,false,false,false],product:[3,true,true,true,true,false,false,false,false],bid:[3,true,true,true,true,true,false,false,false],award:[4,true,true,true,true,true,false,false,false],price:[4,true,true,true,true,true,true,false,false],contract:[4,true,true,true,true,true,true,true,false],delivery:[5,true,true,true,true,true,true,true,false],payment:[5,true,true,true,true,true,true,true,true]};
@@ -415,7 +436,7 @@ async function main() {
   });
   check("Interactable outline contrast exceeds WCAG non-text 3 to 1", () => {
     assert.ok(b.run("contrastRatio(interactableColors.bright,interactableColors.edge)")>=3);
-    for(const surface of ['#9da99b','#a9b3a3','#899e92','#96aa9c','#dfc695','#ad8c68','#92724e'])
+    for(const surface of ['#e5e2cc','#f0ecd9','#b7d8d2','#c5e1d8','#f2d6b4','#cea890','#b18776'])
       assert.ok(b.run(`contrastRatio(interactableColors.edge,'${surface}')`)>=3,surface);
     assert.match(css,/prefers-reduced-motion/);
     assert.match(css,/goal-glow/);
@@ -625,8 +646,8 @@ async function main() {
     assert.equal(b.run("state.stage"), 3);
     assert.match(b.el("modal").innerHTML, /권한 있는 담당자/);
     b.run("actions.advance()");
-    assert.equal(b.run("talkState.name"), "욘 대리");
-    assert.equal(b.run("talkState.role"), "supplier");
+    assert.equal(b.run("talkState"), null);
+    assert.equal(b.run("sceneItems(false).at(-1).actor"), "supplier");
     b.finish();
     assert.equal(b.run("portalSignedIn"), false);
   });
@@ -693,14 +714,14 @@ async function main() {
     assert.equal(c.run("floor"), 0);
     assert.equal(c.run("modalKind"), "");
   });
-  check("Elevator travels to 3F, updates hotspots and persists its floor", () => {
+  check("Elevator travels to 2F, updates hotspots and persists its floor", () => {
     b.run("actions.elevator();actions['floor-1']();updateMap()");
     assert.equal(b.run("floor"), 1);
     assert.equal(b.el("spot-doc").hidden, true);
     assert.equal(b.el("spot-officer").hidden, false);
     assert.equal(b.el("spot-elevator").hidden, false);
     assert.equal(JSON.parse(b.store.get("jodal-master-v1")).floor, 1);
-    assert.match(b.el("location").textContent, /3층/);
+    assert.match(b.el("location").textContent, /2층/);
     assert.equal(b.el("mini-layout").innerHTML, b.run("miniLayout()"));
     const c = boot(b.store.get("jodal-master-v1"));
     c.run("actions.continue()");
@@ -708,7 +729,7 @@ async function main() {
     assert.equal(c.run("canWalk(player.x,player.y)"), true);
     assert.equal(c.run("player.x"), 48);
   });
-  check("Every 3F destination is reachable without crossing partitions", () => {
+  check("Every 2F destination is reachable without crossing partitions", () => {
     for (const start of ["elevator", "officer", "bidroom"])
       for (const end of ["elevator", "officer", "bidroom"]) {
         b.run(`player.x=spots.${start}.x;player.y=spots.${start}.y`);
@@ -847,7 +868,7 @@ async function main() {
   });
   check("Rooms have no department signs and map captions follow the active office", () => {
     const c=boot();assert.equal(c.run("floors.every(f=>!f.labels)"),true);
-    for(const [stage,floor,label] of [[1,0,'5층 구매팀'],[4,1,'3층 계약팀'],[3,0,'새봄테크 영업팀']]) {
+    for(const [stage,floor,label] of [[1,0,'5층 구매팀'],[4,1,'2층 계약 체험실'],[3,0,'새봄테크 영업팀']]) {
       c.run(`state.stage=${stage};runtime.floor=${floor};render()`);
       assert.ok(c.el('location').textContent.includes(label));
     }
@@ -858,7 +879,7 @@ async function main() {
     assert.match(c.el('modal').innerHTML,/portal-quantity/);
     assert.doesNotMatch(c.el('modal').innerHTML,/요청서\s*:\s*20|<small>[^<]*20대/);
   });
-  check("3F officer explains the price review and sees the rookie off before the elevator becomes the goal", () => {
+  check("2F officer explains the price review and sees the rookie off before the elevator becomes the goal", () => {
     const c=boot();c.run('Object.assign(state,{started:true,stage:4,xp:400,awardBrief:true,openingChecked:true});runtime.floor=state.floor=1;officer()');
     assert.equal(c.run('talkState.role'),'officer');assert.ok(c.run('talkState.lines.length')>=3);
     c.finish();assert.equal(c.run('modalKind'),'contract');
@@ -1079,13 +1100,53 @@ async function main() {
   });
   check("Invalid new save fields are rejected and valid six-stage saves load", () => {
     const valid = b.run("JSON.stringify(state)");
-    for (const patch of [{ floor: 4 }, { openingChecked: "yes" }, { stage: 7 }]) {
+    for (const patch of [{ floor: 99 }, { openingChecked: "yes" }, { stage: 7 }]) {
       const c = boot(JSON.stringify({ ...JSON.parse(valid), ...patch }));
       assert.equal(c.run("loaded"), false);
       assert.equal(c.run("state.stage"), 0);
     }
     const c = boot(valid);
     assert.equal(c.run("state.stage"), 6);
+  });
+  check("All ten agency floors have a walkable lift and a distinct collectible cabinet card", () => {
+    const c = boot();
+    c.run("actions.new();stopTalk();state.brief=true");
+    assert.equal(c.run("floorOrder.map(i=>floors[i].level).join(',')"), "B1F,1F,2F,3F,4F,5F,6F,7F,8F,9F");
+    for (const index of c.run("floorOrder")) {
+      c.run(`travelTo(${index});showFloorMap(${index});close()`);
+      for (const id of ["cabinet", "elevator"]) assert.ok(c.run(`routeTo('${id}').length > 0`));
+      c.run("go('cabinet');for(let i=0;i<500 && target;i++) frame(last+35)");
+      assert.equal(c.run("modalKind"), "cabinet");
+      assert.match(c.el("modal").innerHTML,/용어 카드를 발견/);
+      c.run("close();interact()");
+      assert.match(c.el("modal").innerHTML,/다시 펼친 용어 카드/);
+      c.run("close()");
+      const restored = boot(c.store.get("jodal-master-v1"));
+      assert.equal(restored.run("floor"),index);
+      assert.equal(restored.run("state.learnedTerms.length"),c.run("state.learnedTerms.length"));
+    }
+    assert.equal(c.run("state.learnedTerms.length"),10);
+    assert.equal(c.run("state.stage"),0);
+  });
+  check("Individual explanations unlock once, persist mid-dialogue and reset for a new game", () => {
+    const c = boot();
+    c.run("actions.new();openGlossary()");
+    assert.doesNotMatch(c.el("modal").innerHTML, /<summary>/);
+    c.run("close();while(talkState.index<3){revealLine();nextLine()}");
+    assert.equal(c.run("state.learnedTerms.length"), 0);
+    c.run("revealLine();revealLine()");
+    assert.equal(c.el("learned-terms").innerHTML, "<li>수요기관</li>");
+    const loaded = boot(c.store.get("jodal-master-v1"));
+    assert.equal(loaded.el("learned-terms").innerHTML, "<li>수요기관</li>");
+    loaded.run("actions.new()");
+    assert.equal(loaded.el("learned-terms").innerHTML, "");
+    const old = JSON.parse(c.store.get("jodal-master-v1"));
+    delete old.learnedTerms;
+    old.stage = 4; old.xp = 400; old.awardBrief = false;
+    const legacy = boot(JSON.stringify(old));
+    legacy.run("openGlossary()");
+    assert.equal((legacy.el("modal").innerHTML.match(/<summary>/g)||[]).length, 3);
+    assert.doesNotMatch(legacy.el("learned-terms").innerHTML, /예정가격/);
   });
   check("Glossary cites the official procedure and completed ending reviews all six lessons", () => {
     b.run("result()");

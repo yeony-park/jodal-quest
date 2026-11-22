@@ -1,5 +1,6 @@
 import { keys, runtime } from "../core/runtime.js";
 import { $ } from "../core/dom.js";
+import { learnTerm } from "./learning.js";
 import { playSyllable, stopVoices } from "../audio/sound.js";
 import { close } from "./modal.js";
 import { setNotebook } from "./hud.js";
@@ -39,7 +40,8 @@ export function typeLine() {
   if (!runtime.talkState) return;
   clearTimeout(runtime.talkTimer);
   const t = runtime.talkState,
-    text = t.lines[t.index];
+    line = t.lines[t.index],
+    text = line.text ?? line;
   t.revealed = 0;
   $("speech-text").textContent = "";
   $("speech-count").textContent = `${t.index + 1} / ${t.lines.length}`;
@@ -54,6 +56,7 @@ export function typeLine() {
     else {
       $("speech-hint").textContent = t.index === t.lines.length - 1 ? "대화 마치기" : "다음 이야기";
       runtime.talkTimer = null;
+      if (line.term) learnTerm(line.term);
     }
   }
   tick();
@@ -64,15 +67,19 @@ export function revealLine() {
   clearTimeout(runtime.talkTimer);
   runtime.talkTimer = null;
   stopVoices();
-  runtime.talkState.revealed = runtime.talkState.lines[runtime.talkState.index].length;
-  $("speech-text").textContent = runtime.talkState.lines[runtime.talkState.index];
+  const line = runtime.talkState.lines[runtime.talkState.index];
+  const text = line.text ?? line;
+  runtime.talkState.revealed = text.length;
+  $("speech-text").textContent = text;
+  if (line.term) learnTerm(line.term);
   $("speech-hint").textContent =
     runtime.talkState.index === runtime.talkState.lines.length - 1 ? "대화 마치기" : "다음 이야기";
 }
 
 export function nextLine() {
   if (!runtime.talkState) return;
-  if (runtime.talkState.revealed < runtime.talkState.lines[runtime.talkState.index].length) {
+  const line = runtime.talkState.lines[runtime.talkState.index];
+  if (runtime.talkState.revealed < (line.text ?? line).length) {
     revealLine();
     return;
   }

@@ -178,6 +178,60 @@
 .talking .mobile-controls {
   visibility: hidden;
 }
+.glossary-dock {
+  position: absolute;
+  right: 22px;
+  bottom: 62px;
+  width: 148px;
+  padding: 5px 9px;
+  color: #45425a;
+  background: #f8f3ff;
+  border: 2px solid #cdbfdd;
+  border-radius: 5px 8px 8px 5px;
+  box-shadow: -3px 0 #aea1c3, 0 3px #dbcee4;
+}
+.glossary-dock button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 34px;
+  padding: 0 3px;
+  background: transparent;
+  color: inherit;
+  font-weight: 750;
+}
+#glossary-count {
+  border-radius: 4px;
+  background: #e5dbf0;
+  padding: 1px 6px;
+  font-size: 12px;
+}
+#learned-terms {
+  max-height: 160px;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+#learned-terms li {
+  border-top: 1px solid #ddd4e8;
+  padding: 4px 3px;
+  font-size: 12px;
+}
+.notebook { z-index: 8; }
+@media (max-width: 1190px), (max-height: 540px) {
+  .glossary-dock { right: 12px; bottom: 62px; width: 132px; }
+  #learned-terms { max-height: 46px; }
+}
+@media (min-width: 701px) and (max-width: 960px) {
+  .inventory-slot { width: 44px; }
+}
+@media (max-width: 700px) {
+  .glossary-dock { right: 10px; bottom: 6px; width: 132px; padding: 0 7px; }
+  #learned-terms { max-height: 22px; }
+}
 .lesson-card {
   margin-top: 16px;
   padding: 10px 16px;

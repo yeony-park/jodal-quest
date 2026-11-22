@@ -3,6 +3,7 @@ import { runtime } from "../core/runtime.js";
 import { save } from "../core/storage.js";
 import { buttons, show } from "../components/modal.js";
 import { speak } from "../components/dialogue.js";
+import { learnTerm } from "../components/learning.js";
 import { actions } from "./actions.js";
 
 export function showRecovery(id=runtime.state.pendingRecovery) {
@@ -26,6 +27,9 @@ export function recover() {
   const scene=recoveryScenes[runtime.state.pendingRecovery];
   if (!scene || scene.stage!==runtime.state.stage) return;
   speak("조달달", ["기록을 바로잡고 올바른 절차로 이어갈게요."], () => {
+    const term = { intake: "수요기관", "spec-brand": "규격", "spec-empty": "규격", notice: "구매결의",
+      opening: "예정가격", contract: "낙찰자 선정·전자계약", delivery: "검사·검수", payment: "대금 청구" }[runtime.state.pendingRecovery];
+    if (term) learnTerm(term);
     show("수습 업무 · " + scene.title, `<p>${scene.correction}</p>
       <p class="source-note">근거 : 조달청 총액계약 업무처리절차 · ${scene.source} · <a href="https://www.pps.go.kr/kor/content.do?key=00179" target="_blank" rel="noopener">원문</a></p>
       ${buttons([["recover-finish",scene.button]])}`, "recovery", false);

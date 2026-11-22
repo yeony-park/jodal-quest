@@ -1,4 +1,168 @@
 (() => {
+  // src/data/world.js
+  var TILE = 32;
+  var MAP_W = 18;
+  var MAP_H = 14;
+  var spots = {
+    doc: { x: 464, y: 144, floor: 0 },
+    mentor: { x: 528, y: 144, npcX: 560, npcY: 112, floor: 0 },
+    phone: { x: 80, y: 400, floor: 0 },
+    terminal: { x: 464, y: 400, floor: 0 },
+    supplier: { x: 272, y: 240, npcX: 304, npcY: 208, floor: 0 },
+    cabinet: { x: 112, y: 240 },
+    elevator: { x: 16, y: 240 },
+    officer: { x: 496, y: 112, npcX: 528, npcY: 96, floor: 1 },
+    bidroom: { x: 432, y: 112, floor: 1 }
+  };
+  var floors = [
+    {
+      level: "5F",
+      caption: "5층 구매팀",
+      rooms: ["구매총괄과", "전기전자구매과"],
+      term: "납품기한",
+      corridorCols: [5, 11],
+      partitions: [
+        { axis: "h", at: 5, from: 0, to: 18, doors: [2, 8, 14], z: 17 },
+        { axis: "h", at: 9, from: 0, to: 18, doors: [2, 8, 14], z: 10 },
+        { axis: "v", at: 5, from: 0, to: 5, z: 28 },
+        { axis: "v", at: 11, from: 0, to: 5, z: 28 },
+        { axis: "v", at: 5, from: 10, to: 14, z: 18 },
+        { axis: "v", at: 11, from: 10, to: 14, z: 18 }
+      ],
+      furnishings: [
+        { type: "shelf", x: 1, y: 1, w: 3, h: 1 },
+        { type: "desk", x: 2, y: 3, w: 2, h: 1 },
+        { type: "desk", x: 7, y: 2, w: 2, h: 1 },
+        { type: "shelf", x: 9, y: 1, w: 1, h: 2 },
+        { type: "desk", spot: "doc", x: 13, y: 2, w: 2, h: 1 },
+        { type: "desk", x: 16, y: 2, w: 1, h: 1 },
+        { type: "phone", spot: "phone", x: 2, y: 11, w: 2, h: 1 },
+        { type: "shelf", x: 1, y: 12, w: 1, h: 1 },
+        { type: "table", x: 7, y: 11, w: 3, h: 1 },
+        { type: "terminal", spot: "terminal", x: 13, y: 11, w: 3, h: 1 },
+        { type: "plant", x: 17, y: 12, w: 1, h: 1 }
+      ]
+    },
+    {
+      level: "2F",
+      caption: "2층 계약 체험실",
+      rooms: ["계약 상담석", "개찰·계약 자료실"],
+      term: "계약상대자",
+      corridorCols: [9],
+      partitions: [
+        { axis: "h", at: 5, from: 0, to: 18, doors: [3, 13], z: 17 },
+        { axis: "h", at: 9, from: 0, to: 18, doors: [8, 14], z: 10 },
+        { axis: "v", at: 9, from: 0, to: 5, z: 28 },
+        { axis: "v", at: 11, from: 10, to: 14, z: 18 }
+      ],
+      furnishings: [
+        { type: "shelf", x: 1, y: 1, w: 3, h: 1 },
+        { type: "table", x: 5, y: 2, w: 2, h: 1 },
+        { type: "plant", x: 8, y: 1, w: 1, h: 1 },
+        { type: "terminal", spot: "bidroom", x: 12, y: 2, w: 3, h: 1 },
+        { type: "shelf", x: 16, y: 1, w: 1, h: 2 },
+        { type: "table", x: 3, y: 11, w: 3, h: 1 },
+        { type: "plant", x: 1, y: 12, w: 1, h: 1 },
+        { type: "desk", x: 14, y: 11, w: 2, h: 1 },
+        { type: "shelf", x: 16, y: 12, w: 1, h: 1 }
+      ]
+    }
+  ];
+  var tourFloors = [
+    ["B1F", "기록관", ["조달청기록관", "제안서평가실"], "조달기록", ["shelf", "shelf", "shelf"], ["table", "plant", "shelf"], "#e7dae0"],
+    ["1F", "전시관", ["조달전시관", "문화상품전시관"], "조달물자", ["plant", "display", "plant"], ["display", "plant", "display"], "#f9e5cb"],
+    ["3F", "가격·데이터", ["조달가격조사과", "조달데이터관리팀"], "가격조사", ["desk", "shelf", "desk"], ["desk", "plant", "shelf"], "#d9e8f4"],
+    ["4F", "물품관리", ["물품관리과", "해외물자과"], "물품관리", ["shelf", "shelf", "desk"], ["shelf", "table", "shelf"], "#dbe9d8"],
+    ["6F", "시설사업", ["설계예산검토과", "건축설비과"], "설계도서", ["table", "table", "desk"], ["desk", "table", "shelf"], "#e5e3f0"],
+    ["7F", "도서실", ["도서실", "서비스계약과"], "용역", ["shelf", "shelf", "shelf"], ["plant", "table", "desk"], "#e9dfcf"],
+    ["8F", "회의 공간", ["기획재정담당관실", "대회의실"], "예산", ["desk", "plant", "shelf"], ["table", "table", "table"], "#ecdfee"],
+    ["9F", "혁신조달", ["혁신조달정책과", "운영지원과"], "혁신조달", ["table", "desk", "desk"], ["shelf", "table", "plant"], "#d5eae5"]
+  ];
+  for (const [level, name, rooms, term, firstRoom, secondRoom, tint] of tourFloors) {
+    const furnishings2 = [];
+    for (const [wing, arrangement] of [firstRoom, secondRoom].entries()) {
+      for (const [slot, type] of arrangement.entries()) {
+        furnishings2.push({
+          type,
+          x: 2 + 9 * wing + 2 * (slot % 2),
+          y: 2 + 8 * Math.floor(slot / 2),
+          w: type === "plant" ? 1 : 2,
+          h: 1
+        });
+      }
+    }
+    floors.push({
+      level,
+      caption: level.replace("F", "층").replace("B", "지하 ") + " " + name,
+      rooms,
+      term,
+      tint,
+      corridorCols: [8],
+      furnishings: furnishings2,
+      partitions: [
+        { axis: "v", at: 8, from: 0, to: 6, z: 24 },
+        { axis: "h", at: 9, from: 0, to: 18, doors: [3, 8, 13], z: 16 }
+      ]
+    });
+  }
+  for (const floor of floors) {
+    floor.furnishings.push(
+      { type: "cabinet", spot: "cabinet", x: 3, y: 6, w: 1, h: 1 },
+      { type: "plant", variety: "palm", x: 0, y: 3, w: 1, h: 1 },
+      { type: "plant", variety: "flowers", x: 15, y: 4, w: 1, h: 1 }
+    );
+  }
+  var supplierOffice = { ...floors[0], furnishings: floors[0].furnishings.filter((o) => o.type !== "cabinet") };
+  function floorForScene(index, stage) {
+    return stage === 3 ? supplierOffice : floors[index];
+  }
+  function floorNumber(floor) {
+    return floor.level === "B1F" ? -1 : parseInt(floor.level, 10);
+  }
+  var floorOrder = floors.map((_, i) => i).sort((a, b) => floorNumber(floors[a]) - floorNumber(floors[b]));
+  var furnishings = floors[0].furnishings;
+
+  // src/data/learning.js
+  var PROCEDURE_SOURCE = "https://www.pps.go.kr/kor/content.do?key=00179";
+  var lessons = [
+    "조달요청에는 품명·규격·납기·예산 등이 필요해요. 빠진 정보는 수요기관에 확인해요.",
+    "정부물품 구매는 일반경쟁이 원칙이에요. 이 사례는 협의한 성능으로 규격을 고쳐 경쟁 기회를 열었어요.",
+    "구매결의에는 수량·계약방법·낙찰자 선정방식 등을 담고, 검토·결재를 거쳐 나라장터에 공고해요.",
+    "기업은 공고의 규격과 참가 조건을 확인해 입찰서를 제출해요. 접수 뒤 낙찰자 선정과 계약 절차가 이어져요.",
+    "예정가격은 입찰 전에 결정해요. 공고한 선정방식에 따른 심사 후 낙찰예정자와 전자계약을 체결해요.",
+    "납품한 물품을 검사·검수하고 인수해요. 영수증과 납품 서류를 확인한 뒤 대금 청구·지급 절차를 진행해요."
+  ];
+  var glossary = {
+    "조달기록": "물품을 요청하고 계약해 납품받기까지, 누가 무엇을 확인했는지 남긴 자료예요.",
+    "조달물자": "공공기관이 업무에 쓰려고 조달하는 물품이에요. 도서관에서 요청한 모니터도 여기에 들어가요.",
+    "계약상대자": "공공기관과 계약을 맺고 계약한 물품이나 서비스를 제공하는 쪽이에요.",
+    "가격조사": "구매를 준비할 때 거래 사례와 견적 등 가격 자료를 찾아 비교하는 일이에요.",
+    "물품관리": "기관이 보유한 물품의 수량과 상태를 기록하고, 필요한 곳에서 쓸 수 있게 관리하는 일이에요.",
+    "납품기한": "계약에 따라 물품을 납품해야 하는 기한이에요. 이번 모니터 계약에서는 계약일부터 30일 이내예요.",
+    "설계도서": "시설을 어떻게 지을지 나타낸 도면과 시방서 등의 자료예요.",
+    "용역": "물건 대신 조사, 설계, 유지보수처럼 전문적인 일을 맡기는 것을 말해요.",
+    "예산": "정해진 기간에 어떤 일을 위해 얼마를 쓸지 세운 계획이에요.",
+    "혁신조달": "공공기관의 구매를 통해 새로운 기술과 제품이 공공 문제 해결에 쓰이도록 하는 활동이에요.",
+    "수요기관": "필요한 물품의 품명·규격·납기·예산 등을 적어 조달을 요청하는 기관이에요. 이번 수요기관은 새봄도서관이에요.",
+    "규격": "구매할 물품의 크기·성능 등 필요한 조건이에요. 이번 구매에서는 24형 이상·FHD 이상·HDMI 연결을 확인해요.",
+    "구매결의": "수요기관명, 물품의 규격·수량, 계약방법, 낙찰자 선정방식, 예산, 입찰일시, 납품기한 등을 정리해요.",
+    "예정가격": "입찰 전에 결정하는 가격이에요. 공식 절차에서는 작성한 예비가격 중 추첨된 가격을 산술평균해 정해요.",
+    "낙찰자 선정·전자계약": "공고한 선정방식에 따른 심사를 거치고, 낙찰예정자와 전자계약을 체결해 계약이 성립해요.",
+    "검사·검수": "납품 물품을 검사공무원과 물품출납공무원이 각각 확인하고, 수요기관이 물품을 인수해요.",
+    "대금 청구": "계약상대자가 납품 후 조달청에 대금을 청구해요. 수요기관이 직접 지급하는 경우에는 수요기관에 청구해요."
+  };
+  function legacyLearnedTerms(s) {
+    return [
+      ["수요기관", s.stage > 0 || s.brief],
+      ["규격", s.stage > 1 || s.specAdvice],
+      ["구매결의", s.stage > 2],
+      ["예정가격", s.stage > 4 || s.awardBrief],
+      ["낙찰자 선정·전자계약", s.stage > 4 || s.awardBrief],
+      ["검사·검수", s.stage > 5 || s.contractFarewell || s.inspectionChecked],
+      ["대금 청구", s.stage > 5]
+    ].filter(([, learned]) => learned).map(([term]) => term);
+  }
+
   // src/data/recovery.js
   var recoveryScenes = {
     intake: {
@@ -110,6 +274,7 @@
     mistakes: 0,
     recoveries: [],
     pendingRecovery: null,
+    learnedTerms: [],
     history: []
   });
 
@@ -137,15 +302,15 @@
     },
     {
       title: "이번에는 기업의 시선으로",
-      desc: "이제 공급기업 담당자입니다. 공고와 제품을 확인하고 입찰서를 제출하세요.",
+      desc: "이제 공급기업 담당자입니다. 공고와 제품을 확인하고 모의 입찰서를 제출하세요.",
       memo: "입찰서 제출은 낙찰이나 계약 체결이 아니에요. 이후 별도 심사와 절차가 이어져요.",
       dialogue: "이제 공급기업 담당자의 시선으로 볼까요? 공고에 맞는 제품인지, 참가 준비가 되었는지 확인하세요."
     },
     {
       title: "엘리베이터 너머, 계약까지",
-      desc: "조달달로 돌아왔어요. 엘리베이터를 타고 3층에서 개찰 자료와 계약 절차를 확인하세요.",
+      desc: "엘리베이터를 타고 2층에서 개찰 자료와 계약 절차를 확인하세요.",
       memo: "예정가격은 입찰 전에 결정해요. 접수 후에는 공고한 선정방식에 따른 심사와 전자계약이 이어져요.",
-      dialogue: "입찰서 접수 다음은 별도 절차예요. 3층 계약 담당자에게 배워 볼까요?"
+      dialogue: "입찰서 접수 다음은 별도 절차예요. 2층 계약 담당자에게 배워 볼까요?"
     },
     {
       title: "스무 대가 도착했나요?",
@@ -199,7 +364,7 @@
   function loadGame() {
     try {
       const s = JSON.parse(localStorage.getItem(KEY));
-      if (s && s.version === 1 && (s.recoveries === void 0 || Array.isArray(s.recoveries) && s.recoveries.length <= Object.keys(recoveryScenes).length && s.recoveries.every((id) => typeof id === "string" && Object.hasOwn(recoveryScenes, id)) && new Set(s.recoveries).size === s.recoveries.length) && (s.pendingRecovery === void 0 || s.pendingRecovery === null || typeof s.pendingRecovery === "string" && Object.hasOwn(recoveryScenes, s.pendingRecovery) && recoveryScenes[s.pendingRecovery].stage === s.stage) && (s.xp === void 0 || Number.isInteger(s.xp) && s.xp >= s.stage * 100 && s.xp <= s.stage * 125 && s.xp % 25 === 0) && (s.questMistakes === void 0 || Number.isInteger(s.questMistakes) && s.questMistakes >= 0 && s.questMistakes <= s.mistakes) && Number.isInteger(s.stage) && s.stage >= 0 && s.stage <= LAST_STAGE && (s.floor === void 0 || s.floor === 0 || s.floor === 1) && ["contractFarewell", "awardBrief", "openingChecked", "deliveryIssueReported", "inspectionChecked"].every(
+      if (s && s.version === 1 && (s.recoveries === void 0 || Array.isArray(s.recoveries) && s.recoveries.length <= Object.keys(recoveryScenes).length && s.recoveries.every((id) => typeof id === "string" && Object.hasOwn(recoveryScenes, id)) && new Set(s.recoveries).size === s.recoveries.length) && (s.pendingRecovery === void 0 || s.pendingRecovery === null || typeof s.pendingRecovery === "string" && Object.hasOwn(recoveryScenes, s.pendingRecovery) && recoveryScenes[s.pendingRecovery].stage === s.stage) && (s.xp === void 0 || Number.isInteger(s.xp) && s.xp >= s.stage * 100 && s.xp <= s.stage * 125 && s.xp % 25 === 0) && (s.questMistakes === void 0 || Number.isInteger(s.questMistakes) && s.questMistakes >= 0 && s.questMistakes <= s.mistakes) && Number.isInteger(s.stage) && s.stage >= 0 && s.stage <= LAST_STAGE && (s.floor === void 0 || Number.isInteger(s.floor) && s.floor >= 0 && s.floor < floors.length) && ["contractFarewell", "awardBrief", "openingChecked", "deliveryIssueReported", "inspectionChecked"].every(
         (k) => s[k] === void 0 || typeof s[k] === "boolean"
       ) && [
         "started",
@@ -211,6 +376,7 @@
         "eligibility"
       ].every((k) => typeof s[k] === "boolean") && Number.isInteger(s.mistakes) && s.mistakes >= 0 && Array.isArray(s.history) && s.history.every((x) => typeof x === "string")) {
         runtime.state = { ...fresh(), ...s, xp: s.xp ?? s.stage * 100, questMistakes: s.questMistakes ?? s.mistakes };
+        runtime.state.learnedTerms = s.learnedTerms === void 0 ? legacyLearnedTerms(s) : [...new Set((Array.isArray(s.learnedTerms) ? s.learnedTerms : []).filter((term) => typeof term === "string" && Object.hasOwn(glossary, term)))];
         runtime.floor = s.stage === 3 ? 0 : runtime.state.floor;
         runtime.state.floor = runtime.floor;
         runtime.loaded = s.started;
@@ -229,72 +395,6 @@
       $("save-status").textContent = "저장 불가 · 현재 창에서 계속";
     }
   }
-
-  // src/data/world.js
-  var TILE = 32;
-  var MAP_W = 18;
-  var MAP_H = 14;
-  var spots = {
-    doc: { x: 464, y: 144, floor: 0 },
-    mentor: { x: 528, y: 144, npcX: 560, npcY: 112, floor: 0 },
-    phone: { x: 80, y: 400, floor: 0 },
-    terminal: { x: 464, y: 400, floor: 0 },
-    supplier: { x: 272, y: 240, npcX: 304, npcY: 208, floor: 0 },
-    elevator: { x: 16, y: 240 },
-    officer: { x: 496, y: 112, npcX: 528, npcY: 96, floor: 1 },
-    bidroom: { x: 432, y: 112, floor: 1 }
-  };
-  var floors = [
-    {
-      level: "5F",
-      caption: "5층 구매팀",
-      corridorCols: [5, 11],
-      partitions: [
-        { axis: "h", at: 5, from: 0, to: 18, doors: [2, 8, 14], z: 17 },
-        { axis: "h", at: 9, from: 0, to: 18, doors: [2, 8, 14], z: 10 },
-        { axis: "v", at: 5, from: 0, to: 5, z: 28 },
-        { axis: "v", at: 11, from: 0, to: 5, z: 28 },
-        { axis: "v", at: 5, from: 10, to: 14, z: 18 },
-        { axis: "v", at: 11, from: 10, to: 14, z: 18 }
-      ],
-      furnishings: [
-        { type: "shelf", x: 1, y: 1, w: 3, h: 1 },
-        { type: "desk", x: 2, y: 3, w: 2, h: 1 },
-        { type: "desk", x: 7, y: 2, w: 2, h: 1 },
-        { type: "shelf", x: 9, y: 1, w: 1, h: 2 },
-        { type: "desk", spot: "doc", x: 13, y: 2, w: 2, h: 1 },
-        { type: "desk", x: 16, y: 2, w: 1, h: 1 },
-        { type: "phone", spot: "phone", x: 2, y: 11, w: 2, h: 1 },
-        { type: "shelf", x: 1, y: 12, w: 1, h: 1 },
-        { type: "table", x: 7, y: 11, w: 3, h: 1 },
-        { type: "terminal", spot: "terminal", x: 13, y: 11, w: 3, h: 1 },
-        { type: "plant", x: 17, y: 12, w: 1, h: 1 }
-      ]
-    },
-    {
-      level: "3F",
-      caption: "3층 계약팀",
-      corridorCols: [9],
-      partitions: [
-        { axis: "h", at: 5, from: 0, to: 18, doors: [3, 13], z: 17 },
-        { axis: "h", at: 9, from: 0, to: 18, doors: [8, 14], z: 10 },
-        { axis: "v", at: 9, from: 0, to: 5, z: 28 },
-        { axis: "v", at: 11, from: 10, to: 14, z: 18 }
-      ],
-      furnishings: [
-        { type: "shelf", x: 1, y: 1, w: 3, h: 1 },
-        { type: "table", x: 5, y: 2, w: 2, h: 1 },
-        { type: "plant", x: 8, y: 1, w: 1, h: 1 },
-        { type: "terminal", spot: "bidroom", x: 12, y: 2, w: 3, h: 1 },
-        { type: "shelf", x: 16, y: 1, w: 1, h: 2 },
-        { type: "table", x: 3, y: 11, w: 3, h: 1 },
-        { type: "plant", x: 1, y: 12, w: 1, h: 1 },
-        { type: "desk", x: 14, y: 11, w: 2, h: 1 },
-        { type: "shelf", x: 16, y: 12, w: 1, h: 1 }
-      ]
-    }
-  ];
-  var furnishings = floors[0].furnishings;
 
   // src/game/progression.js
   var XP_PER_QUEST = 100;
@@ -317,27 +417,6 @@
     return `<p class="xp-reward" role="status">${runtime.lastXP || ""}</p>`;
   }
 
-  // src/data/learning.js
-  var PROCEDURE_SOURCE = "https://www.pps.go.kr/kor/content.do?key=00179";
-  var LAYOUT_SOURCE = "https://www.pps.go.kr/kor/content.do?key=00139";
-  var lessons = [
-    "조달요청에는 품명·규격·납기·예산 등이 필요해요. 빠진 정보는 수요기관에 확인해요.",
-    "정부물품 구매는 일반경쟁이 원칙이에요. 이 사례는 협의한 성능으로 규격을 고쳐 경쟁 기회를 열었어요.",
-    "구매결의에는 수량·계약방법·낙찰자 선정방식 등을 담고, 검토·결재를 거쳐 나라장터에 공고해요.",
-    "기업은 공고의 규격과 참가 조건을 확인해 입찰서를 제출해요. 접수 뒤 낙찰자 선정과 계약 절차가 이어져요.",
-    "예정가격은 입찰 전에 결정해요. 공고한 선정방식에 따른 심사 후 낙찰예정자와 전자계약을 체결해요.",
-    "납품한 물품을 검사·검수하고 인수해요. 영수증과 납품 서류를 확인한 뒤 대금 청구·지급 절차를 진행해요."
-  ];
-  var glossary = [
-    ["수요기관", "필요한 물품의 품명·규격·납기·예산 등을 적어 조달을 요청하는 기관이에요. 이번 수요기관은 새봄도서관이에요."],
-    ["규격", "구매할 물품의 크기·성능 등 필요한 조건이에요. 이번 구매에서는 24형 이상·FHD 이상·HDMI 연결을 확인해요."],
-    ["구매결의", "수요기관명, 물품의 규격·수량, 계약방법, 낙찰자 선정방식, 예산, 입찰일시, 납품기한 등을 정리해요."],
-    ["예정가격", "입찰 전에 결정하는 가격이에요. 공식 절차에서는 작성한 예비가격 중 추첨된 가격을 산술평균해 정해요."],
-    ["낙찰자 선정·전자계약", "공고한 선정방식에 따른 심사를 거치고, 낙찰예정자와 전자계약을 체결해 계약이 성립해요."],
-    ["검사·검수", "납품 물품을 검사공무원과 물품출납공무원이 각각 확인하고, 수요기관이 물품을 인수해요."],
-    ["대금 청구", "계약상대자가 납품 후 조달청에 대금을 청구해요. 수요기관이 직접 지급하는 경우에는 수요기관에 청구해요."]
-  ];
-
   // src/components/learning.js
   function lessonCard(stage) {
     return `<section class="lesson-card"><h3>이번 업무에서 배운 것</h3><p>${lessons[stage]}</p></section>`;
@@ -345,11 +424,30 @@
   function learningReview() {
     return `<ol class="learning-review">${lessons.slice(0, runtime.state.stage).map((lesson, i) => `<li><strong>${questNames[i]}</strong><p>${lesson}</p></li>`).join("")}</ol>`;
   }
+  function renderGlossary() {
+    const terms = runtime.state.learnedTerms;
+    $("glossary-count").textContent = terms.length;
+    $("learned-terms").innerHTML = terms.slice().reverse().map((term) => `<li>${term}</li>`).join("");
+  }
+  function learnTerm(term) {
+    if (runtime.state.learnedTerms.includes(term)) return;
+    runtime.state.learnedTerms.push(term);
+    renderGlossary();
+    save();
+  }
+  function openCabinet() {
+    if (runtime.state.stage === 3) return;
+    const { term, caption } = floors[runtime.floor];
+    const collected = runtime.state.learnedTerms.includes(term);
+    learnTerm(term);
+    show(collected ? "다시 펼친 용어 카드" : "용어 카드를 발견했어요", `<article class="cabinet-card">
+    <small>${caption} · 자료 캐비닛</small><h3>${term}</h3><p>${glossary[term]}</p></article>
+    ${buttons([["close", "캐비닛 닫기"], ["glossary", "용어 수첩 보기", true]])}`, "cabinet");
+  }
   function openGlossary() {
-    show("조달 용어 수첩", `<p>지금까지 ${runtime.state.stage}개 업무를 마쳤어요. 용어를 누르면 설명이 펼쳐져요.</p>
-    <div class="glossary">${glossary.map(([term, meaning]) => `<details><summary>${term}</summary><p>${meaning}</p></details>`).join("")}</div>
-    <p class="source-note">기준 자료 : 조달청 물품구매 총액계약 업무처리절차 · 2026-11-21 확인<br />
-    <a href="${PROCEDURE_SOURCE}" target="_blank" rel="noopener noreferrer">공식 업무처리절차 보기</a> · <a href="${LAYOUT_SOURCE}" target="_blank" rel="noopener noreferrer">층별배치도 보기</a></p>
+    const terms = runtime.state.learnedTerms;
+    show("조달 용어 수첩", `<div class="glossary">${terms.length ? terms.map((term) => `<details><summary>${term}</summary><p>${glossary[term]}</p></details>`).join("") : "<p>설명을 듣거나 캐비닛에서 발견한 용어가 여기에 기록돼요.</p>"}</div>
+    <p class="source-note"><a href="${PROCEDURE_SOURCE}" target="_blank" rel="noopener noreferrer">공식 업무처리절차 보기</a></p>
     ${buttons([["close", "수첩 닫기"]])}`, "glossary");
   }
 
@@ -515,6 +613,42 @@
     return true;
   }
 
+  // src/components/floor-map.js
+  var colors = { cabinet: "#b58443", shelf: "#94a89b", plant: "#89bba4", table: "#cfb398", display: "#b4cad9" };
+  function floorPlan(index, supplier) {
+    const floor = floorForScene(index, runtime.state.stage);
+    const walls = [];
+    for (const p of floor.partitions) {
+      for (let n = p.from; n < p.to; n++) {
+        if (p.doors?.includes(n)) continue;
+        walls.push(p.axis === "h" ? `M${n} ${p.at + 0.5}h1` : `M${p.at + 0.5} ${n}v1`);
+      }
+    }
+    const pin = (x, y, color, label) => `<circle cx="${x}" cy="${y}" r=".36" fill="${color}" stroke="white" stroke-width=".1"><title>${label}</title></circle>`;
+    return `<svg class="floor-plan" viewBox="-.4 -.4 ${MAP_W + 0.8} ${MAP_H + 0.8}" role="img" aria-label="${supplier ? "새봄테크" : floor.caption} 안내도">
+    <rect width="${MAP_W}" height="${MAP_H}" rx=".35" fill="${floor.tint || "#edeada"}"/>
+    <rect y="6" width="${MAP_W}" height="3" fill="#d2e7dc"/>
+    <path d="${walls.join("")}" stroke="#82978d" stroke-width=".2"/>
+    ${floor.furnishings.map((o) => `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" rx=".12" fill="${colors[o.type] || "#a9b9c7"}"/>`).join("")}
+    ${(supplier ? ["영업팀", "제품 자료실"] : floor.rooms).map((room, i) => `<g transform="translate(${i * 9 + 4.5} 4.9)"><rect x="-3.9" y="-.66" width="7.8" height="1.14" rx=".22" fill="#fffdf1"/><text text-anchor="middle" y=".14" fill="#34473e" font-size=".73" font-weight="700">${room}</text></g>`).join("")}
+    ${supplier ? "" : pin(spots.elevator.x / TILE, spots.elevator.y / TILE, "#67619e", "엘리베이터")}
+    ${index === runtime.floor ? pin(player.x / TILE, player.y / TILE, "#247953", "현재 위치") : ""}
+  </svg>`;
+  }
+  function showFloorMap(index = runtime.floor, riding = false) {
+    const floor = floors[index], supplier = runtime.state.stage === 3;
+    const tabs = supplier ? "" : `<div class="floor-tabs" aria-label="층 선택">${floorOrder.map((i) => `<button data-action="map-${i}" aria-pressed="${i === index}">${floors[i].level}</button>`).join("")}</div>`;
+    const rooms = supplier ? "영업팀 · 제품 자료실" : floor.rooms.join(" · ");
+    const legend = `<div class="map-legend">
+    ${index === runtime.floor ? '<span class="map-person">현재 위치</span>' : ""}
+    ${supplier ? "" : '<span class="map-lift">엘리베이터</span><span class="map-cabinet">자료 캐비닛</span>'}</div>`;
+    const controls = riding && index !== runtime.floor ? [[`floor-${index}`, `${floor.level} 이동`], ["close", "닫기", true]] : [["close", "닫기", true]];
+    show(riding ? "엘리베이터" : "층별 지도", `${tabs}<h3 class="floor-caption">${supplier ? "새봄테크" : floor.caption}</h3>
+    <p class="floor-rooms">${rooms}</p>${floorPlan(index, supplier)}${legend}
+    ${!supplier && index === 1 ? "<small>게임 속 계약 업무를 위한 체험 공간</small>" : ""}
+    ${buttons(controls)}`, riding ? "elevator" : "map");
+  }
+
   // src/components/title.js
   function intro() {
     runtime.titleVisible = true;
@@ -544,7 +678,7 @@
     }
     keys.clear();
     runtime.target = null;
-    if (!isNew && runtime.floor === 1) {
+    if (!isNew && runtime.floor !== 0) {
       player.x = 48;
       player.y = 240;
     }
@@ -811,11 +945,10 @@
       contractFarewell();
       return;
     }
-    show("엘리베이터 · 어느 층으로 갈까요?", `<p>현재 ${floors[runtime.floor].level}입니다.</p>
-    ${buttons([[runtime.floor === 0 ? "floor-1" : "floor-0", runtime.floor === 0 ? "3층 · 개찰·계약 창구" : "5층 · 구매팀·납품 확인"], ["close", "이번 층에 머무르기", true]])}`, "elevator");
+    showFloorMap(runtime.floor, true);
   }
   function travelTo(floor) {
-    if (runtime.state.stage === 3 || ![0, 1].includes(floor)) return;
+    if (runtime.state.stage === 3 || !Number.isInteger(floor) || !floors[floor]) return;
     close();
     keys.clear();
     runtime.target = null;
@@ -837,15 +970,15 @@
       return;
     }
     if (runtime.state.stage !== 4) {
-      speak2("이계약 주무관", ["여기는 계약팀이에요. 입찰서 접수 뒤 공고한 선정방식에 따른 심사와 계약 절차를 확인해요."], () => {
+      speak("이계약 주무관", ["여기는 계약팀이에요. 입찰서 접수 뒤 공고한 선정방식에 따른 심사와 계약 절차를 확인해요."], () => {
       }, "officer", "네, 순서를 기억해 둘게요.");
       return;
     }
     if (!runtime.state.awardBrief) {
-      speak2("이계약 주무관", [
-        "3층에 온 걸 환영해요. 입찰서 접수 다음에는 낙찰자 선정과 계약 절차가 남아 있어요.",
-        "예정가격은 입찰 전에 결정해 두었어요. 먼저 옆의 개찰·계약 자료에서 순서를 확인해 주세요.",
-        "이번 구매 건은 공고한 낙찰자 선정방식에 따른 심사를 마친 뒤 전자계약을 진행합니다."
+      speak("이계약 주무관", [
+        "2층에 온 걸 환영해요. 입찰서 접수 다음에는 낙찰자 선정과 계약 절차가 남아 있어요.",
+        { term: "예정가격", text: "예정가격은 입찰 전에 정하는 가격이에요. 옆에 있는 개찰·계약 자료에서 확인할 수 있어요." },
+        { term: "낙찰자 선정·전자계약", text: "공고한 기준으로 심사해 낙찰예정자를 선정하고, 그 업체와 전자계약을 맺어요." }
       ], () => {
         runtime.state.awardBrief = true;
         save();
@@ -854,11 +987,11 @@
       return;
     }
     if (!runtime.state.openingChecked) {
-      speak2("이계약 주무관", ["옆의 개찰·계약 자료를 먼저 확인해 주세요. 예정가격을 언제 결정했는지 기억해 볼까요?"], () => {
+      speak("이계약 주무관", ["옆의 개찰·계약 자료를 먼저 확인해 주세요. 예정가격을 언제 결정했는지 기억해 볼까요?"], () => {
       }, "officer", "네, 자료를 먼저 보고 올게요.");
       return;
     }
-    speak2("이계약 주무관", [
+    speak("이계약 주무관", [
       "예정가격 자료를 확인했군요. 입찰 전에 결정한 기록을 확인하는 순서를 잘 지켰어요.",
       "이번 건은 공고한 낙찰자 선정방식에 따른 심사를 마쳤고, 새봄테크가 낙찰예정자예요.",
       "접수증과 심사 결과, 납품 조건을 대조해 볼까요? 확인한 뒤 권한 있는 담당자가 전자계약을 체결합니다."
@@ -903,11 +1036,11 @@
   }
   function contractFarewell() {
     if (runtime.state.stage !== 5 || runtime.floor !== 1) return;
-    speak2("이계약 주무관", [
+    speak("이계약 주무관", [
       "계약서 받았죠? 모니터 20대와 계약일로부터 30일 이내라는 납품 조건을 기억해 주세요.",
       "수고했어요, 조달달 주무관. 이제 엘리베이터로 5층 구매팀에 돌아가세요.",
       "수요기관 연락 데스크에서 납품 자료를 확인하고, 계약서의 규격과 수량에 맞게 도착했는지 대조해 주세요.",
-      "부족한 물품이 있으면 보완을 요청하고, 검사·검수와 물품인수를 확인한 뒤 납품 서류를 살펴봐요."
+      { term: "검사·검수", text: "검사·검수는 도착한 물품이 계약한 규격과 수량에 맞는지 확인하는 일이에요. 부족하면 보완을 요청하세요." }
     ], () => {
       runtime.state.contractFarewell = true;
       save();
@@ -930,7 +1063,7 @@
     runtime.state.deliveryIssueReported = true;
     save();
     render();
-    speak2("수요기관 담당자", ["한 대가 부족한 것을 확인했어요. 계약상대자에게 보완을 요청하겠습니다.", "부족한 한 대가 도착했어요! 수요기관 연락 데스크에서 보완한 자료를 다시 확인해 주세요."], () => {
+    speak("수요기관 담당자", ["한 대가 부족한 것을 확인했어요. 계약상대자에게 보완을 요청하겠습니다.", "부족한 한 대가 도착했어요! 수요기관 연락 데스크에서 보완한 자료를 다시 확인해 주세요."], () => {
     }, "contact", "보완 감사합니다. 스무 대가 맞는지 다시 확인할게요.");
   }
   function inspectDelivery() {
@@ -938,6 +1071,7 @@
     runtime.state.inspectionChecked = true;
     save();
     render();
+    learnTerm("검사·검수");
     show("검사·검수와 물품인수 완료", `<div class="success">계약한 규격과 수량 20대를 확인하고 물품을 인수했어요.</div><p>수요기관이 영수증을 발급했어요. 업무용 모니터에서 납품 서류와 대금 청구를 확인하세요.</p>${buttons([["close", "대금 청구 확인하러 가기"]])}`);
   }
   function payment() {
@@ -946,6 +1080,7 @@
       show("대금 지급 전 확인", `<p>수요기관의 납품 자료부터 확인하세요. 검사·검수와 물품인수 후 영수증과 납품 서류를 확인해요.</p>${buttons([["close", "납품 확인하러 가기"]])}`);
       return;
     }
+    learnTerm("대금 청구");
     show("납품 서류와 대금 청구 확인", `${doc("계약 종결 검토", [
       ["검사·검수 및 인수", "모니터 20대 · 완료"],
       ["영수증·납품 서류", "수요기관 영수증 발급 · 서류 하자 없음"],
@@ -962,7 +1097,7 @@
     save();
     render();
     close();
-    speak2("김주문", ["스무 대가 모두 도착했는지 끝까지 확인했군요. 납품 서류를 확인하고 담당자가 대금 지급 절차를 마쳤어요.", "요청서부터 계약과 납품까지, 오늘 배운 절차를 다시 떠올려 봐요."], ending);
+    speak("김주문", ["스무 대가 모두 도착했는지 끝까지 확인했군요. 납품 서류를 확인하고 담당자가 대금 지급 절차를 마쳤어요.", "요청서부터 계약과 납품까지, 오늘 배운 절차를 다시 떠올려 봐요."], ending);
   }
 
   // src/game/actions.js
@@ -1006,8 +1141,8 @@
     doc: documentDesk,
     terminal: () => runtime.state.stage === 5 ? payment() : terminal(),
     elevator,
-    "floor-0": () => travelTo(0),
-    "floor-1": () => travelTo(1),
+    map: () => showFloorMap(),
+    cabinet: openCabinet,
     officer,
     "contract-farewell": contractFarewell,
     bidroom,
@@ -1034,17 +1169,6 @@
         player.y = 144;
       }
       runtime.portalSignedIn = false;
-      if (runtime.state.stage === 3)
-        speak(
-          "욘 대리",
-          [
-            "공고가 게시됐군요! 저는 새봄테크 영업팀의 욘 대리예요.",
-            "제품 자료를 비교한 뒤 업무용 모니터에서 공고를 검색하고 입찰서를 준비해 볼게요."
-          ],
-          () => {
-          },
-          "supplier"
-        );
     },
     "intake-good": () => {
       if (runtime.state.stage !== 0) return;
@@ -1062,10 +1186,7 @@
       }
       complete("요청서 접수 준비 완료", "확인한 납기를 보완하고 선배 검토를 거쳐 접수했습니다.");
     },
-    "intake-bad": () => wrong(
-      "납기는 구매 목적과 공급 가능성에 영향을 줍니다. 수요기관 확인 없이 임의로 정하지 않아요.",
-      "doc"
-    ),
+    "intake-bad": () => beginRecovery("intake"),
     "spec-good": () => {
       if (runtime.state.stage !== 1) return;
       if (!runtime.state.specAdvice) {
@@ -1110,6 +1231,10 @@
     ),
     "submit-bid": finishBid
   };
+  floors.forEach((_, index) => {
+    actions["map-" + index] = () => showFloorMap(index, runtime.modalKind === "elevator");
+    actions["floor-" + index] = () => travelTo(index);
+  });
   Object.assign(actions, {
     supplier: supplierNPC,
     "portal-home": () => openPortal("home"),
@@ -1151,7 +1276,18 @@
   function recover() {
     const scene = recoveryScenes[runtime.state.pendingRecovery];
     if (!scene || scene.stage !== runtime.state.stage) return;
-    speak2("조달달", ["기록을 바로잡고 올바른 절차로 이어갈게요."], () => {
+    speak("조달달", ["기록을 바로잡고 올바른 절차로 이어갈게요."], () => {
+      const term = {
+        intake: "수요기관",
+        "spec-brand": "규격",
+        "spec-empty": "규격",
+        notice: "구매결의",
+        opening: "예정가격",
+        contract: "낙찰자 선정·전자계약",
+        delivery: "검사·검수",
+        payment: "대금 청구"
+      }[runtime.state.pendingRecovery];
+      if (term) learnTerm(term);
       show("수습 업무 · " + scene.title, `<p>${scene.correction}</p>
       <p class="source-note">근거 : 조달청 총액계약 업무처리절차 · ${scene.source} · <a href="https://www.pps.go.kr/kor/content.do?key=00179" target="_blank" rel="noopener">원문</a></p>
       ${buttons([["recover-finish", scene.button]])}`, "recovery", false);
@@ -1201,21 +1337,18 @@
       title,
       /* HTML */
       `<div class="success">✓ ${body}</div>
-      <p>
-        ${completed === 2 ? "검토·결재를 거쳐 공고가 게시됐습니다. 이제 공고를 본 기업의 차례입니다." : "퀘스트 완료!"}
-      </p>
       ${xpReward()}${lessonCard(completed)}
-      ${buttons([["advance", completed === 2 ? "기업 담당자로 전환" : "다음 퀘스트"]])}`,
+      ${buttons([["advance", completed === 2 ? "입찰 준비하기" : "다음 퀘스트"]])}`,
       "advance",
       false
     );
   }
   function mentor() {
     if (runtime.state.stage === 0) {
-      speak2(
+      speak(
         "김주문",
         [
-          "새봄도서관에서 모니터 20대를 요청했어요. 요청서에 납품기한이 빠져 있네요.",
+          { term: "수요기관", text: "모니터 20대를 요청한 새봄도서관이 이번 수요기관이에요. 요청서에는 납품기한이 빠져 있네요." },
           "왼쪽 연락 데스크에서 수요기관에 납기를 확인해 주세요. 확인한 내용으로 요청서를 보완하면 됩니다."
         ],
         () => {
@@ -1227,11 +1360,11 @@
         "네! 수요기관에 납기를 확인하고 요청서를 보완할게요."
       );
     } else if (runtime.state.stage === 1) {
-      speak2(
+      speak(
         "김주문",
         [
           "규격서에 특정 브랜드가 적혀 있네요. 이번 사례에서는 그 브랜드만 필요한 사유가 확인되지 않았어요.",
-          "수요기관과 확인했더니 문서 열람용 24형 이상, FHD 이상, HDMI 연결이면 된대요.",
+          { term: "규격", text: "규격은 물품이 갖춰야 할 조건이에요. 도서관에는 24형 이상, FHD 이상, HDMI 연결이면 충분하대요." },
           "이 성능 기준을 담아 수정안을 만들어 주세요. 필요한 조건은 지키고, 다른 기업도 참여할 수 있게요."
         ],
         () => {
@@ -1244,24 +1377,24 @@
       );
     } else if (runtime.state.stage === 2) {
       if (!runtime.state.noticeChecked) {
-        speak2("김주문", [
+        speak("김주문", [
           "공고 초안을 먼저 확인해 주세요. 요청서는 모니터 20대였죠? 수량이 같은지 대조해 보세요."
         ], () => {
         }, "mentor", "네, 요청서와 수량을 대조해 볼게요.");
         return;
       }
-      speak2(
+      speak(
         "김주문",
         [
           "수량 20대와 성능 조건을 확인했어요. 초안 검토를 마쳤습니다.",
-          "이제 권한 있는 담당자의 구매결의·결재 절차로 넘길게요. 그 절차가 끝나야 공고가 게시됩니다."
+          { term: "구매결의", text: "수량과 예산, 계약방법을 정리해 구매를 결정하는 게 구매결의예요. 담당자의 결재가 끝나면 공고를 게시해요." }
         ],
         () => actions.approve(),
         "mentor",
         "검토 감사합니다! 결재가 끝나면 공고를 확인할게요."
       );
     } else
-      speak2(
+      speak(
         "김주문",
         ["수고했어요, 조달달 주무관! 확인하고 협의하는 습관을 기억하세요."],
         () => {
@@ -1273,10 +1406,10 @@
   function phone() {
     if (runtime.state.stage === 0) {
       if (!runtime.state.brief) {
-        speak2("안내", ["먼저 김주문 선배에게 첫 업무를 들어 보세요."]);
+        speak("안내", ["먼저 김주문 선배에게 첫 업무를 들어 보세요."]);
         return;
       }
-      speak2(
+      speak(
         "수요기관 담당자",
         [
           "새봄도서관입니다. 아, 요청서에 납기를 빠뜨렸네요!",
@@ -1334,13 +1467,13 @@
     } else show("확인한 구매 요청서", `${requestDoc()}${buttons([["close", "확인 완료"]])}`);
   }
   function tutorial() {
-    speak2(
+    speak(
       "김주문",
       [
         "반가워요, 조달달 주무관! 새봄지방조달청에 온 걸 환영해요. 첫 업무는 제가 옆에서 알려 줄게요.",
         "방향키나 WASD로 걸어 보세요. 사람이나 책상 이름을 누르면 알아서 찾아가요. 대화는 스페이스바로 넘기면 돼요.",
         "왼쪽 위 작은 지도에서 내 위치를 볼 수 있어요. 오른쪽 위는 제 업무 노트, 아래 7칸은 물건을 모으는 인벤토리예요.",
-        "우리는 내용을 확인하고 초안을 준비해요. 공고는 검토와 담당자 결재를 거칩니다. 혼자 확정하면 안 돼요.",
+        { term: "수요기관", text: "필요한 물품을 사 달라고 요청하는 곳을 수요기관이라고 해요. 이번 수요기관은 새봄도서관이에요." },
         "첫 의뢰는 도서관 모니터 20대예요. 요청서에 납기가 빠졌네요. 연락 데스크에서 확인해 주세요. 노트에도 적어 둘게요."
       ],
       () => {
@@ -1355,7 +1488,7 @@
     );
   }
   function supplierNPC() {
-    speak2(
+    speak(
       "욘 대리",
       [
         "안녕하세요! 새봄테크에서 입찰 업무를 맡고 있는 욘입니다.",
@@ -1386,7 +1519,7 @@
     save();
     render();
     close();
-    speak2(
+    speak(
       "욘 대리",
       [
         "입찰서가 접수됐어요! 공고를 꼼꼼히 읽으니 제출까지 할 수 있었네요.",
@@ -1396,18 +1529,18 @@
         runtime.floor = 0;
         runtime.state.floor = 0;
         render();
-        show("입찰서 접수 완료", `<div class="success">입찰서가 접수됐어요. 이어서 낙찰자 선정과 계약 절차를 배워요.</div>${xpReward()}${lessonCard(3)}${buttons([["return-rookie", "조달달로 돌아가 다음 업무 받기"]])}`, "advance", false);
+        show("입찰서 접수 완료", `<div class="success">입찰서가 접수됐어요. 이어서 낙찰자 선정과 계약 절차를 배워요.</div>${xpReward()}${lessonCard(3)}${buttons([["return-rookie", "계약 업무 받기"]])}`, "advance", false);
       },
       "supplier"
     );
   }
   function returnRookie() {
     if (runtime.state.stage !== 4) return;
-    speak2("김주문", [
-      "조달달 주무관, 새봄테크의 입찰서가 접수됐어요. 이제 낙찰자 선정과 계약 절차를 배울 차례예요.",
-      "복도 왼쪽 엘리베이터를 타고 3층 계약 담당자에게 가 보세요. 노트의 다음 목표 버튼도 안내해 줄 거예요."
+    speak("김주문", [
+      "입찰서가 접수됐어요. 다음은 낙찰자 선정과 계약이에요.",
+      "복도 왼쪽 엘리베이터를 타고 2층 계약 담당자에게 가 보세요. 노트의 다음 목표 버튼도 안내해 줄 거예요."
     ], () => {
-    }, "mentor", "네! 엘리베이터를 타고 3층으로 가 볼게요.");
+    }, "mentor", "네! 엘리베이터를 타고 2층으로 가 볼게요.");
   }
 
   // src/world/contrast.js
@@ -1458,8 +1591,20 @@
     polygon([up(a), up(b), up(c), up(d)], top);
   }
   function drawFurniture(o) {
+    if (o.type === "cabinet") {
+      box(o.x, o.y, o.w, o.h, 34, "#eadbbf", "#a08b78", "#786d70");
+      const opened = runtime.state.learnedTerms.includes(floors[runtime.floor].term);
+      for (const z of [6, 17, 28]) {
+        const shift = opened && z === 28 ? 0.2 : 0;
+        box(o.x + 0.08, o.y + 0.94 + shift, 0.84, 0.12, z, "#e4cdb0", "#c5ae95", "#948579");
+        const p2 = project((o.x + 0.48) * TILE, (o.y + 1.08 + shift) * TILE, z - 3);
+        ctx.fillStyle = "#574b4a";
+        ctx.fillRect(Math.round(p2.x) - 3, Math.round(p2.y), 7, 2);
+      }
+      return;
+    }
     if (o.type === "shelf") {
-      box(o.x, o.y, o.w, o.h, 41, "#b6c4b8", "#758e86", "#536e69");
+      box(o.x, o.y, o.w, o.h, 41, "#d4dee8", "#a0b8c4", "#839ca5");
       const p2 = project((o.x + 0.1) * TILE, (o.y + o.h) * TILE, 26);
       for (let i = 0; i < Math.round(o.w * 5); i++) {
         ctx.fillStyle = ["#c58a69", "#e0c378", "#759aaf", "#9caf81"][i % 4];
@@ -1467,17 +1612,49 @@
       }
       return;
     }
+    if (o.type === "display") {
+      box(o.x, o.y, o.w, o.h, 18, "#f4e5c8", "#c8afa0", "#aa948a");
+      box(o.x + 0.22, o.y + 0.15, o.w - 0.44, 0.68, 30, "#e1f5f2", "#b4d8d8", "#91bdc1");
+      const p2 = project((o.x + o.w / 2) * TILE, (o.y + 0.6) * TILE, 32);
+      polygon([{ x: p2.x - 6, y: p2.y }, { x: p2.x - 4, y: p2.y - 9 }, { x: p2.x + 4, y: p2.y - 9 }, { x: p2.x + 6, y: p2.y }], "#c58166");
+      return;
+    }
     if (o.type === "plant") {
       box(o.x + 0.15, o.y + 0.15, 0.65, 0.65, 13, "#d2a876", "#96704b", "#73563f");
       const p2 = project((o.x + 0.5) * TILE, (o.y + 0.5) * TILE, 30);
+      if (o.variety === "palm") {
+        ctx.fillStyle = "#82684e";
+        ctx.fillRect(p2.x - 2, p2.y - 12, 4, 30);
+        for (const side of [-1, 1]) {
+          polygon([{ x: p2.x, y: p2.y - 8 }, { x: p2.x + side * 8, y: p2.y - 16 }, { x: p2.x + side * 18, y: p2.y - 13 }, { x: p2.x + side * 21, y: p2.y - 4 }], "#618c76");
+          polygon([{ x: p2.x, y: p2.y - 8 }, { x: p2.x + side * 10, y: p2.y - 9 }, { x: p2.x + side * 14, y: p2.y + 8 }], "#86ae88");
+        }
+        return;
+      }
+      if (o.variety === "flowers") {
+        for (const [dx, dy, color] of [[-7, 3, "#cc8492"], [1, -3, "#e2a468"], [8, 1, "#aa91ba"]]) {
+          ctx.fillStyle = "#678b71";
+          ctx.fillRect(p2.x + dx, p2.y + dy, 2, 14);
+          ctx.fillStyle = color;
+          ctx.fillRect(p2.x + dx - 3, p2.y + dy - 2, 8, 5);
+          ctx.fillRect(p2.x + dx - 1, p2.y + dy - 4, 4, 9);
+          ctx.fillStyle = "#ffdf98";
+          ctx.fillRect(p2.x + dx, p2.y + dy, 2, 2);
+        }
+        return;
+      }
       ctx.fillStyle = "#4e7c53";
       ctx.fillRect(p2.x - 8, p2.y - 8, 16, 20);
       ctx.fillStyle = "#7a9e64";
       ctx.fillRect(p2.x - 12, p2.y - 2, 24, 8);
       return;
     }
-    box(o.x + 0.08, o.y + 0.08, o.w - 0.16, o.h - 0.16, 19, "#dfc695", "#ad8c68", "#92724e");
-    if (o.type === "table") return;
+    box(o.x + 0.08, o.y + 0.08, o.w - 0.16, o.h - 0.16, 19, "#f2d6b4", "#cea890", "#b18776");
+    if (o.type === "table") {
+      box(o.x + 0.25, o.y + 0.22, 0.54, 0.4, 21, "#dce9e8", "#96ada9", "#839f9a");
+      box(o.x + 1, o.y + 0.2, 0.54, 0.46, 23, "#d8a7a0", "#bd8c88", "#a67a78");
+      return;
+    }
     const p = project((o.x + 0.5) * TILE, (o.y + 0.5) * TILE, 21);
     if (o.type === "phone") {
       if (o.spot && spotNearby(o.spot)) outlineRect(p.x - 14, p.y - 14, 28, 17);
@@ -1561,7 +1738,7 @@
     };
   }
   function sceneItems(moving) {
-    const floor = floors[runtime.floor], items = [];
+    const floor = floorForScene(runtime.floor, runtime.state.stage), items = [];
     for (const p of floor.partitions) {
       if (p.axis === "v")
         items.push({
@@ -1570,7 +1747,7 @@
           y0: p.from,
           x1: p.at + 0.18,
           y1: p.to,
-          draw: () => box(p.at, p.from, 0.18, p.to - p.from, p.z, "#e0dfca", "#b8bdab", "#96aa9a")
+          draw: () => box(p.at, p.from, 0.18, p.to - p.from, p.z, "#f4e6d8", "#d2d4c7", "#b8c9c0")
         });
       else
         for (let x = p.from; x < p.to; x++)
@@ -1581,7 +1758,7 @@
               y0: p.at,
               x1: x + 1,
               y1: p.at + 0.13,
-              draw: () => box(x, p.at, 1, 0.13, p.z, "#dce1cd", "#a3b5a7", "#93a994")
+              draw: () => box(x, p.at, 1, 0.13, p.z, "#f5eadd", "#c5d6ca", "#afc8be")
             });
     }
     for (const o of floor.furnishings)
@@ -1590,19 +1767,19 @@
       if (runtime.floor === 0) {
         items.push(person(spots.mentor.npcX, spots.mentor.npcY, "mentor"));
         items.push(person(spots.supplier.npcX, spots.supplier.npcY, "supplier"));
-      } else items.push(person(spots.officer.npcX, spots.officer.npcY, "officer"));
+      } else if (runtime.floor === 1) items.push(person(spots.officer.npcX, spots.officer.npcY, "officer"));
     }
     items.push(person(player.x, player.y, runtime.state.stage === 3 ? "supplier" : "rookie", moving));
     return items;
   }
   function draw(t, moving) {
     camera();
-    const floor = floors[runtime.floor];
+    const floor = floorForScene(runtime.floor, runtime.state.stage);
     ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = "#738e84";
+    ctx.fillStyle = "#d7e8e4";
     ctx.fillRect(0, 0, 940, 620);
     for (let i = 0; i < 90; i++) {
-      ctx.fillStyle = i % 2 ? "#78958a" : "#6c877e";
+      ctx.fillStyle = i % 2 ? "#e5eff0" : "#c6ddd9";
       ctx.fillRect(i * 137 % 940, i * 83 % 620, 2, 2);
     }
     polygon(
@@ -1612,7 +1789,7 @@
         project(MAP_W * TILE, MAP_H * TILE),
         project(0, MAP_H * TILE)
       ].map((p2) => ({ x: p2.x, y: p2.y + 8 })),
-      "#385a54"
+      "#8da9a3"
     );
     for (let y = 0; y < MAP_H; y++)
       for (let x = 0; x < MAP_W; x++) {
@@ -1620,16 +1797,26 @@
         tile(
           x,
           y,
-          corridor ? (x + y) % 2 ? "#899e92" : "#96aa9c" : (x + y) % 2 ? "#9da99b" : "#a9b3a3"
+          corridor ? (x + y) % 2 ? "#b7d8d2" : "#c5e1d8" : (x + y) % 2 ? floor.tint || "#e5e2cc" : "#f0ecd9"
         );
       }
-    box(0, 0, 18, 0.12, 37, "#e0e5d0", "#b6c2b2", "#9cae9f");
-    box(0, 0, 0.12, 14, 37, "#e0e5d0", "#b6c2b2", "#9cae9f");
+    box(0, 0, 18, 0.12, 37, "#fbf0dc", "#d6dfd6", "#b9cec5");
+    box(0, 0, 0.12, 14, 37, "#fbf0dc", "#d6dfd6", "#b9cec5");
+    const board = project(9 * TILE, 0, 25);
+    const wallPoint = (offset, z) => ({ x: board.x + offset, y: board.y + offset * 0.5 - z });
+    polygon([wallPoint(-16, -6), wallPoint(16, -6), wallPoint(16, 11), wallPoint(-16, 11)], "#bb9477", "#957b67");
+    for (const [offset, color] of [[-11, "#fff2c9"], [-2, "#d1e6dd"], [7, "#e6cbd5"]])
+      polygon([wallPoint(offset, -2), wallPoint(offset + 6, -2), wallPoint(offset + 6, 6), wallPoint(offset, 6)], color);
     if (runtime.state.stage !== 3) drawElevator();
     const items = sceneItems(moving), dest = spots[guideTarget(nextTarget())];
     if (dest && spotNearby(guideTarget(nextTarget())) && !runtime.modalOpen && !runtime.talkState) drawFloorMarker(dest, items);
     for (const item of paintOrder(items)) item.draw();
     const p = project(player.x, player.y);
+    if (!runtime.titleVisible) {
+      const x = p.x, y = p.y - 54;
+      polygon([{ x, y }, { x: x - 7, y: y - 12 }, { x, y: y - 20 }, { x: x + 7, y: y - 12 }], "#88e6ba", "#265e52");
+      polygon([{ x, y }, { x, y: y - 18 }, { x: x + 6, y: y - 12 }], "#41a782");
+    }
     ctx.fillStyle = "#fff4d7";
     ctx.fillRect(Math.round(p.x - 28), Math.round(p.y + 7), 56, 15);
     ctx.fillStyle = "#3e6359";
@@ -1665,7 +1852,7 @@
   var miniX = (x) => 10 + x / MAP_W * 168;
   var miniY = (y) => 8 + y / MAP_H * 96;
   function miniLayout() {
-    const floor = floors[runtime.floor], r = (n) => Math.round(n * 10) / 10;
+    const floor = floorForScene(runtime.floor, runtime.state.stage), r = (n) => Math.round(n * 10) / 10;
     let walls = "";
     for (const p of floor.partitions)
       if (p.axis === "v")
@@ -1683,7 +1870,7 @@
       }
     return `<path d="M10 ${r(miniY(6))}H178V${r(miniY(9))}H10Z" fill="#c6d2b6"/><path d="${walls}" stroke="#97ad99" stroke-width="2" fill="none"/><g fill="#819c84">${floor.furnishings.filter((o) => o.type !== "plant").map(
       (o) => `<rect x="${r(miniX(o.x))}" y="${r(miniY(o.y))}" width="${r(o.w / MAP_W * 168)}" height="${r(o.h / MAP_H * 96)}"/>`
-    ).join("")}</g><rect x="6" y="${r(miniY(6.6))}" width="6" height="${r(1.8 / MAP_H * 96)}" fill="#4c6268"/>`;
+    ).join("")}</g>` + (runtime.state.stage === 3 ? "" : `<rect x="6" y="${r(miniY(6.6))}" width="6" height="${r(1.8 / MAP_H * 96)}" fill="#4c6268"/>`);
   }
   function intersects(a, b, gap = 0) {
     return a.x < b.x + b.w + gap && a.x + a.w + gap > b.x && a.y < b.y + b.h + gap && a.y + a.h + gap > b.y;
@@ -1693,7 +1880,7 @@
       const p = project(item.x0 * TILE, item.y0 * TILE);
       return { x: p.x - 20, y: p.y - 54, w: 40, h: 58 };
     }
-    const height = item.height ?? ({ shelf: 41, plant: 40, table: 19, phone: 35 }[item.furniture?.type] ?? 46);
+    const height = item.height ?? ({ cabinet: 34, shelf: 41, plant: 40, table: 19, phone: 35 }[item.furniture?.type] ?? 46);
     const corners = [[item.x0, item.y0], [item.x1, item.y0], [item.x1, item.y1], [item.x0, item.y1]].map(([x, y]) => project(x * TILE, y * TILE));
     const xs = corners.map((p) => p.x), ys = corners.map((p) => p.y);
     return {
@@ -1727,16 +1914,15 @@
   }
   function labelVisuals() {
     const scale = runtime.view.scale, screen = (r) => ({ x: (r.x - runtime.view.x) * scale, y: (r.y - runtime.view.y) * scale, w: r.w * scale, h: r.h * scale });
-    const visuals = sceneItems(false).filter((item) => item.actor || item.furniture?.spot && spotActive(item.furniture.spot)).map((item) => ({ id: item.furniture?.spot || Object.keys(spots).find((id) => spots[id].npcX / TILE === item.x0 && spots[id].npcY / TILE === item.y0), ...screen(sceneItemBounds(item)) }));
+    const visuals = sceneItems(false).filter((item) => item.furniture?.spot || item.actor && spotActive(item.actor) && spots[item.actor]?.npcX !== void 0).map((item) => ({ id: item.furniture?.spot || item.actor, ...screen(sceneItemBounds(item)) }));
     return visuals;
   }
   function placeLabel(anchor, size, obstacles, own) {
-    const margin = 8, maxX = Math.max(margin, runtime.view.width - size.w - margin), maxY = Math.max(margin, runtime.view.height - size.h - margin);
     const t = own || { x: anchor.x - 12, y: anchor.y, w: 24, h: 24 };
     const cx = t.x + t.w / 2, cy = t.y + t.h / 2;
     let best = null, score = Infinity;
     const consider = (x, y, rank2) => {
-      const rect = { x: Math.max(margin, Math.min(maxX, x)), y: Math.max(margin, Math.min(maxY, y)), w: size.w, h: size.h };
+      const rect = { x, y, w: size.w, h: size.h };
       let hits = 0;
       for (const obstacle of obstacles) if (intersects(rect, obstacle, 6)) hits++;
       const value = hits * 1e8 + rank2 * 1e3 + Math.hypot(rect.x + size.w / 2 - cx, rect.y + size.h / 2 - cy);
@@ -1748,6 +1934,7 @@
     let rank = 0;
     for (const gap of [10, 26, 44, 66, 90]) {
       const top = t.y - gap - size.h, bottom = t.y + t.h + gap, left = t.x - gap - size.w, right = t.x + t.w + gap;
+      if (own?.id === "cabinet") consider(cx - size.w / 2, bottom, rank++);
       consider(cx - size.w / 2, top, rank++);
       for (let k = 1; k <= 4; k++) for (const d of [k, -k]) consider(cx - size.w / 2 + d * size.w / 3, top, rank++);
       for (let k = 0; k <= 3; k++) for (const d of k ? [k, -k] : [0]) {
@@ -1761,15 +1948,13 @@
   }
   function positionLabels() {
     const visuals = labelVisuals(), obstacles = [...visuals];
-    for (const el of document.querySelectorAll?.(".minimap,.goal-bar,.top-controls,.inventory,.bottom-controls,.mobile-controls,.scene-clock") || []) {
-      const r = el.getBoundingClientRect();
-      if (r.width && r.height) obstacles.push({ x: r.x, y: r.y, w: r.width, h: r.height });
-    }
-    const target = guideTarget(nextTarget()), ids = Object.keys(spots).sort((a, b) => a === target ? -1 : b === target ? 1 : 0);
+    const target = guideTarget(nextTarget()), nearby = interactionTarget();
+    const ids = Object.keys(spots).sort((a, b) => Number(b === target) - Number(a === target));
     for (const id of ids) {
       const el = $("spot-" + id), s = spots[id];
-      el.hidden = !spotActive(id) || id !== target && !spotNearby(id);
+      el.hidden = !spotActive(id) || id !== target && !spotNearby(id) && !(id === "cabinet" && runtime.floor > 1);
       if (el.hidden) continue;
+      el.classList.toggle("in-range", id === nearby);
       const p = project(s.npcX ?? s.x, s.npcY ?? s.y), own = visuals.find((v) => v.id === id);
       const anchor = { x: (p.x - runtime.view.x) * runtime.view.scale, y: own ? own.y - 10 : (p.y - 65 - runtime.view.y) * runtime.view.scale };
       if (own) anchor.x = own.x + own.w / 2;
@@ -1777,12 +1962,14 @@
       el.style.left = r.x + r.w / 2 + "px";
       el.style.top = r.y + r.h / 2 + "px";
       obstacles.push(r);
+      el.style.visibility = r.x + r.w < 0 || r.x > runtime.view.width || r.y + r.h < 0 || r.y > runtime.view.height ? "hidden" : "";
     }
   }
   function updateMap() {
-    if ($("mini-layout").dataset?.floor !== String(runtime.floor)) {
+    const layout = runtime.state.stage === 3 ? "supplier" : String(runtime.floor);
+    if ($("mini-layout").dataset?.floor !== layout) {
       $("mini-layout").innerHTML = miniLayout();
-      $("mini-layout").setAttribute("data-floor", runtime.floor);
+      $("mini-layout").setAttribute("data-floor", layout);
     }
     positionLabels();
     $("mini-player").setAttribute("cx", miniX(player.x / TILE));
@@ -1954,14 +2141,14 @@
     document.body.classList.remove("talking");
     stopVoices();
   }
-  function speak2(name, lines, onDone = () => {
+  function speak(name, lines, onDone = () => {
   }, role = "mentor", reply = "") {
     close();
     stopTalk();
     keys.clear();
     runtime.target = null;
     setNotebook(false);
-    const done = !reply || role === "rookie" || runtime.state.stage === 3 ? onDone : () => speak2("조달달", [reply], onDone, "rookie");
+    const done = !reply || role === "rookie" || runtime.state.stage === 3 ? onDone : () => speak("조달달", [reply], onDone, "rookie");
     runtime.talkState = { name, lines, onDone: done, role, index: 0, revealed: 0 };
     $("speech").hidden = false;
     document.body.classList.add("talking");
@@ -1973,7 +2160,7 @@
   function typeLine() {
     if (!runtime.talkState) return;
     clearTimeout(runtime.talkTimer);
-    const t = runtime.talkState, text = t.lines[t.index];
+    const t = runtime.talkState, line = t.lines[t.index], text = line.text ?? line;
     t.revealed = 0;
     $("speech-text").textContent = "";
     $("speech-count").textContent = `${t.index + 1} / ${t.lines.length}`;
@@ -1988,6 +2175,7 @@
       else {
         $("speech-hint").textContent = t.index === t.lines.length - 1 ? "대화 마치기" : "다음 이야기";
         runtime.talkTimer = null;
+        if (line.term) learnTerm(line.term);
       }
     }
     tick();
@@ -1997,13 +2185,17 @@
     clearTimeout(runtime.talkTimer);
     runtime.talkTimer = null;
     stopVoices();
-    runtime.talkState.revealed = runtime.talkState.lines[runtime.talkState.index].length;
-    $("speech-text").textContent = runtime.talkState.lines[runtime.talkState.index];
+    const line = runtime.talkState.lines[runtime.talkState.index];
+    const text = line.text ?? line;
+    runtime.talkState.revealed = text.length;
+    $("speech-text").textContent = text;
+    if (line.term) learnTerm(line.term);
     $("speech-hint").textContent = runtime.talkState.index === runtime.talkState.lines.length - 1 ? "대화 마치기" : "다음 이야기";
   }
   function nextLine() {
     if (!runtime.talkState) return;
-    if (runtime.talkState.revealed < runtime.talkState.lines[runtime.talkState.index].length) {
+    const line = runtime.talkState.lines[runtime.talkState.index];
+    if (runtime.talkState.revealed < (line.text ?? line).length) {
       revealLine();
       return;
     }
@@ -2026,7 +2218,7 @@
     runtime.state.floor = 0;
     player.x = 14.5 * TILE;
     player.y = 4.5 * TILE;
-    speak2(
+    speak(
       "조달달",
       [
         "요청서의 빈칸부터 계약, 납품과 대금 지급까지 마쳤어. 공정한 기준과 꼼꼼한 확인을 기억할 거야!",
@@ -2081,7 +2273,7 @@
   }
   function cellBlocked(x, y, floor = runtime.floor) {
     if (x < 0 || y < 0 || x >= MAP_W || y >= MAP_H) return true;
-    const f = floors[floor];
+    const f = floorForScene(floor, runtime.state.stage);
     for (const p of f.partitions) {
       if (p.axis === "h" && y === p.at && x >= p.from && x < p.to && !p.doors.includes(x))
         return true;
@@ -2159,7 +2351,10 @@
     if (canWalk(player.x + dx, player.y)) player.x += dx;
     if (canWalk(player.x, player.y + dy)) player.y += dy;
   }
-  function interact() {
+  function interactionTarget() {
+    const goal = guideTarget(nextTarget());
+    if (spots[goal] && spotActive(goal) && Math.hypot(player.x - spots[goal].x, player.y - spots[goal].y) < 55)
+      return goal;
     let closest = null, distance = Infinity;
     for (const [id, p] of Object.entries(spots)) {
       if (!spotActive(id)) continue;
@@ -2169,7 +2364,11 @@
         closest = id;
       }
     }
-    if (distance < 55) actions[closest]();
+    return distance < 55 ? closest : null;
+  }
+  function interact() {
+    const id = interactionTarget();
+    if (id) actions[id]();
     else toast("사람이나 모니터 가까이 다가가 주세요.");
   }
   function frame(t) {
@@ -2246,7 +2445,7 @@
       [runtime.state.product, "공고에 맞는 제품 선택"],
       [runtime.state.eligibility, "참가 조건 확인"],
       [false, "입찰서 제출"]
-    ] : runtime.state.stage === 4 ? [[runtime.state.awardBrief, "3층 계약 담당자에게 설명 듣기"], [runtime.state.openingChecked, "입찰 전 결정한 예정가격 확인"], [false, "선정방식에 따른 심사 확인 후 전자계약"]] : runtime.state.stage === 5 ? [[runtime.state.deliveryIssueReported, "5층에서 납품 부족분 보완 요청"], [runtime.state.inspectionChecked, "보완한 물품의 검사·검수와 인수"], [false, "영수증·납품 서류 확인 후 대금 지급"]] : [
+    ] : runtime.state.stage === 4 ? [[runtime.state.awardBrief, "2층 계약 담당자에게 설명 듣기"], [runtime.state.openingChecked, "입찰 전 결정한 예정가격 확인"], [false, "선정방식에 따른 심사 확인 후 전자계약"]] : runtime.state.stage === 5 ? [[runtime.state.deliveryIssueReported, "5층에서 납품 부족분 보완 요청"], [runtime.state.inspectionChecked, "보완한 물품의 검사·검수와 인수"], [false, "영수증·납품 서류 확인 후 대금 지급"]] : [
       [true, "요청서 확인"],
       [true, "규격 수정 및 공고"],
       [true, "기업 입찰 참여"],
@@ -2277,10 +2476,11 @@
       $("spot-" + id).classList.toggle("target", target === id);
     $("guide-button").textContent = runtime.state.stage === LAST_STAGE ? "완료 기록 보기" : target === "elevator" ? "엘리베이터로 이동" : "다음 목표로 이동";
     $("quest-label").textContent = runtime.state.stage === LAST_STAGE ? "완료" : `퀘스트 ${runtime.state.stage + 1}`;
-    const goalLabels = { mentor: "김주문에게 업무 듣기", phone: runtime.state.stage === 5 ? "5층 · 납품 자료 확인" : "수요기관에 연락", doc: runtime.state.stage === 3 ? "공고에 맞는 제품 고르기" : "내 책상 자료 확인", terminal: runtime.state.stage === 5 ? "5층 · 대금 청구 확인" : "업무용 모니터 사용", officer: runtime.state.stage === 5 ? "3층 · 계약 담당자와 인사하기" : "3층 · 계약 담당자 만나기", bidroom: "3층 · 개찰·계약 자료 확인", result: "완료 기록 다시 보기" };
+    const goalLabels = { mentor: "김주문에게 업무 듣기", phone: runtime.state.stage === 5 ? "5층 · 납품 자료 확인" : "수요기관에 연락", doc: runtime.state.stage === 3 ? "공고에 맞는 제품 고르기" : "내 책상 자료 확인", terminal: runtime.state.stage === 5 ? "5층 · 대금 청구 확인" : "업무용 모니터 사용", officer: runtime.state.stage === 5 ? "2층 · 계약 담당자와 인사하기" : "2층 · 계약 담당자 만나기", bidroom: "2층 · 개찰·계약 자료 확인", result: "완료 기록 다시 보기" };
     $("current-goal").textContent = goalLabels[nextTarget()];
     $("quick-guide").textContent = $("guide-button").textContent;
     renderInventory();
+    renderGlossary();
     if (!runtime.storageOK) $("save-status").textContent = "저장 불가 · 현재 창에서 계속";
   }
   function setNotebook(open) {
@@ -2376,7 +2576,7 @@
         저장 후에는 사무실로 돌아와 선배에게 검토를 요청하세요.
       </p>
       <p>
-        <strong>공간:</strong> 새봄지방조달청 5층 구매팀과 3층 계약팀입니다. 엘리베이터로 층을 옮겨요.
+        <strong>공간:</strong> 미니맵을 눌러 층별 지도를 보세요. 5층 구매팀과 2층 계약 체험실에서 업무를 진행하고, 다른 층의 자료 캐비닛에서는 용어 카드를 찾을 수 있어요.
         기업 단계는 별도 사무실로 전환하며 공간 배치는 체험을 위해 재사용합니다.
       </p>
       <p>
@@ -2610,7 +2810,7 @@
       toast("캐릭터 대화소리를 켠 뒤 들어 주세요.");
       return;
     }
-    Array.from(role === "rookie" ? "이제 나도 조달의 왕이야" : "안녕하세요, 입찰에 참여할게요").forEach(
+    Array.from(role === "rookie" ? "이제나도조달의왕이야" : "안녕하세요입찰에참여할게요").forEach(
       (letter, i) => playSyllable(letter, role, i * 0.095)
     );
   }
@@ -2674,7 +2874,7 @@
       const b = e.target.closest("[data-action]");
       if (b) {
         const a = b.dataset.action;
-        if (runtime.talkState && !runtime.modalOpen && !["talk-next", "sound"].includes(a)) return;
+        if (runtime.talkState && !runtime.modalOpen && !["talk-next", "sound", "glossary", "map"].includes(a)) return;
         unlockAudio();
         if (a.startsWith("go-")) go(a.slice(3));
         else if (actions[a]) actions[a]();
