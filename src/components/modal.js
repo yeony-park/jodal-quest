@@ -10,9 +10,9 @@ export function toast(t) {
   runtime.toastTimer = setTimeout(() => ($("toast").hidden = true), 3000);
 }
 
-function returnBag() {
-  if (runtime.modalKind !== "submission") return;
-  $("game-hud").prepend($("bag"));
+function clearHandoff() {
+  if (!runtime.pendingSubmission) return;
+  $("handoff-dock").hidden = true;
   runtime.pendingSubmission = null;
   $("bag").classList.remove("submission-active");
   for (const slot of $("inventory-slots").querySelectorAll("button")) {
@@ -23,7 +23,7 @@ function returnBag() {
 }
 
 export function show(title, body, kind = "", closable = true) {
-  returnBag();
+  clearHandoff();
   stopVoices();
   setNotebook(false);
   $("game-shell").inert = true;
@@ -41,7 +41,7 @@ export function show(title, body, kind = "", closable = true) {
 }
 
 export function close() {
-  returnBag();
+  clearHandoff();
   stopVoices();
   $("game-shell").inert = runtime.titleVisible;
   runtime.modalOpen = false;

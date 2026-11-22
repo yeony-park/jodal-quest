@@ -44,7 +44,6 @@ export function startGame(isNew) {
   stopTitleCall();
   stopLiftArrival();
   stopTalk();
-  runtime.pendingSubmission=null;
   runtime.submittedSteps.clear();
   close();
   if (isNew) {

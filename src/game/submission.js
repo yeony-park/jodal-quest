@@ -1,8 +1,7 @@
 import { playPaperTurn } from "../audio/sound.js";
 import { runtime } from "../core/runtime.js";
 import { inventoryItems, itemDescription, itemIcon, ownedItems, renderInventory } from "../components/inventory.js";
-import { close, show } from "../components/modal.js";
-import { face } from "../world/characters.js";
+import { close } from "../components/modal.js";
 import { $ } from "../core/dom.js";
 
 export const submissionSteps = {
@@ -44,21 +43,18 @@ export function requestSubmission(target, onSubmit) {
   const atDesk = target === "doc" || target === "terminal" || target === "bidroom";
   const recipient = {doc: "내 책상", terminal: "업무용 모니터", bidroom: "개찰·계약 자료실",
     mentor: "김주문", officer: "이계약 주무관", phone: "한서진 사서"}[target];
-  const role = atDesk ? (runtime.state.stage === 3 ? "supplier" : "rookie")
-    : {mentor: "mentor", officer: "officer", phone: "contact"}[target];
   const expectedItem = submissionSteps[step].item;
   const expected = inventoryItems[expectedItem].name;
   const verb = atDesk ? "펼치기" : "건네기";
-  show(recipient, `<div class="handoff-counter">
-      <div class="handoff-avatar">${face(role)}</div>
-      <div class="handoff-task">${expected} ${verb}
-        <p id="submission-hint" role="status">가방에서 ${expected} 칸을 눌러 주세요.</p></div>
-      <div id="handoff-inventory"></div>
-      <button id="handoff-tray" data-action="hand-over" aria-disabled="true">
-        <span id="handoff-paper" aria-hidden="true">⇢</span><span id="handoff-label">여기에 놓아 펼치기</span>
-      </button></div>`, "submission");
+  close();
+  $("handoff-recipient").textContent = recipient;
+  $("submission-hint").textContent = `아래 가방에서 ‘${expected}’ 칸을 눌러 주세요.`;
+  $("handoff-paper").textContent = "⇣";
+  $("handoff-label").textContent = "여기에 " + verb;
+  $("handoff-tray").setAttribute("aria-disabled", "true");
+  $("handoff-dock").hidden = false;
   runtime.pendingSubmission = {step, onSubmit, selected: null, verb, expectedItem};
-  $("handoff-inventory").append($("bag"));
+
   renderInventory();
 }
 
@@ -103,7 +99,7 @@ export function handOverDocument(dropped = false) {
 
 export function submitItem(item) {
   const pending=runtime.pendingSubmission;
-  if (!pending || runtime.modalKind!=="submission") return false;
+  if (!pending) return false;
   if (!matchesSubmission(pending.step,item) || !ownedItems()[item]) {
     const name=inventoryItems[submissionSteps[pending.step].item].name;
     $("submission-hint").textContent = `이번에 필요한 서류는 ${name}입니다. 가방을 다시 살펴보세요.`;

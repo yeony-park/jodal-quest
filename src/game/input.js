@@ -23,6 +23,7 @@ let lastMoveKey = null, lastMoveTime = -Infinity;
 
 function pressMove(key, time) {
   if (keys.has(key)) return;
+  if (runtime.pendingSubmission) close();
   runtime.runKey = key === lastMoveKey && time - lastMoveTime <= doubleTapWindow ? key : null;
   if (runtime.runKey) {
     const dx = ["d", "arrowright", "s", "arrowdown"].includes(key) ? 10 : -10;
@@ -35,6 +36,11 @@ function pressMove(key, time) {
 }
 
 export function handleKey(e) {
+  if (runtime.pendingSubmission && e.key === "Escape") {
+    close();
+    canvas.focus({preventScroll: true});
+    return;
+  }
   if (liftOpening()) { e.preventDefault(); return; }
   if (runtime.modalKind === "delivery-surprise") {
     e.preventDefault();

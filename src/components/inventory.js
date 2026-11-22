@@ -78,7 +78,7 @@ export function renderInventory() {
         >
           <span class="slot-number">${i + 1}</span
           >${owned[i] ? itemIcon(i) : '<span class="slot-empty">·</span>'}<span class="slot-name"
-            >${owned[i] ? item.name : "빈칸"}</span
+            >${owned[i] ? item.name : ""}</span
           >
         </button>`,
     )
