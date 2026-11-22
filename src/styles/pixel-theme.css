@@ -366,3 +366,23 @@
 @media (pointer: coarse) {
   .hotspot.in-range::after { content: "누르기"; }
 }
+
+.title-screen:not(.intro-playing) > :not(#title-enter) { visibility: hidden; }
+#title-enter:not([hidden]) { position: absolute; inset: 0; z-index: 2; width: 100%; color: #35584c; background: #ecf2de; font: bold 24px var(--hand); }
+
+#first-day { position: fixed; inset: 0; z-index: 12; background: #35454a; }
+#first-day img { width: 100%; height: 100%; object-fit: cover; object-position: center 65%; image-rendering: pixelated; }
+#first-day > span { position: absolute; top: clamp(14px, 4vh, 40px); left: clamp(14px, 4vw, 64px); padding: 7px 14px; color: #314741; background: #fff8e7; border: 2px solid #779188; box-shadow: 3px 3px #37453f80; font-weight: bold; }
+body:has(#first-day:not([hidden])) #game-shell { visibility: hidden; }
+#first-day:not([hidden]) + .speech { bottom: max(12px, 3vh); padding: 22px 24px 12px; width: min(620px, calc(100vw - 28px)); }
+#first-day:not([hidden]) + .speech .speech-portrait, #first-day:not([hidden]) + .speech::before { display: none; }
+#first-day:not([hidden]) + .speech .speech-name { left: 22px; top: -18px; }
+#first-day:not([hidden]) + .speech .speech-text { min-height: 1.6em; }
+@media (max-width: 700px) {
+  #first-day:not([hidden]) + .speech { padding-top: 38px; }
+  #first-day:not([hidden]) + .speech .speech-name { top: 5px; }
+}
+@media (max-aspect-ratio: 1/1) {
+  #first-day img { height: 80%; object-position: center center; }
+}
+

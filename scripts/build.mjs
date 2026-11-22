@@ -39,6 +39,7 @@ const options = {
         builder.onEnd(async (result) => {
           if (!result.errors.length) {
             await writeFile(path.join(outdir, "index.html"), await renderPage());
+            await copyFile(path.join(root, "assets/scenes/first-day.webp"), path.join(outdir, "assets/first-day.webp"));
             await copyFile(
               path.join(root, "assets/FONT-LICENSE.txt"),
               path.join(outdir, "FONT-LICENSE.txt"),
