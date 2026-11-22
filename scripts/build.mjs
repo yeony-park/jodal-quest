@@ -6,6 +6,8 @@ import path from "node:path";
 const root = fileURLToPath(new URL("../", import.meta.url));
 async function renderPage() {
   let html = await readFile(path.join(root, "index.html"), "utf8");
+  // 루트 index.html을 바로 연 사람을 dist로 보내는 줄은 배포본에서 뺍니다.
+  html = html.replace(/^.*data-source-only.*\r?\n/m, "");
   for (const match of html.matchAll(/<!-- component:([a-z-]+) -->/g)) {
     html = html.replace(
       match[0],

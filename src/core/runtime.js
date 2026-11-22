@@ -6,6 +6,10 @@ export const player = { x: 464, y: 144 };
 
 export const runtime = {
   state: fresh(),
+  lastXP: "",
+  pendingSubmission: null,
+  submittedSteps: new Set(),
+  floor: 0,
   storageOK: true,
   loaded: false,
   modalOpen: false,
@@ -13,6 +17,7 @@ export const runtime = {
   modalKind: "",
   toastTimer: null,
   target: null,
+  touchKey: null,
   last: 0,
   walk: 0,
   audioCtx: null,
@@ -20,6 +25,7 @@ export const runtime = {
   muted: false,
   volume: 0.28,
   supplierVoiceReady: null,
+  rookieVoiceReady: null,
   talkState: null,
   talkTimer: null,
   titleVisible: true,

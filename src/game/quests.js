@@ -1,3 +1,6 @@
+import { awardQuestXP, xpReward } from "./progression.js";
+import { beginRecovery } from "./recovery.js";
+import { lessonCard } from "../components/learning.js";
 import { runtime } from "../core/runtime.js";
 import { save } from "../core/storage.js";
 import { buttons, close, doc, show, toast } from "../components/modal.js";
@@ -6,7 +9,6 @@ import { chime } from "../audio/sound.js";
 import { speak } from "../components/dialogue.js";
 import { actions } from "./actions.js";
 import { $ } from "../core/dom.js";
-import { ending } from "../components/ending.js";
 
 export function nextTarget() {
   if (runtime.state.stage === 0)
@@ -14,20 +16,15 @@ export function nextTarget() {
   if (runtime.state.stage === 1) return !runtime.state.specAdvice ? "mentor" : "doc";
   if (runtime.state.stage === 2) return !runtime.state.noticeChecked ? "terminal" : "mentor";
   if (runtime.state.stage === 3) return !runtime.state.product ? "doc" : "terminal";
+  if (runtime.state.stage === 4) return !runtime.state.awardBrief ? "officer" : !runtime.state.openingChecked ? "bidroom" : "officer";
+  if (runtime.state.stage === 5 && runtime.floor === 1 && !runtime.state.contractFarewell) return "officer";
+  if (runtime.state.stage === 5) return !runtime.state.inspectionChecked ? "phone" : "terminal";
   return "result";
 }
 
-export function wrong(text, back) {
-  runtime.state.mistakes++;
-  save();
-  show(
-    "잠깐, 한 번 더 확인해요",
-    /* HTML */ `<div class="alert">${text}</div>
-      <p>아직 제출되지 않았어요. 자료를 다시 확인하고 수정할 수 있어요.</p>
-      ${buttons([[back, "다시 검토하기"]])}`,
-    "feedback",
-    false,
-  );
+export function wrong(text, back, id) {
+  const ids = ["intake", "spec-brand", "notice", "product", back === "bidroom" ? "opening" : "contract", back === "phone" ? "delivery" : "payment"];
+  beginRecovery(id || ids[runtime.state.stage]);
 }
 
 export function complete(title, body) {
@@ -36,6 +33,7 @@ export function complete(title, body) {
   runtime.state.history.push(
     ["요청서 확인 및 접수 준비", "경쟁 가능한 규격 수정", "검토·결재 후 공고 게시"][completed],
   );
+  awardQuestXP();
   runtime.state.stage++;
   save();
   render();
@@ -45,6 +43,7 @@ export function complete(title, body) {
       <p>
         ${completed === 2 ? "검토·결재를 거쳐 공고가 게시됐습니다. 다음 장면에서는 기업 담당자로 전환합니다." : "퀘스트 완료! 진행 상황을 이 브라우저에 저장했습니다."}
       </p>
+      ${xpReward()}${lessonCard(completed)}
       ${buttons([["advance", completed === 2 ? "기업 담당자로 전환" : "다음 퀘스트"]])}`,
     "advance",
     false,
@@ -65,6 +64,8 @@ export function mentor() {
         save();
         render();
       },
+      "mentor",
+      "네! 수요기관에 납기를 확인하고 요청서를 보완할게요.",
     );
   } else if (runtime.state.stage === 1) {
     speak(
@@ -79,12 +80,14 @@ export function mentor() {
         save();
         render();
       },
+      "mentor",
+      "알겠습니다. 성능 기준으로 수정안을 만들어 볼게요.",
     );
   } else if (runtime.state.stage === 2) {
     if (!runtime.state.noticeChecked) {
       speak("김주문", [
         "공고 초안을 먼저 확인해 주세요. 요청서는 모니터 20대였죠? 수량이 같은지 대조해 보세요.",
-      ]);
+      ], () => {}, "mentor", "네, 요청서와 수량을 대조해 볼게요.");
       return;
     }
     speak(
@@ -94,8 +97,17 @@ export function mentor() {
         "이제 권한 있는 담당자의 구매결의·결재 절차로 넘길게요. 그 절차가 끝나야 공고가 게시됩니다.",
       ],
       () => actions.approve(),
+      "mentor",
+      "검토 감사합니다! 결재가 끝나면 공고를 확인할게요.",
     );
-  } else speak("김주문", ["수고했어요, 조달달 주무관! 확인하고 협의하는 습관을 기억하세요."]);
+  } else
+    speak(
+      "김주문",
+      ["수고했어요, 조달달 주무관! 확인하고 협의하는 습관을 기억하세요."],
+      () => {},
+      "mentor",
+      "네, 선배님. 꼭 기억할게요!",
+    );
 }
 
 export function phone() {
@@ -117,6 +129,7 @@ export function phone() {
         toast("납기 30일 · 2층 자료실을 기록했어요.");
       },
       "contact",
+      "확인 감사합니다. 계약일로부터 30일 이내, 2층 자료실로 적어 둘게요.",
     );
   } else show("수요기관 확인 메모", `${requestDoc()}${buttons([["close", "돌아가기"]])}`);
 }
@@ -125,7 +138,7 @@ export function requestDoc() {
   return doc("물품 구매 요청서", [
     ["수요기관", "새봄도서관"],
     ["구매 물품", "이용자용 모니터 20대"],
-    ["배정 예산", "20,000,000원 (가상 설정)"],
+    ["배정 예산", "20,000,000원"],
     ["사용 목적", "자료실에서 문서·자료 열람"],
     ["납품기한", runtime.state.contact ? "계약일로부터 30일 이내" : "미기재 · 확인 필요"],
     ["납품 장소", runtime.state.contact ? "새봄도서관 2층 자료실" : "새봄도서관"],
@@ -136,7 +149,7 @@ export function documentDesk() {
   if (runtime.state.stage === 0) {
     show(
       "첫 요청서를 검토하세요",
-      `${requestDoc()}<p>접수 준비를 마치려면 어떻게 해야 할까요?</p><div class="choices"><button class="choice" data-action="intake-good">확인한 납기를 보완하고 검토를 요청한다<small>수요기관 확인 내용으로 빈칸을 채웁니다.</small></button><button class="choice" data-action="intake-bad">급하니 납기를 임의로 7일로 적는다<small>빠른 처리를 위해 내가 정합니다.</small></button></div>`,
+      `${requestDoc()}<p>접수 준비를 마치려면 어떻게 해야 할까요?</p><div class="choices"><button class="choice" data-action="intake-good">확인한 납기를 보완하고 검토를 요청한다</button><button class="choice" data-action="intake-bad">급하니 납기를 임의로 7일로 적는다</button></div>`,
     );
   } else if (runtime.state.stage === 1) {
     show(
@@ -146,7 +159,7 @@ export function documentDesk() {
         ["사용 목적", "문서 및 자료 열람"],
         ["필요 성능", "24형 이상 · FHD 이상 · HDMI 연결"],
         ["수량", "20대"],
-      ])}<p>검토 의견으로 가장 알맞은 것은?</p><div class="choices"><button class="choice" data-action="spec-bad">기존 브랜드와 모델명 제한을 그대로 유지한다</button><button class="choice" data-action="spec-good">협의한 성능 기준으로 수정안을 작성한다<small>브랜드 제한 대신 크기·해상도·연결 조건을 명시합니다.</small></button><button class="choice" data-action="spec-empty">경쟁이 쉬워지도록 모든 규격을 삭제한다</button></div>`,
+      ])}<p>검토 의견으로 가장 알맞은 것은?</p><div class="choices"><button class="choice" data-action="spec-bad">기존 브랜드와 모델명 제한을 그대로 유지한다</button><button class="choice" data-action="spec-good">협의한 성능 기준으로 수정안을 작성한다</button><button class="choice" data-action="spec-empty">경쟁이 쉬워지도록 모든 규격을 삭제한다</button></div>`,
     );
   } else if (runtime.state.stage === 3) {
     show(
@@ -155,7 +168,10 @@ export function documentDesk() {
         ["구매 수량", "20대"],
         ["필요 성능", "24형 이상 · FHD 이상 · HDMI 연결"],
         ["납품기한", "계약일로부터 30일 이내"],
-      ])}<div class="choices"><button class="choice" data-action="product-good">새봄 M24 · 24형 / FHD / HDMI<small>20대 공급 가능 · 계약 후 20일 내 납품 가능</small></button><button class="choice" data-action="product-bad">새봄 C22 · 22형 / FHD / HDMI<small>20대 공급 가능 · 저렴하지만 화면 크기가 부족합니다.</small></button></div>`,
+      ])}${doc("제품 자료", [
+        ["새봄 M24", "24형 / FHD / HDMI · 20대 공급 · 계약 후 20일 내 납품"],
+        ["새봄 C22", "22형 / FHD / HDMI · 20대 공급 · 계약 후 20일 내 납품"],
+      ])}<div class="choices"><button class="choice" data-action="product-good">새봄 M24 · 24형 / FHD / HDMI</button><button class="choice" data-action="product-bad">새봄 C22 · 22형 / FHD / HDMI</button></div>`,
     );
   } else show("확인한 구매 요청서", `${requestDoc()}${buttons([["close", "확인 완료"]])}`);
 }
@@ -166,7 +182,7 @@ export function tutorial() {
     [
       "반가워요, 조달달 주무관! 새봄지방조달청에 온 걸 환영해요. 첫 업무는 제가 옆에서 알려 줄게요.",
       "방향키나 WASD로 걸어 보세요. 사람이나 책상 이름을 누르면 알아서 찾아가요. 대화는 스페이스바로 넘기면 돼요.",
-      "왼쪽 위 작은 지도에서 내 위치를 볼 수 있어요. 오른쪽 위는 제 업무 노트, 아래 5칸은 물건을 모으는 인벤토리예요.",
+      "왼쪽 위 작은 지도에서 내 위치를 볼 수 있어요. 오른쪽 위는 제 업무 노트, 아래 7칸은 물건을 모으는 인벤토리예요.",
       "우리는 내용을 확인하고 초안을 준비해요. 공고는 검토와 담당자 결재를 거칩니다. 혼자 확정하면 안 돼요.",
       "첫 의뢰는 도서관 모니터 20대예요. 요청서에 납기가 빠졌네요. 연락 데스크에서 확인해 주세요. 노트에도 적어 둘게요.",
     ],
@@ -177,6 +193,8 @@ export function tutorial() {
       setNotebook(true);
       toast("첫 업무를 받았어요. 김주문의 노트를 확인해 보세요.");
     },
+    "mentor",
+    "네, 선배님! 연락 데스크에서 납기부터 확인해 볼게요.",
   );
 }
 
@@ -189,6 +207,7 @@ export function supplierNPC() {
     ],
     () => {},
     "supplier",
+    "반갑습니다! 공고가 게시되면 잘 부탁드려요.",
   );
 }
 
@@ -207,6 +226,7 @@ export function finishBid() {
     return;
   }
   runtime.state.history.push("기업 모의 입찰서 접수");
+  awardQuestXP();
   runtime.state.stage = 4;
   runtime.portalSignedIn = false;
   save();
@@ -219,7 +239,20 @@ export function finishBid() {
       "모의 입찰서가 접수됐어요! 공고를 꼼꼼히 읽으니 제출까지 할 수 있었네요.",
       "접수는 낙찰이나 계약 체결이 아니에요. 다음 절차가 남아 있다는 점도 기억할게요.",
     ],
-    ending,
+    () => {
+      runtime.floor = 0;
+      runtime.state.floor = 0;
+      render();
+      show("모의 입찰서 접수 완료", `<div class="success">입찰서가 접수됐어요. 이어서 낙찰자 선정과 계약 절차를 배워요.</div>${xpReward()}${lessonCard(3)}${buttons([["return-rookie", "조달달로 돌아가 다음 업무 받기"]])}`, "advance", false);
+    },
     "supplier",
   );
+}
+
+export function returnRookie() {
+  if (runtime.state.stage !== 4) return;
+  speak("김주문", [
+    "조달달 주무관으로 돌아왔어요. 모의 입찰서는 접수됐고, 이제 낙찰자 선정과 계약 절차를 배울 차례예요.",
+    "복도 왼쪽 엘리베이터를 타고 3층 계약 담당자에게 가 보세요. 노트의 다음 목표 버튼도 안내해 줄 거예요.",
+  ], () => {}, "mentor", "네! 엘리베이터를 타고 3층으로 가 볼게요.");
 }

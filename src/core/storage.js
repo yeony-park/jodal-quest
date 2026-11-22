@@ -1,3 +1,6 @@
+import { recoveryScenes } from "../data/recovery.js";
+import { fresh } from "../data/initial-state.js";
+import { LAST_STAGE } from "../data/quests.js";
 import { runtime } from "./runtime.js";
 import { $ } from "./dom.js";
 
@@ -9,9 +12,26 @@ export function loadGame() {
     if (
       s &&
       s.version === 1 &&
+      (s.recoveries === undefined || (
+        Array.isArray(s.recoveries) &&
+        s.recoveries.length <= Object.keys(recoveryScenes).length &&
+        s.recoveries.every(id => typeof id === "string" && Object.hasOwn(recoveryScenes,id)) &&
+        new Set(s.recoveries).size === s.recoveries.length
+      )) &&
+      (s.pendingRecovery === undefined || s.pendingRecovery === null || (
+        typeof s.pendingRecovery === "string" &&
+        Object.hasOwn(recoveryScenes,s.pendingRecovery) &&
+        recoveryScenes[s.pendingRecovery].stage === s.stage
+      )) &&
+      (s.xp === undefined || (Number.isInteger(s.xp) && s.xp >= s.stage * 100 && s.xp <= s.stage * 125 && s.xp % 25 === 0)) &&
+      (s.questMistakes === undefined || (Number.isInteger(s.questMistakes) && s.questMistakes >= 0 && s.questMistakes <= s.mistakes)) &&
       Number.isInteger(s.stage) &&
       s.stage >= 0 &&
-      s.stage <= 4 &&
+      s.stage <= LAST_STAGE &&
+      (s.floor === undefined || s.floor === 0 || s.floor === 1) &&
+      ["contractFarewell", "awardBrief", "openingChecked", "deliveryIssueReported", "inspectionChecked"].every(
+        (k) => s[k] === undefined || typeof s[k] === "boolean",
+      ) &&
       [
         "started",
         "brief",
@@ -26,7 +46,9 @@ export function loadGame() {
       Array.isArray(s.history) &&
       s.history.every((x) => typeof x === "string")
     ) {
-      runtime.state = s;
+      runtime.state = { ...fresh(), ...s, xp: s.xp ?? s.stage * 100, questMistakes: s.questMistakes ?? s.mistakes };
+      runtime.floor = s.stage === 3 ? 0 : runtime.state.floor;
+      runtime.state.floor = runtime.floor;
       runtime.loaded = s.started;
     }
   } catch (e) {

@@ -1,4 +1,6 @@
-import { player, runtime } from "../core/runtime.js";
+import { showRecovery } from "../game/recovery.js";
+import { LAST_STAGE } from "../data/quests.js";
+import { keys, player, runtime } from "../core/runtime.js";
 import { $ } from "../core/dom.js";
 import { face } from "../world/characters.js";
 import { unlockAudio } from "../audio/sound.js";
@@ -22,9 +24,14 @@ export function intro() {
 export function startGame(isNew) {
   unlockAudio();
   stopTalk();
+  runtime.pendingSubmission=null;
+  runtime.submittedSteps.clear();
   close();
   if (isNew) {
     runtime.state = fresh();
+    runtime.lastXP = "";
+    runtime.floor = 0;
+    runtime.target = null;
     runtime.state.started = true;
     runtime.loaded = true;
     player.x = 464;
@@ -32,12 +39,19 @@ export function startGame(isNew) {
     runtime.portalSignedIn = false;
     save();
   }
+  keys.clear();
+  runtime.target = null;
+  if (!isNew && runtime.floor === 1) {
+    player.x = 48;
+    player.y = 240;
+  }
   runtime.titleVisible = false;
   $("title-screen").hidden = true;
   document.body.classList.remove("title-mode");
   $("game-shell").inert = false;
   setNotebook(false);
   render();
-  if (runtime.state.stage === 0 && !runtime.state.brief) tutorial();
-  else if (runtime.state.stage === 4) result();
+  if (runtime.state.pendingRecovery) showRecovery();
+  else if (runtime.state.stage === 0 && !runtime.state.brief) tutorial();
+  else if (runtime.state.stage === LAST_STAGE) result();
 }

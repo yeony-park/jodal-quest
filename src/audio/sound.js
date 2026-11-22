@@ -2,22 +2,44 @@ import { runtime } from "../core/runtime.js";
 import { show, toast } from "../components/modal.js";
 import { $ } from "../core/dom.js";
 import supplierVoiceData from "../../assets/audio/yon-voice-bank.wav";
+import rookieVoiceData from "../../assets/audio/jodal-voice-bank.wav";
 
 export const voiceClips = new Map();
 
 export const activeSounds = new Set();
 
+// Register a processed recording without changing another character's voice.
+// Offsets and duration are seconds; the recording remains an offline build asset.
+export async function loadVoiceBank(role, bytes, offsets, segment = 0.085) {
+  if (!["rookie", "supplier"].includes(role) || !runtime.audioCtx)
+    throw new Error("Unsupported voice role or unavailable audio context");
+  if (!(segment > 0) || !Number.isFinite(segment) || !Array.isArray(offsets) || !offsets.length ||
+      offsets.some((n) => !Number.isFinite(n) || n < 0))
+    throw new Error("Invalid voice segments");
+  const buffer = await runtime.audioCtx.decodeAudioData(bytes);
+  if (offsets.some((n) => n + segment > buffer.duration + 1e-6))
+    throw new Error("Voice segment exceeds recording duration");
+  const clip = { buffer, offsets: [...offsets], segment };
+  voiceClips.set(role, clip);
+  return clip;
+}
+
 export function loadSupplierVoice() {
   if (runtime.supplierVoiceReady) return;
-  runtime.supplierVoiceReady = runtime.audioCtx
-    .decodeAudioData(Uint8Array.from(atob(supplierVoiceData), (c) => c.charCodeAt(0)).buffer)
-    .then((buffer) => {
-      voiceClips.set("supplier", {
-        buffer,
-        offsets: Array.from({ length: 24 }, (_, i) => i * 0.1),
-      });
-    })
-    .catch(() => toast("녹음 재생을 지원하지 않아 기본 목소리를 사용합니다."));
+  runtime.supplierVoiceReady = loadVoiceBank(
+    "supplier",
+    Uint8Array.from(atob(supplierVoiceData), (c) => c.charCodeAt(0)).buffer,
+    Array.from({ length: 24 }, (_, i) => i * 0.1),
+  ).catch(() => toast("녹음 재생을 지원하지 않아 기본 목소리를 사용합니다."));
+}
+
+export function loadRookieVoice() {
+  if (runtime.rookieVoiceReady) return;
+  runtime.rookieVoiceReady = loadVoiceBank(
+    "rookie",
+    Uint8Array.from(atob(rookieVoiceData), (c) => c.charCodeAt(0)).buffer,
+    Array.from({ length: 24 }, (_, i) => i * 0.1),
+  ).catch(() => toast("조달달 녹음을 재생하지 못해 기본 목소리를 사용합니다."));
 }
 
 export function unlockAudio() {
@@ -29,6 +51,7 @@ export function unlockAudio() {
     runtime.master.gain.value = runtime.muted ? 0 : runtime.volume;
     runtime.master.connect(runtime.audioCtx.destination);
     loadSupplierVoice();
+    loadRookieVoice();
   }
   if (runtime.audioCtx.state === "suspended")
     runtime.audioCtx
@@ -67,13 +90,14 @@ export function playSyllable(letter, role = "mentor", delay = 0) {
     return;
   const clip = voiceClips.get(role),
     code = letter.codePointAt(0) || 0,
-    rate = (role === "rookie" ? 1.7 : 1.4) + (code % 7) * 0.045;
+    rate = (!clip && role === "rookie" ? 1.7 : 1.4) + (code % 7) * 0.045;
   const source = runtime.audioCtx.createBufferSource(),
     gain = runtime.audioCtx.createGain();
   let offset = 0,
     segment = 0.085;
   if (clip) {
     source.buffer = clip.buffer;
+    segment = clip.segment;
     offset = clip.offsets[code % clip.offsets.length];
   } else {
     const length = Math.floor(runtime.audioCtx.sampleRate * segment),
@@ -152,18 +176,19 @@ export function soundSettings() {
         여성 기업 담당자 욘 대리는 팀원의 실제 녹음을 짧게 잘라 웅얼거리는 목소리로 말합니다.
       </p>
       <div class="sound-row">
-        <label for="volume">음량</label
+        <label for="volume">마스터 음량</label
         ><input
           id="volume"
           type="range"
           min="0"
           max="70"
           value="${Math.round(runtime.volume * 100)}"
-          aria-label="음량"
+          aria-label="마스터 음량 · 모든 소리"
         />
       </div>
-      <p>김주문과 조달달은 기본 합성 목소리를 사용합니다.</p>
+      <p>조달달은 사용자가 제공한 녹음의 발성 조각을 사용합니다. 김주문과 다른 인물은 기본 합성 목소리를 사용합니다.</p>
       <div class="actions">
+        <button class="primary" data-action="rookie-voice-preview">조달달 목소리 듣기</button>
         <button class="primary" data-action="voice-preview">욘 대리 목소리 듣기</button
         ><button class="secondary" data-action="mute" id="mute-button">
           ${runtime.muted ? "소리 켜기" : "소리 끄기"}</button
@@ -173,17 +198,17 @@ export function soundSettings() {
   );
 }
 
-export async function previewVoice() {
+export async function previewVoice(role = "supplier") {
   if (!unlockAudio()) return;
-  await runtime.supplierVoiceReady;
+  await (role === "rookie" ? runtime.rookieVoiceReady : runtime.supplierVoiceReady);
   stopSounds();
   if (runtime.muted) {
     toast("소리를 켠 뒤 들어 주세요.");
     return;
   }
-  Array.from("안녕하세요입찰에참여할게요").forEach((letter, i) =>
-    playSyllable(letter, "supplier", i * 0.095),
+  Array.from(role === "rookie" ? "이제나도조달의왕이야" : "안녕하세요입찰에참여할게요").forEach((letter, i) =>
+    playSyllable(letter, role, i * 0.095),
   );
 }
 
-export { supplierVoiceData };
+export { supplierVoiceData, rookieVoiceData };

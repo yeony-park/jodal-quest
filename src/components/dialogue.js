@@ -15,13 +15,18 @@ export function stopTalk() {
   stopSounds();
 }
 
-export function speak(name, lines, onDone = () => {}, role = "mentor") {
+// reply: 대화가 끝난 뒤 조달달이 녹음 목소리로 하는 짧은 대답. 대화마다 따로 적습니다.
+export function speak(name, lines, onDone = () => {}, role = "mentor", reply = "") {
   close();
   stopTalk();
   keys.clear();
   runtime.target = null;
   setNotebook(false);
-  runtime.talkState = { name, lines, onDone, role, index: 0, revealed: 0 };
+  const done =
+    !reply || role === "rookie" || runtime.state.stage === 3
+      ? onDone
+      : () => speak("조달달", [reply], onDone, "rookie");
+  runtime.talkState = { name, lines, onDone: done, role, index: 0, revealed: 0 };
   $("speech").hidden = false;
   document.body.classList.add("talking");
   $("speech-name").textContent = name;

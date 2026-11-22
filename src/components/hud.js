@@ -1,4 +1,6 @@
-import { quests } from "../data/quests.js";
+import { LAST_STAGE, questNames, quests } from "../data/quests.js";
+import { floors, spots } from "../data/world.js";
+import { guideTarget } from "../world/navigation.js";
 import { runtime } from "../core/runtime.js";
 import { $ } from "../core/dom.js";
 import { nextTarget } from "../game/quests.js";
@@ -6,7 +8,7 @@ import { renderInventory } from "./inventory.js";
 
 export function render() {
   const q = quests[runtime.state.stage];
-  $("steps").innerHTML = ["요청서 접수", "규격 검토", "입찰 공고", "기업 입찰 참여"]
+  $("steps").innerHTML = questNames
     .map(
       (n, i) =>
         /* HTML */ `<div
@@ -26,7 +28,7 @@ export function render() {
   $("quest-title").textContent = q.title;
   $("quest-desc").textContent = q.desc;
   $("memo").textContent = q.memo;
-  $("quest-count").textContent = runtime.state.stage + " / 4";
+  $("quest-count").textContent = runtime.state.stage + " / " + LAST_STAGE;
   const tasks =
     runtime.state.stage === 0
       ? [
@@ -50,10 +52,15 @@ export function render() {
                 [runtime.state.eligibility, "참가 조건 확인"],
                 [false, "모의 입찰서 제출"],
               ]
-            : [
+            : runtime.state.stage === 4
+              ? [[runtime.state.awardBrief, "3층 계약 담당자에게 설명 듣기"], [runtime.state.openingChecked, "입찰 전 결정한 예정가격 확인"], [false, "선정방식에 따른 심사 확인 후 전자계약"]]
+              : runtime.state.stage === 5
+                ? [[runtime.state.deliveryIssueReported, "5층에서 납품 부족분 보완 요청"], [runtime.state.inspectionChecked, "보완한 물품의 검사·검수와 인수"], [false, "영수증·납품 서류 확인 후 대금 지급"]]
+                : [
                 [true, "요청서 확인"],
                 [true, "규격 수정 및 공고"],
                 [true, "기업 입찰 참여"],
+                [true, "계약·납품·대금 지급"],
               ];
   $("todos").innerHTML = tasks
     .map(
@@ -64,15 +71,17 @@ export function render() {
     )
     .join("");
   $("location").textContent =
-    runtime.state.stage === 3 ? "새봄테크 · 영업팀 사무실" : "새봄지방조달청 · 구매팀";
+    runtime.state.stage === 3 ? "새봄테크 영업팀" : floors[runtime.floor].caption;
   $("player-label").textContent =
-    runtime.state.stage === 3 ? "욘 대리 · 기업 담당자" : "플레이어 · 조달달 / 신입 9급 주무관";
+    runtime.state.stage === 3 ? "욘 대리 · 기업 담당자" : "조달달 · 신입 9급 주무관";
   $("scene-time").textContent = [
     "DAY 01 · 09:00",
     "DAY 01 · 10:00",
-    "공고 준비 · 시간 축약",
-    "입찰 참여 · 시간 축약",
-    "EPISODE CLEAR",
+    "DAY 02 · 09:00",
+    "DAY 03 · 14:00",
+    "DAY 04 · 10:00",
+    "DAY 24 · 14:00",
+    "DAY 24 · 17:00",
   ][runtime.state.stage];
   $("spot-doc").textContent =
     runtime.state.stage === 3
@@ -80,16 +89,14 @@ export function render() {
       : runtime.state.stage === 1
         ? "규격서 · 내 책상"
         : "요청서 · 내 책상";
-  $("spot-mentor").hidden = runtime.state.stage === 3;
-  $("spot-phone").hidden = runtime.state.stage === 3;
-  $("spot-supplier").hidden = runtime.state.stage === 3;
-  $("spot-terminal").textContent = runtime.state.stage === 3 ? "업무용 모니터" : "업무용 모니터";
-  ["doc", "mentor", "phone", "terminal"].forEach((id) =>
-    $("spot-" + id).classList.toggle("target", nextTarget() === id),
-  );
-  $("guide-button").textContent = runtime.state.stage === 4 ? "완료 기록 보기" : "다음 목표로 이동";
-  $("quest-label").textContent =
-    runtime.state.stage === 4 ? "완료" : `퀘스트 ${runtime.state.stage + 1}`;
+  const target = guideTarget(nextTarget());
+  for (const id of Object.keys(spots))
+    $("spot-" + id).classList.toggle("target", target === id);
+  $("guide-button").textContent = runtime.state.stage === LAST_STAGE ? "완료 기록 보기" : target === "elevator" ? "엘리베이터로 이동" : "다음 목표로 이동";
+  $("quest-label").textContent = runtime.state.stage === LAST_STAGE ? "완료" : `퀘스트 ${runtime.state.stage + 1}`;
+  const goalLabels = { mentor: "김주문에게 업무 듣기", phone: runtime.state.stage === 5 ? "5층 · 납품 자료 확인" : "수요기관에 연락", doc: runtime.state.stage === 3 ? "공고에 맞는 제품 고르기" : "내 책상 자료 확인", terminal: runtime.state.stage === 5 ? "5층 · 대금 청구 확인" : "업무용 모니터 사용", officer: runtime.state.stage === 5 ? "3층 · 계약 담당자와 인사하기" : "3층 · 계약 담당자 만나기", bidroom: "3층 · 개찰·계약 자료 확인", result: "완료 기록 다시 보기" };
+  $("current-goal").textContent = goalLabels[nextTarget()];
+  $("quick-guide").textContent = $("guide-button").textContent;
   renderInventory();
   if (!runtime.storageOK) $("save-status").textContent = "저장 불가 · 현재 창에서 계속";
 }

@@ -28,6 +28,8 @@ export function show(title, body, kind = "", closable = true) {
 }
 
 export function close() {
+  runtime.pendingSubmission=null;
+  $("bag").classList.remove("submission-active");
   stopSounds();
   $("game-shell").inert = runtime.titleVisible;
   runtime.modalOpen = false;
@@ -44,7 +46,7 @@ export function buttons(items) {
 
 export function doc(title, rows) {
   return /* HTML */ `<div class="document">
-    <div class="doc-header"><strong>${title}</strong><small>게임용 가상 문서</small></div>
+    <div class="doc-header"><strong>${title}</strong><small>업무 문서</small></div>
     ${rows.map(([a, b]) => /* HTML */ `<div class="row"><span>${a}</span><b>${b}</b></div>`).join("")}
   </div>`;
 }
@@ -61,27 +63,27 @@ export function help() {
         때마다 브라우저에 저장합니다.
       </p>
       <p>
-        <strong>사운드:</strong> 소리 버튼에서 음량을 조절하거나 욘 대리의 녹음 목소리를 들어 볼 수
+        <strong>사운드:</strong> 소리 버튼에서 마스터 음량을 조절하거나 두 녹음 목소리를 들어 볼 수
         있어요. 대화 중 소리 버튼을 누르면 음소거를 전환합니다.
       </p>
       <p>
-        <strong>이동:</strong> 방향키 또는 WASD. 가까운 대상과 Space 또는 E로 상호작용합니다. 대상
+        <strong>이동:</strong> 방향키 또는 WASD, 휴대전화에서는 이동 버튼을 길게 눌러 걸어요. 가까운 대상과 Space 또는 E로 상호작용합니다. 대상
         이름을 클릭·터치하면 자동으로 이동해 대화합니다.
       </p>
       <p>
-        <strong>다음 목표로 이동:</strong> 현재 해야 할 일을 바로 찾아갑니다. 잘못 선택해도 설명을
-        읽고 다시 시도할 수 있습니다.
+        <strong>다음 목표로 이동:</strong> 현재 해야 할 일을 바로 찾아갑니다. 다른 층의 목표는 엘리베이터로 안내해요. 용어 수첩에서 배운 말을 다시 읽어 보세요. 잘못 선택하면 결과를
+        확인하고 수습 업무로 올바른 절차를 배웁니다.
       </p>
       <p>
-        <strong>인벤토리:</strong> 하단 5칸에 사원증과 완료한 업무의 문서가 쌓입니다. 물건을 눌러
-        내용을 다시 볼 수 있어요.
+        <strong>인벤토리:</strong> 하단 7칸에 사원증과 업무 문서가 쌓입니다. 제출 요청이 뜨면
+        가방의 서류를 눌러 제출하세요. 다른 서류를 내면 힌트를 받고 다시 고릅니다.
       </p>
       <p>
         <strong>업무용 모니터:</strong> 모니터를 사용할 때만 나라장터 체험 화면이 열립니다. 초안
         저장 후에는 사무실로 돌아와 선배에게 검토를 요청하세요.
       </p>
       <p>
-        <strong>공간:</strong> 조달청 본청 5층의 중앙 복도와 방 배치를 참고한 가상 지방청입니다.
+        <strong>공간:</strong> 새봄지방조달청 5층 구매팀과 3층 계약팀입니다. 엘리베이터로 층을 옮겨요.
         기업 단계는 별도 사무실로 전환하며 공간 배치는 체험을 위해 재사용합니다.
       </p>
       <p>
@@ -89,8 +91,7 @@ export function help() {
         모드나 저장 제한 환경에서는 이어하기가 제한됩니다.
       </p>
       <p>
-        <strong>업무 범위:</strong> 요청 접수 → 규격 검토 → 공고 → 기업 입찰 참여까지. 구매결의와
-        결재는 장면으로 압축하고, 예정가격 결정·낙찰·계약·납품은 체험 범위에서 제외했습니다.
+        <strong>업무 범위:</strong> 요청 접수 → 규격 검토 → 공고 → 기업 입찰 참여 → 낙찰자 선정·전자계약 → 검사·검수·대금 지급을 체험해요.
       </p>
       <p>
         원자료:

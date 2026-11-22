@@ -1,106 +1,144 @@
-# 팀원 인수인계
+# Developer handoff
 
-기준일: 2026-11-21. 단일 HTML에서 책임별 소스와 CSS로 분리했습니다. 게임 동작은 기존 MVP를 유지합니다.
+Updated 2026-11-21. This build has six quests, two floors, recorded rookie replies, document submission, and consequence/recovery achievements. Save version 1 remains compatible.
 
-## 실행과 편집
+## Build and repository rules
 
-- 바로 플레이: `dist/index.html`을 브라우저로 열기. `dist` 전체를 함께 배포합니다.
-- 개발: Node.js 22 이상에서 `npm ci`, `npm run dev`. http://127.0.0.1:8765 에 접속합니다.
-- 확인: `npm test`.
-- 배포 갱신: `npm run build`. 저장소에 포함한 `dist`도 새 결과로 커밋합니다.
+Use Node 22+, `npm ci`, then `npm test`. The test command rebuilds `dist` and runs 87 game checks plus distribution checks. `npm run dev` serves the game at http://127.0.0.1:8765. For offline play, open `dist/index.html` and keep the entire distribution folder together.
 
-루트 `index.html`은 HTML 컴포넌트 조립 템플릿입니다. 그 파일만 브라우저로 열면 완성된 게임이 아닙니다.
-`src`가 수정 원본이며 `dist`는 자동 생성 결과입니다. 이전 단일 HTML이나 임시 변환 스크립트로 덮어쓰지 마세요.
+Edit source in `src`; regenerate `dist` with `npm run build`. Keep the CSS import order in `src/styles/index.css`. Later rules in `ending.css` override mobile inventory rules in `pixel-theme.css`; check both when changing the HUD. No new dependencies, external images, or fonts were added. The owner-supplied processed rookie voice bank is included.
 
-## 수정 위치
+The existing supplier recording and Gaegu font remain included with the font license. Contest submission, a public deployment, Windows EXE packaging, and video production remain separate work.
 
-| 수정 내용                  | 파일 / 위치                                        |
-| -------------------------- | -------------------------------------------------- |
-| 시작 순서                  | `src/main.js`                                      |
-| HUD·맵·노트·가방의 HTML 틀 | `src/components/world.html`                        |
-| 시작 화면                  | `src/components/title.html`, `title.js`            |
-| 말풍선·Space 진행          | `src/components/dialogue.html`, `dialogue.js`      |
-| 모달과 도움말              | `src/components/modal.html`, `modal.js`            |
-| 노트 상태·목표 표시        | `src/components/hud.js`                            |
-| 다섯 아이템·획득 조건      | `src/components/inventory.js`                      |
-| 나라장터 화면·초안·입찰    | `src/components/portal.js`                         |
-| 레벨업·엔딩 링크           | `src/components/ending.js`                         |
-| 대사·구매 문서·퀘스트 완료 | `src/game/quests.js`                               |
-| 버튼 선택 결과             | `src/game/actions.js`                              |
-| 키보드·클릭 연결           | `src/game/input.js`                                |
-| 퀘스트 제목·안내           | `src/data/quests.js`                               |
-| 방·가구·목적지             | `src/data/world.js`                                |
-| 도트 캐릭터                | `src/world/characters.js`                          |
-| 쿼터뷰·카메라·그리기       | `src/world/render.js`                              |
-| 경로 탐색·충돌·이동        | `src/world/navigation.js`                          |
-| 저장·복원                  | `src/core/storage.js`, `src/data/initial-state.js` |
-| 실행 중 공유 상태          | `src/core/runtime.js`                              |
-| 음량·목소리·효과음         | `src/audio/sound.js`                               |
-| 욘 대리 가공 녹음          | `assets/audio/yon-voice-bank.wav`                  |
-| 글꼴                       | `assets/fonts/Gaegu-Regular.ttf`                   |
-| 모든 CSS 진입점            | `src/styles/index.css`                             |
+## File map
 
-CSS는 기존 적용 순서를 유지하면서 기본/HUD, 노트, 화면·대화, 반응형, 도트 테마, 나라장터, 엔딩으로 나눴습니다.
-`index.css`에서 가져오는 순서가 우선순위에 영향을 주므로 임의로 정렬하지 마세요.
+| Responsibility | Source |
+| --- | --- |
+| Boot and input wiring | `src/main.js`, `src/game/input.js` |
+| First four quests and dialogue | `src/game/quests.js`, `src/game/actions.js` |
+| Elevator, contract, delivery, payment | `src/game/procurement.js` |
+| Quest names and last-stage constant | `src/data/quests.js` |
+| Learning text and official source links | `src/data/learning.js` |
+| Glossary and lesson review | `src/components/learning.js` |
+| HUD, inventory, ending | `src/components/hud.js`, `inventory.js`, `ending.js`, `world.html` |
+| Mock G2B | `src/components/portal.js` |
+| Map data, floor partitions, destinations | `src/data/world.js` |
+| Sprites and projection/depth order | `src/world/characters.js`, `render.js` |
+| Movement and floor-aware routing | `src/world/navigation.js` |
+| Submission matrix and gates | `docs/ITEM_SUBMISSIONS.md`, `src/game/submission.js` |
+| Recovery content and progression | `src/data/recovery.js`, `src/game/recovery.js` |
+| Outline colors and contrast calculation | `src/world/contrast.js` |
+| Save migration | `src/core/storage.js`, `src/data/initial-state.js` |
+| Voice registration and effects | `src/audio/sound.js` |
 
-## 구조
+## Stages and progression
 
-HTML 컴포넌트는 빌드할 때 합칩니다. JavaScript는 명시적인 import/export를 사용하고, UI 컴포넌트와 게임 로직은 공용 `runtime` 상태를 참조합니다.
-저장 대상은 `runtime.state`뿐입니다. 모달, 현재 대화, 오디오, 카메라 등은 세션 중에만 유지됩니다.
-프레임워크와 대규모 상태 관리 도구는 도입하지 않았습니다. esbuild 하나로 실행 JavaScript와 CSS를 만들고 HTML·글꼴·허가문을 배포 폴더에 넣습니다.
+`LAST_STAGE = 6`; stages 0–5 are playable quests and stage 6 is the ending.
 
-글꼴과 음성은 소스에서 별도 파일입니다. 가공 음성은 빌드 중 JavaScript에 포함되어 `file://` 실행에서 음성을 가져오기 위한 네트워크 요청이 필요 없습니다. 원본 M4A 전체는 포함하지 않습니다.
+| Stage | Quest | Gates and completion |
+| --- | --- | --- |
+| 0 | 요청서 접수 | Tutorial briefing, contact the library, complete request |
+| 1 | 규격 검토 | Mentor advice, performance-based specification |
+| 2 | 입찰 공고 | Save quantity 20 in the mock portal; mentor review and authorized approval |
+| 3 | 기업 입찰 참여 | Supplier role, suitable product, mock login and participation checkbox |
+| 4 | 낙찰과 계약 | Return to rookie; elevator to 3F; officer briefing, confirm the previously determined price, contract |
+| 5 | 납품과 대금 지급 | Return to 5F; request correction of 19 delivered against 20 contracted, inspect corrected delivery, verify receipt/documents, payment |
+| 6 | Ending | Six lessons, seven items, earned final level, existing recruitment link |
 
-## 유지할 플레이 흐름
+Bid receipt completes stage 3 only. It must never be described as award or contract completion. The contract scene assumes a fictional review under the announced selection method is complete; it teaches no scoring formula or lowest-price shortcut. The price was determined before bidding. The later scene confirms that existing record.
 
-1. 조달달이 수요기관에 납기를 확인하고 요청서를 보완합니다.
-2. 김주문에게 조언을 듣고 성능 중심 규격 수정안을 고릅니다.
-3. 모니터에서 수량 2대를 20대로 수정해 검토본만 저장합니다. 선배 검토와 권한 있는 담당자의 결재 후 공고를 게시합니다.
-4. 욘 대리로 전환해 적합한 제품을 고르고, 모니터에서 공고와 참가 조건을 확인한 후 모의 입찰서를 제출합니다.
-5. 조달달로 복귀해 Lv. 2, “이제 나도... 조달의 왕이야!” 엔딩.
+A completion saves immediately. The new inspection flow also saves after requesting a correction and after inspection. Repeated submit/contract/payment calls cannot duplicate a completed quest.
 
-입찰서 접수를 낙찰이나 계약 완료로 표현하지 않습니다. 엔딩의 지정 외부 링크는 조달청 채용정보입니다.
+## Floors and navigation
 
-## 저장과 음성 유지 사항
+`floors[0]` is 5F and `floors[1]` is 3F. The original `furnishings` export aliases floor 0 for compatibility. Partitions, doors, and furnishings drive collision, rendering, and minimap layout.
 
-- 저장 키 `jodal-master-v1`, 저장 버전 1 유지. 기존 저장 구조와 호환됩니다.
-- 같은 origin/파일 주소의 저장만 이어집니다. 예전 루트 HTML에서 `dist/index.html`로 파일 주소를 옮기면 브라우저별 파일 저장 공간이 달라질 수 있습니다. 기존 서버 주소를 유지하려면 같은 주소의 루트에서 `dist`를 제공하세요.
-- 인벤토리는 5칸이고 퀘스트 상태에서 획득 여부를 계산합니다.
-- 모의 로그인 상태는 새로고침 후 초기화되지만 퀘스트는 저장됩니다.
-- 욘 대리만 실제 팀원 음성. 김주문·조달달·수요기관 담당자는 합성 웅얼거림입니다.
-- 음성 불러오기 UI는 사용자 요청으로 제거했습니다.
-- 현재 음성 조각은 모노 24kHz WAV, 85ms 발성 + 15ms 간격 24개로 총 2.4초입니다. 교체할 때 `loadSupplierVoice`의 오프셋과 관련 검사를 같이 맞추세요.
-- 기업 사무실은 별도 장소로 표기하되 간단한 MVP를 위해 맵 배치를 재사용합니다.
+Every spot has a floor except the elevator. Room number/department signs are removed. Minimap captions identify 5F 구매팀, 3F 계약팀, or 새봄테크 영업팀. NPC spots also carry separate `npcX`/`npcY` render coordinates so arrivals stand beside the NPC rather than on top of it. `spotActive` filters interactions and hotspots. `guideTarget` redirects another floor's target to the elevator; the player chooses the destination and presses the next-goal button again after arrival. `travelTo` clears movement, places the player next to the elevator, updates the floor, and saves. The supplier office permits only its desk and monitor and cannot travel.
 
-## 검증과 남은 확인
+Floor location and legal procedure are fictionalized for the game. Official headquarters room numbers are visual references, not a claim that those offices perform these fictional tasks.
 
-`npm test`는 빌드 후 43개 게임 검사와 배포 연결 검사를 실행합니다.
-게임 모듈을 테스트 전용으로 묶어 상태 전이를 검사하며, 실제 배포 번들도 별도로 부팅하고 시작 버튼 연결을 검사합니다.
-배포 검사에서는 HTML·CSS의 상대 자산 경로, HTML 컴포넌트, 글꼴 바이트, 내장 음성 및 허가문을 확인합니다.
-분리 전후 조달달·기업·완료 장면의 Canvas 결과가 동일한 것도 확인했습니다.
+## Save compatibility
 
-다음 항목은 실제 기기에서 확인해야 합니다.
+Keep key `jodal-master-v1` and version 1. `loadGame` validates the old required fields, accepts stages 0–6, validates optional new fields, and merges defaults from `fresh()`.
 
-- 제출할 브라우저에서 처음부터 네 퀘스트 완주.
-- 화면 크기별 HUD·말풍선·나라장터 배치와 스피커 음량.
-- 실제 브라우저 새로고침·이어하기.
-- 제출용 팀명·참가자 정보, 공모전 지정 항목.
+New saved fields :
 
-## EXE 후속 작업
+- `recoveries` : completed recovery IDs, default `[]`; IDs are unique and validated.
+- `pendingRecovery` : a recovery ID for the current stage, default `null`; Continue restores its consequence screen.
 
-파일을 분리해도 EXE로 묶을 수 있습니다. Electron에서 `dist/index.html`을 로드하고 `dist`의 자산을 함께 패키징하는 방식입니다.
-현재 저장소에는 Electron 실행부나 Windows EXE 빌드 설정을 추가하지 않았습니다. EXE 제작을 완료했다고 간주하지 마세요.
-실제 Windows에서 앱 실행·localStorage·오디오·외부 링크 처리를 확인해야 합니다.
+- `floor` : 0 or 1; absent old saves default to 0.
+- `awardBrief` : 3F officer explanation completed.
+- `openingChecked` : player confirmed that the price was determined before bidding.
+- `deliveryIssueReported` : shortage correction requested; the next delivery screen shows 20.
+- `inspectionChecked` : inspection, acceptance, and receipt completed.
 
-공식 참고: https://www.electronjs.org/docs/latest/tutorial/tutorial-first-app
-패키징: https://www.electronjs.org/docs/latest/tutorial/tutorial-packaging
+Old stage-4 saves continue into the contract quest, with five items and these flags false. The new final stage is 6. Existing history strings remain intact. The officer adds a post-price explanation and a send-off after the contract document. The stage-5 goal remains the officer until that dialogue and recorded rookie reply finish; Continue restores that pending send-off on 3F.
 
-## 원자료
+Session-only state includes the active floor mirror (`runtime.floor`), camera, coordinates, dialogue, modal, touch key, and mock portal login. Resuming restores the saved floor and starts beside the elevator on 3F or at the desk on 5F; it does not persist precise coordinates. New game resets floor, movement target, progression, and login.
 
-업무 흐름: https://www.pps.go.kr/kor/content.do?key=00179
-맵 참고: https://www.pps.go.kr/kor/content.do?key=00139
-나라장터: https://www.g2b.go.kr/
-보조 화면 자료(공개 PDF 116쪽): https://www.nyjwf.or.kr/File/Download/e4281ebc747d1a45c3f6afe5a97701a2
-엔딩: https://www.pps.go.kr/kor/bbs/list.do?key=00645
+## Sprite fixes
 
-실제 평면도나 나라장터 화면을 완전히 복제한 것은 아니며 가상의 학습 사례로 축약했습니다.
+Topological depth ordering resolves unconstrained candidates by the footprint front edge (`x1 + y1`). Tests cover four front/back cells for every furniture instance on both floors (80 placements). A real Chromium canvas check compared 17,528 opaque overlap pixels across the same 80 placements with zero mismatches.
+
+Each character/pose is rasterized once into a 16×24 offscreen canvas. One `drawImage` call draws the full sprite at integer device pixels with smoothing disabled. This removes fractional cell seams. Walking lifts one foot rather than shifting legs downward; all four poses remain connected. People, wide desks, and partitions use their geometric behind/in-front relation for drawing order. The floor target marker is drawn before furniture and characters so it cannot appear across a body.
+
+The tests check connected sprite pixels for rookie, mentor, supplier, and officer in all four poses, integer destination pixels across fractional camera scales, and the wide-desk ordering regression. Browser screenshots are separate evidence; see the validation record.
+
+## Voice integration
+
+The owner's recording is now registered as the production `rookie` voice, independently of the existing supplier recording. `assets/audio/jodal-voice-bank.wav` is mono 24kHz s16 PCM, 2.4 seconds, 115244 bytes, with 24 slots of 85ms voice plus 15ms silence. Offsets are `i * 0.1` for `i = 0..23`.
+
+The coordinator prepared these grains from the owner's 5.67-second AAC recording using a 90Hz highpass, 7.5kHz lowpass, loudness normalization, peak leveling, and 6ms fades. Only the processed bank is included; the raw recording stays outside the repository and distribution.
+
+`loadVoiceBank(role, bytes, offsets, segment = 0.085)` validates decoded ranges and registers an independent `rookie` or `supplier` bank. `loadRookieVoice()` stores `runtime.rookieVoiceReady`; both banks load after audio initialization. The build embeds both WAV files as base64 for offline play. A failed decode falls back to synthesized syllables. Conversations pass an optional per-conversation rookie reply as the fifth argument of `speak`; it plays before the completion callback and is skipped at supplier stage 3. Both recordings use a 1.4 base playback rate plus the existing character-derived variation; only the synthetic rookie fallback uses 1.7. Sound settings retain both preview buttons and one master volume. Other characters retain their existing synthetic voices.
+
+Tests verify both production banks, nonempty voiced windows, rookie dialogue playback, independence, decode fallback, and invalid-range rejection. The distribution suite checks both embedded banks and excludes raw M4A recordings. No upload UI or external voice service was added.
+
+## Evidence and remaining work
+
+`npm test` currently passes 87 checks plus the distribution suite. See `docs/검증기록.txt` for browser results and limits. No commit, push, PR, or deployment was performed by this worker.
+
+Official reference content was supplied to the worker from a 2026-11-21 fetch :
+
+- Procedure : https://www.pps.go.kr/kor/content.do?key=00179
+- Floor reference : https://www.pps.go.kr/kor/content.do?key=00139
+- G2B : https://www.g2b.go.kr/
+- Ending recruitment link : https://www.pps.go.kr/kor/bbs/list.do?key=00645
+
+## Bag and recovery flow
+
+Read `docs/ITEM_SUBMISSIONS.md` for the matrix written before the bag implementation. The seven items are reusable; the request and specification become available as drafts before their first submission. Target actions request an item before opening the task. The modal contains a highlighted bag with keyboard-accessible buttons because the world is inert behind an open modal. Wrong items leave the request pending and change no score or progress. A session-only `submittedSteps` set avoids duplicate prompts within a local step and resets on Continue/new game; it adds no save fields.
+
+Wrong decisions now open a consequence screen, then a corrective task with one action that rejoins the existing storyline. Nine scenes include both mutually exclusive specification errors. Official procedure step references are stored beside each scene. Notice quantity recovery restores the draft form before setting its value; the dialog replaces the old form in the browser DOM.
+
+Ending titles use completed recovery count, with legacy mistake count retained for older saves : zero = 정파, one or two = 정파 · 수습을 배운 신입, three or more = 사파. Completed recoveries appear in the achievements list. No alternative full storyline was added.
+
+## Outline verification
+
+Interactable NPC sprites use a cached bright silhouette and dark outer edge within two tiles of the player; interactive monitors, phone, and documents use the same proximity rule and colors. Nearby names appear within that radius; the current goal name and minimap dot remain visible at any distance. Other floor colors are one tone darker. Only the next hotspot pulses, with `prefers-reduced-motion` disabling animation. The goal floor marker uses the same two-color outline.
+
+WCAG 2.2 SC 1.4.11 requires 3:1 for meaningful non-text information against adjacent colors. The measured outline pair `#fff2a6` / `#172f35` is 12.3815:1. The dark edge against the darkest tested desk side `#92724e` is 3.1712:1; against the darker floor `#899e92`, 4.9312:1. Calculation uses sRGB linearization and relative luminance, with unrounded values tested against 3.
+
+Sources checked 2026-11-21 : [official procedure](https://www.pps.go.kr/kor/content.do?key=00179), [WCAG non-text contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html).
+
+Artifacts for this worker are in `/tmp/jodal-run2/`. Full-room depth screenshots use a temporary harness importing the production renderer; proper and recovery playthroughs use the shipped bundle and visible UI controls.
+
+## Follow-up 1 : review fixes
+
+The current suite passes 87 checks plus distribution checks. Recovery IDs must be strings before any property-key lookup; malformed pending IDs and nested completed-ID arrays reject the save and leave Continue unavailable. Valid pending recovery strings still resume and finish.
+
+`drawFurniture` outlines only active spots, so stage 3 shows document/terminal cues and leaves the disabled phone unoutlined. `positionLabels` uses screen-space silhouette bounds, label dimensions, existing labels, and visible HUD rectangles to place clickable labels without covering actors or active furniture. The same placement applies on both floors and adapts to viewport/camera changes.
+
+The ground goal cue is an isometric diamond. `floorMarkerBounds` conservatively suppresses the whole cue if any scene silhouette might clip it. At the reviewed mentor approach, the foreground partition suppresses the cue; the highlighted name and minimap continue to show the next goal.
+
+Regression tests cover malformed recovery values, active-only furnishing outlines, desktop/mobile label placement on both floors, and complete suppression of clipped ground markers. Chromium measurements and four new screenshots are in `/tmp/jodal-run2/fix1-*`; the detailed result is appended to `core-report.md`.
+
+## Play-test polish (2026-11-21)
+
+- Physical `e.code` handles WASD, Q, and E on both keydown and keyup, including Korean IME jamo/Process values. Arrows remain supported. Manual and automatic movement share `MOVE_SPEED = 145`.
+- The portal draft contains no quantity answer beside the input. Players consult the request. Decision buttons retain plain decision text and the 11 document submissions remain intact.
+- `src/game/progression.js` awards 100 XP per quest plus 25 XP for no recovery on that quest; every 150 XP gives a level. Each completion shows the award and any level-up. The HUD shows current level, progress, and XP; the ending shows total XP and final level (clean run : 750 XP / level 6).
+- Optional saved fields : `xp`, `questMistakes` (mistake count at the prior quest boundary), `contractFarewell`. Loading old version-1 saves awards 100 XP per completed stage and defaults the current mistake baseline. Recovery IDs also suppress the current quest bonus after reload. Save key and version remain unchanged.
+- Removed all player-visible fiction/abbreviation notices, including documents, glossary, help, portal, and dialogue. The title and ending each show one actual-work accuracy note. The clock shows story dates/times. The recruitment button keeps its destination and the separate destination sentence is removed.
+
+`npm test` now runs 87 game checks plus distribution checks. Browser artifacts and item-by-item ownership are in `/tmp/jodal-run3/polish-report.md`.
