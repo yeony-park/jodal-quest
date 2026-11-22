@@ -27,8 +27,10 @@ for (const name of ["yon", "jodal"]) {
   const voice = await readFile(path.join(root, `assets/audio/${name}-voice-bank.wav`));
   assert.ok(js.includes(voice.toString("base64")), `${name} voice must be embedded for file:// execution`);
 }
-const music = await readFile(path.join(root, "assets/audio/office-loop.mp3"));
-assert.ok(js.includes(music.toString("base64")), "Background music must work offline");
+for (const name of ["office-loop", "title-call"]) {
+  const recording = await readFile(path.join(root, `assets/audio/${name}.mp3`));
+  assert.ok(js.includes(recording.toString("base64")), `${name} must work offline`);
+}
 assert.doesNotMatch(js + html, /owner-raw|\.m4a|jodal-voice\//);
 for (const name of await readdir(dist, { recursive: true }))
   assert.doesNotMatch(name, /owner-raw|\.m4a$/i, "Raw recording must not be distributed");

@@ -1,15 +1,16 @@
+import { enteredDays } from "../components/deadline.js";
 import { beginRecovery, recover, finishRecovery } from "./recovery.js";
-import { requestSubmission, submitItem } from "./submission.js";
+import { requestSubmission, selectDocument, handOverDocument } from "./submission.js";
 import { floors } from "../data/world.js";
 import { showFloorMap } from "../components/floor-map.js";
-import { openCabinet, openGlossary } from "../components/learning.js";
-import { buttons, close, help, show } from "../components/modal.js";
+import { openCabinet, openGlossary, meetLibrarian } from "../components/learning.js";
+import { buttons, close, help, show, toast } from "../components/modal.js";
 import { startGame } from "../components/title.js";
 import { player, runtime } from "../core/runtime.js";
 import { render, setNotebook } from "../components/hud.js";
 import { $ } from "../core/dom.js";
 import { previewVoice, soundSettings } from "../audio/sound.js";
-import { nextLine } from "../components/dialogue.js";
+import { nextLine, stopTalk } from "../components/dialogue.js";
 import { go, interact } from "../world/navigation.js";
 import {
   complete,
@@ -32,7 +33,7 @@ import {
 } from "../components/portal.js";
 import { save } from "../core/storage.js";
 import { elevator, travelTo, officer, contractFarewell, bidroom, openingGood, contractGood, delivery, reportDeliveryIssue, inspectDelivery, payment, finishPayment } from "./procurement.js";
-import { inventoryItems, inspectItem } from "../components/inventory.js";
+import { inventoryItems, inspectItem, ownedItems } from "../components/inventory.js";
 
 export const actions = {
   recover,
@@ -41,7 +42,7 @@ export const actions = {
   close,
   help,
   "title-help": () => show("게임 도움말", `<p><kbd>Space</kbd>로 대화 · 클릭 또는 방향키로 이동</p>
-    <p>공공조달 체험 게임 · 실제 업무와 다를 수 있습니다</p>${buttons([["close", "닫기"]])}`, "help"),
+    <p>공공조달 체험 게임 · 실제 업무와 다를 수 있습니다</p>`, "help"),
   glossary: openGlossary,
   interact,
   "return-rookie": returnRookie,
@@ -60,6 +61,8 @@ export const actions = {
   quests: () => setNotebook($("quest-panel").hidden),
   sound: soundSettings,
   "talk-next": nextLine,
+  "hang-up": stopTalk,
+  "hand-over": () => handOverDocument(),
   "voice-preview": previewVoice,
   "rookie-voice-preview": () => previewVoice("rookie"),
   guide: () => {
@@ -73,18 +76,19 @@ export const actions = {
   elevator,
   map: () => showFloorMap(),
   cabinet: openCabinet,
+  librarian: meetLibrarian,
   officer,
   "contract-farewell": contractFarewell,
   bidroom,
   "opening-good": openingGood,
   "opening-bad": () => wrong("예정가격은 입찰 전에 결정해 둡니다. 입찰서를 받은 뒤 임의로 바꾸지 않아요.", "bidroom"),
   "contract-good": contractGood,
-  "contract-bad": () => wrong("입찰서 접수 후 공고한 낙찰자 선정방식에 따른 심사를 거치고, 낙찰예정자와 전자계약을 체결해요.", "officer"),
+  "contract-bad": () => wrong("입찰서 접수 뒤엔 공고한 낙찰자 선정방식대로 심사하고, 낙찰예정자와 전자계약을 체결해요.", "officer"),
   "delivery-report": reportDeliveryIssue,
   "delivery-good": inspectDelivery,
   "delivery-bad": () => wrong("계약한 20대와 납품한 19대가 다릅니다. 부족한 수량을 보완한 뒤 검사·검수해야 해요.", "phone"),
   "payment-good": finishPayment,
-  "payment-bad": () => wrong("검사·검수와 물품인수, 영수증과 납품 서류를 확인하고 대금 청구·지급 절차를 진행해요.", "terminal"),
+  "payment-bad": () => wrong("검사·검수와 물품인수, 영수증·납품 서류 확인을 마친 뒤 대금 청구·지급 절차를 진행합니다.", "terminal"),
   approve: () => {
     if (runtime.state.stage === 2 && runtime.state.noticeChecked)
       complete(
@@ -94,35 +98,45 @@ export const actions = {
   },
   advance: () => {
     close();
-    if (runtime.state.stage <= 3) {
+    if (runtime.state.stage < 3) {
       player.x = 464;
       player.y = 144;
     }
     runtime.portalSignedIn = false;
   },
-  "intake-good": () => {
+  "check-intake-contact": () => go("phone"),
+  "intake-submit": () => {
     if (runtime.state.stage !== 0) return;
     if (!runtime.state.brief || !runtime.state.contact) {
       show(
         "확인할 정보가 남았어요",
         /* HTML */ `<p>
-            선배에게 업무를 듣고 수요기관에 납품기한을 확인해 주세요. 추측으로 요청서를 채울 수는
-            없어요.
+            선배에게 업무를 듣고 수요기관에 납품기한부터 확인하세요. 추측으로 요청서를 채울 순 없어요.
           </p>
           ${buttons([["close", "정보 수집하러 가기"]])}`,
       );
       return;
     }
-    complete("요청서 접수 준비 완료", "확인한 납기를 보완하고 선배 검토를 거쳐 접수했습니다.");
+    const days = enteredDays();
+    if (days === null) return;
+    if (days !== 30) {
+      runtime.state.attemptedDeadline = days;
+      beginRecovery("intake");
+      return;
+    }
+    actions["intake-good"]();
   },
-  "intake-bad": () => beginRecovery("intake"),
+  "intake-good": () => {
+    if (runtime.state.stage !== 0) return;
+    complete("요청서 접수 준비 완료", "확인한 납기를 채워 넣고 선배 검토를 거쳐 접수했어요.");
+  },
   "spec-good": () => {
     if (runtime.state.stage !== 1) return;
     if (!runtime.state.specAdvice) {
       show(
-        "수정 근거를 먼저 확인해요",
-        /* HTML */ `<p>선배 김주문에게 수요기관과 확인한 성능 조건을 들어 보세요.</p>
-          ${buttons([["close", "선배에게 가기"]])}`,
+        "김주문 선배가 어떤 조건을 말했더라?",
+        /* HTML */ `<p>먼저 김주문 선배에게 가서 수요기관과 협의한 성능 조건을 확인해 보세요.</p>
+          ${buttons([["close", "김주문 선배에게 가기"]])}`,
       );
       return;
     }
@@ -133,12 +147,12 @@ export const actions = {
   },
   "spec-bad": () =>
     wrong(
-      "이 사례에는 특정 브랜드만 필요한 사유가 없어요. 필요한 성능으로 표현하면 여러 기업이 경쟁할 수 있습니다.",
+      "이번 건은 특정 브랜드만 고집할 이유가 없어요. 필요한 성능만 적으면 여러 기업이 경쟁할 수 있죠.",
       "doc",
     ),
   "spec-empty": () =>
     wrong(
-      "규격을 모두 없애면 목적에 맞지 않는 물품이 올 수 있어요. 필요한 성능은 명확히 남겨야 해요.",
+      "규격을 다 지우면 목적에 맞지 않는 물품이 올 수 있어요. 필요한 성능은 꼭 남겨야 해요.",
       "doc",
       "spec-empty",
     ),
@@ -156,14 +170,14 @@ export const actions = {
   },
   "product-bad": () =>
     wrong(
-      "22형은 공고의 24형 이상 조건에 미달해요. 가격만 보지 말고 규격과 납기를 함께 확인하세요.",
+      "22형은 공고의 24형 이상 조건에 못 미쳐요. 가격만 보지 말고 규격과 납기를 함께 확인하세요.",
       "doc",
     ),
   "submit-bid": finishBid,
 };
 
 floors.forEach((_, index) => {
-  actions["map-" + index] = () => showFloorMap(index, runtime.modalKind === "elevator");
+  actions["map-" + index] = () => showFloorMap(index);
   actions["floor-" + index] = () => travelTo(index);
 });
 
@@ -172,7 +186,23 @@ Object.assign(actions, {
   "portal-home": () => openPortal("home"),
   "portal-login": () =>
     openPortal(runtime.portalSignedIn ? (runtime.state.stage === 2 ? "draft" : "list") : "login"),
+  "portal-register": () => {
+    if (runtime.state.stage === 3 || runtime.state.badgeRegistered) {
+      openPortal("login");
+      return;
+    }
+    if (!ownedItems()[0]) { toast("첫 업무를 받고 사원증을 챙겨 오세요."); return; }
+    requestSubmission("reader", () => {
+      runtime.state.badgeRegistered = true;
+      save();
+      actions["portal-signin"]();
+    });
+  },
   "portal-signin": () => {
+    if (runtime.state.stage !== 3 && !runtime.state.badgeRegistered) {
+      actions["portal-register"]();
+      return;
+    }
     runtime.portalSignedIn = true;
     openPortal(runtime.state.stage === 2 ? "draft" : "list");
   },
@@ -190,4 +220,4 @@ for (const target of ["mentor","doc","terminal","phone","officer","bidroom"]) {
   actions[target]=()=>requestSubmission(target, original);
 }
 for (let i = 0; i < inventoryItems.length; i++) actions["item-" + i] = () =>
-  runtime.pendingSubmission ? submitItem(i) : inspectItem(i);
+  runtime.pendingSubmission ? selectDocument(i) : inspectItem(i);

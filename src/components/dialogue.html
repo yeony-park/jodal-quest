@@ -1,3 +1,7 @@
+<section id="first-day" hidden aria-label="조달달의 첫 출근">
+  <img src="./assets/first-day.webp" alt="서류 가방을 든 조달달이 정부대전청사 앞에 서서 본청을 올려다보는 뒷모습">
+  <span>정부대전청사 · 조달청 본청</span>
+</section>
 <section
   class="speech"
   id="speech"
@@ -10,7 +14,14 @@
   <div class="speech-name" id="speech-name">김주문</div>
   <div class="speech-portrait" id="speech-portrait"></div>
   <p class="speech-text" id="speech-text"></p>
-  <button class="speech-next" data-action="talk-next">
+  <details id="speech-paper" class="submitted-paper" hidden></details>
+  <button id="hang-up" class="speech-next" data-action="hang-up" hidden>전화 끊기</button>
+  <button id="speech-next" class="speech-next" data-action="talk-next">
     <span id="speech-count"></span> <kbd>Space</kbd> <span id="speech-hint">문장 모두 보기</span> ▾
   </button>
 </section>
+<div id="lift-arrival" role="status" aria-label="엘리베이터 도착" hidden>
+  <div id="lift-left" class="arrival-door"></div>
+  <div id="lift-right" class="arrival-door"></div>
+  <div class="arrival-sign"><span aria-hidden="true">▴</span> <strong id="lift-indicator"></strong></div>
+</div>

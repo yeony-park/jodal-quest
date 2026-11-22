@@ -1,6 +1,7 @@
 <section class="title-screen" id="title-screen" aria-labelledby="game-title">
   <button class="title-help" data-action="title-help" aria-label="게임 도움말" aria-haspopup="dialog">?</button>
   <button class="title-audio" data-action="sound">♫ 사운드 설정</button>
+  <button id="title-enter" hidden>▶ 타이틀 재생</button>
   <div class="title-card">
     <div class="game-logo">
       <h1 id="game-title" aria-label="조달의 달인">
@@ -18,7 +19,7 @@
     </div>
     <div class="title-chars" id="title-chars"></div>
     <div class="title-buttons">
-      <button class="primary" data-action="start-new">게임 시작하기</button
+      <button class="primary" id="title-start" data-action="start-new">게임 시작하기</button
       ><button class="secondary" id="continue-button" data-action="continue" hidden>
         이어서 하기
       </button>

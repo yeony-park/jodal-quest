@@ -92,6 +92,8 @@ function boot(saved = null, blocked = false, realCanvas = null, productionOnly =
         focus() {
           doc.activeElement = node;
         },
+        append(child) { child.parentElement = node; },
+        prepend(child) { child.parentElement = node; },
         querySelectorAll() {
           return [];
         },
@@ -135,6 +137,7 @@ function boot(saved = null, blocked = false, realCanvas = null, productionOnly =
     hidden: false,
   };
   ids.forEach(el);
+  el("game-hud").append(el("bag"));
   const param = () => ({
     value: 1,
     setValueAtTime(v) {
@@ -235,7 +238,12 @@ function boot(saved = null, blocked = false, realCanvas = null, productionOnly =
   });
   vm.runInContext(productionOnly ? production : source, c);
   const run = (s) => vm.runInContext(s, c),
-    finish = () => run("while(talkState){revealLine();nextLine();}");
+    finish = () => {
+      while (run("talkState")) {
+        if (run("talkState.lines[talkState.index]?.dialing")) timers.get(run("phoneTimer"))();
+        else run("revealLine();nextLine()");
+      }
+    };
   return {
     run,
     el,
@@ -246,6 +254,10 @@ function boot(saved = null, blocked = false, realCanvas = null, productionOnly =
     nodes,
     drawCalls,
     drawEvents,
+    answerPhone() {
+      const id = run("runtime.phoneTimer");
+      if (timers.has(id)) timers.get(id)();
+    },
     finish,
     listeners,
     context: c,
@@ -434,9 +446,71 @@ async function main() {
     }
     assert.equal(pairs,77);
   });
+  check("Hand over a document from the real bag, cancel, and retry without losing the item", () => {
+    const c = boot();
+    c.run("Object.assign(state,{stage:0,brief:true,contact:true});actions.doc()");
+    assert.equal(c.el("bag").parentElement.id, "game-hud");
+    assert.equal(c.run("modalOpen"), false);
+    assert.equal(c.el("handoff-dock").hidden, false);
+    c.run("actions['item-0']();actions['hand-over']()");
+    assert.match(c.el("submission-hint").textContent, /요청서/);
+    assert.equal(c.run("submittedSteps.has('intake')"), false);
+    c.run("actions.close()");
+    assert.equal(c.el("bag").parentElement.id, "game-hud");
+    c.run("actions.doc();actions['item-1']()");
+    assert.equal(c.run("submittedSteps.has('intake')"), false);
+    c.run("actions['hand-over']()");
+    assert.equal(c.run("submittedSteps.has('intake') && ownedItems()[1]"), true);
+    assert.equal(c.el("bag").parentElement.id, "game-hud");
+  });
+  check("A successful handoff rustles once, and respects muted effects", () => {
+    for (const enabled of [true, false]) {
+      const c = boot();
+      c.run(`unlockAudio();changeSoundSetting('effects',${enabled});Object.assign(state,{brief:true,contact:true});actions.doc()`);
+      const before = c.nodes.length;
+      c.run("submitItem(0)");
+      assert.equal(c.nodes.length, before);
+      c.run("submitItem(1);submitItem(1)");
+      assert.equal(c.nodes.length - before, enabled ? 1 : 0);
+      if (enabled) assert.ok(Math.abs(c.nodes.at(-1).buffer.duration - 0.22) < 0.001);
+    }
+  });
+  check("An intake deadline must be entered, and alternative day formats preserve the clean route", () => {
+    for (const value of ["30", "30일", "계약 후 30일 이내", "계약일로부터 ３０일 이내"]) {
+      const c = boot();
+      c.run("Object.assign(state,{brief:true,contact:true});documentDesk()");
+      assert.match(c.el("modal").innerHTML, /납품기한 숫자 키패드/);
+      for (const invalid of ["", "30일 이후", "7~30일"]) {
+        c.el("deadline-days").value = invalid;
+        c.run("actions['intake-submit']()");
+        assert.equal(c.run("state.stage"), 0);
+        assert.equal(c.run("state.mistakes"), 0);
+      }
+      c.el("deadline-days").value = value;
+      c.run("actions['intake-submit']()");
+      assert.equal(c.run("state.stage"), 1);
+      assert.equal(c.run("state.xp"), 125);
+    }
+  });
+  check("Footsteps follow distance, elevators sound only on arrival and a canceled call never answers", () => {
+    const c = boot();
+    c.run("unlockAudio();player.x=272;player.y=240;stepPlayer(24,0)");
+    const before = c.nodes.length;
+    c.run("stepPlayer(24,0)");
+    assert.equal(c.nodes.length, before + 2);
+    c.run("stepPlayer(-1000,0);stepPlayer(0,0);travelTo(0)");
+    assert.equal(c.nodes.length, before + 2);
+    c.run("travelTo(1)");
+    assert.deepEqual(c.nodes.slice(-2).map(n => n.frequency.value), [784, 587.33]);
+    c.run("state.brief=true;phone();actions['hang-up']()");
+    c.answerPhone();
+    assert.equal(c.run("talkState"), null);
+    c.run("changeSoundSetting('effects',false);phone()");
+    assert.equal(c.run("talkState.role"), "contact");
+  });
   check("Interactable outline contrast exceeds WCAG non-text 3 to 1", () => {
     assert.ok(b.run("contrastRatio(interactableColors.bright,interactableColors.edge)")>=3);
-    for(const surface of ['#e5e2cc','#f0ecd9','#b7d8d2','#c5e1d8','#f2d6b4','#cea890','#b18776'])
+    for(const surface of ['#e5e2cc','#f0ecd9','#dccbad','#e9dcc5','#f2d6b4','#cea890','#b18776'])
       assert.ok(b.run(`contrastRatio(interactableColors.edge,'${surface}')`)>=3,surface);
     assert.match(css,/prefers-reduced-motion/);
     assert.match(css,/goal-glow/);
@@ -452,8 +526,12 @@ async function main() {
       const resumed=boot(c.store.get('jodal-master-v1'));
       resumed.run('actions.continue()');
       assert.equal(resumed.run('modalKind'),'recovery');
-      c.run('recover()');c.finish();
+      c.run('recover()');
+      assert.ok(c.run("talkState.lines[0]").includes("실수할 수도 있죠"));
+      assert.notEqual(c.run("talkState.role"), "rookie");
+      c.finish();
       assert.match(c.el('modal').innerHTML,/key=00179/);
+      if (id === 'intake') c.el('deadline-days').value = '30';
       c.run('finishRecovery()');c.finish();
       assert.equal(c.run('state.pendingRecovery'),null);
       assert.equal(c.run('state.recoveries.length'),1);
@@ -491,6 +569,12 @@ async function main() {
     const c=boot();
     for(const stage of [0,1,3]) {
       c.run(`state.stage=${stage};documentDesk()`);
+      assert.match(c.el('modal').innerHTML,/나의 선택은\?/);
+      assert.match(c.el('modal').innerHTML,stage===3 ? /<figcaption>욘 대리/ : /<figcaption>조달달/);
+      if (stage === 0) {
+        assert.match(c.el('modal').innerHTML, /<form id="deadline-form"[^>]*>\s*<div class="document">/);
+        assert.doesNotMatch(c.el('modal').innerHTML, /서류 다시 펼치기/);
+      } else assert.match(c.el('modal').innerHTML,/<details class="decision-document" open>/);
       assert.doesNotMatch(c.el('modal').innerHTML,/<button class="choice"[^>]*>[^]*?<small>/);
     }
   });
@@ -513,10 +597,22 @@ async function main() {
     assert.match(c.run("talkState.lines[0]"), /납기/);
     c.run(`state.stage=1;mentor();`);
     c.run(`while(talkState&&talkState.role!=='rookie'){revealLine();nextLine()}`);
-    assert.match(c.run("talkState.lines[0]"), /성능 기준/);
+    assert.match(c.run("talkState.lines[0]"), /어떤 모니터가 필요한지/);
   });
   b.run("actions.new()");
   await b.run("Promise.all([supplierVoiceReady,rookieVoiceReady])");
+  check("The first-day exterior leads into the handover at the senior officer’s desk", () => {
+    assert.equal(b.el("first-day").hidden, false);
+    assert.equal(b.run("talkState.lines[0].text"), "오늘은 첫 출근날..! 잘 해보자!");
+    b.run("revealLine();nextLine()");
+    assert.equal(b.el("first-day").hidden, true);
+    assert.equal(b.run("player.x === spots.mentor.x && runtime.floor === 0"), true);
+    assert.equal(b.run("talkState.role"), "mentor");
+    const resumed = boot(b.store.get("jodal-master-v1"));
+    resumed.run("actions.continue()");
+    assert.equal(resumed.el("first-day").hidden, true);
+    assert.equal(resumed.run("talkState.role"), "mentor");
+  });
   check("Automatic tutorial starts with five lines", () =>
     assert.equal(b.run("talkState.lines.length"), 5),
   );
@@ -574,15 +670,23 @@ async function main() {
   check("Target button actually walks to NPC and opens dialogue", () => {
     b.run('player.x=464;player.y=144;go("phone")');
     for (let i = 0; i < 1400 && b.run("target!==null"); i++) b.run(`frame(${i * 35})`);
+    assert.equal(b.run("modalOpen"), false);
+    assert.equal(b.el("speech-text").textContent, "새봄도서관에 전화 거는 중…");
+    b.answerPhone();
     assert.equal(b.run("talkState.name"), "수요기관 담당자");
   });
   b.finish();
   check("Wrong request choice explains issue and preserves stage", () => {
-    b.run("actions['intake-bad']()");
+    b.run("documentDesk()");
+    b.el("deadline-days").value = "12일";
+    b.run("actions['intake-submit']()");
+    assert.match(b.el("modal").innerHTML, /12일이요/);
     assert.equal(b.run("state.stage"), 0);
     assert.match(b.el("modal").innerHTML, /원래 요청한 일정/);
   });
   check("Request completion saves checkpoint and inventory before advance", () => {
+    b.run("recover()");b.finish();
+    b.el("deadline-days").value = "계약 후 30일 이내";
     b.run("finishRecovery()");
     assert.equal(JSON.parse(b.store.get("jodal-master-v1")).stage, 1);
     assert.equal(b.run("ownedItems().filter(Boolean).length"), 3);
@@ -623,6 +727,9 @@ async function main() {
     b.run("portalWork()");
     assert.match(b.el("modal").innerHTML, /업무 계정으로 로그인/);
     b.run("actions['portal-signin']()");
+    assert.equal(b.run("pendingSubmission.step"),"registration");
+    assert.equal(b.run("submitItem(2)"),false);
+    assert.equal(b.run("submitItem(0) && state.badgeRegistered"),true);
     assert.match(b.el("modal").innerHTML, /공고 초안/);
   });
   check("Wrong quantity cannot be saved or published", () => {
@@ -638,7 +745,8 @@ async function main() {
     b.run("finishRecovery()");
     assert.equal(b.run("state.noticeChecked"), true);
     assert.equal(b.run("state.stage"), 2);
-    assert.match(b.el("modal").innerHTML, /아직 공고 전/);
+    assert.equal(b.run("modalOpen"), false);
+    assert.match(b.el("current-goal").textContent, /김주문에게 공고 초안/);
   });
   check("Mentor review and authorized approval precede supplier stage", () => {
     b.run("close();mentor()");
@@ -648,6 +756,13 @@ async function main() {
     b.run("actions.advance()");
     assert.equal(b.run("talkState"), null);
     assert.equal(b.run("sceneItems(false).at(-1).actor"), "supplier");
+    for (const game of [b, boot(b.store.get("jodal-master-v1"))]) {
+      if (game !== b) game.run("actions.continue()");
+      assert.equal(game.run("sceneItems(false).filter(i=>i.actor).map(i=>i.actor).join()"), "mentor,rookie,supplier");
+      assert.equal(game.run("sceneItems(false).find(i=>i.actor==='rookie').x0 * TILE"), game.run("spots.mentor.x"));
+      assert.equal(game.run("player.x"), game.run("spots.supplier.npcX"));
+      assert.equal(game.run("canWalk(player.x, player.y)"), true);
+    }
     b.finish();
     assert.equal(b.run("portalSignedIn"), false);
   });
@@ -769,7 +884,7 @@ async function main() {
     b.run("actions['payment-good']();actions.phone();if(pendingSubmission)submitItem(submissionSteps[pendingSubmission.step].item);actions['delivery-bad']()");
     assert.equal(b.run("state.inspectionChecked"), false);
     b.run("finishRecovery()");
-    b.finish();
+    b.answerPhone();b.finish();
     b.run("actions.phone();if(pendingSubmission)submitItem(submissionSteps[pendingSubmission.step].item)");
     assert.match(b.el("modal").innerHTML, /20대 · 부족분 보완/);
     b.run("actions['delivery-good']()");
@@ -788,8 +903,8 @@ async function main() {
     b.finish();
     assert.equal(b.run("modalKind"), "result");
     assert.match(b.el("modal").innerHTML, /이제 나도... 조달의 왕이야!/);
-    assert.match(b.el("modal").innerHTML, /최종 Lv. 5/);
-    assert.equal(b.el("level-badge").textContent, "Lv. 5");
+    assert.match(b.el("modal").innerHTML, /최종 Lv. 1/);
+    assert.equal(b.el("level-badge").textContent, "Lv. 1");
     assert.match(b.el("modal").innerHTML, /https:\/\/www.pps.go.kr\/kor\/bbs\/list.do\?key=00645/);
     assert.doesNotMatch(b.el("modal").innerHTML, /채용정보로 이동합니다|외부 사이트/);
   });
@@ -797,9 +912,9 @@ async function main() {
     b.run("finishBid()");
     assert.equal(b.run("state.history.length"), 6);
   });
-  check("Six completed quests each play one two-accent fanfare through scene changes", () => {
-    const notes = b.nodes.filter(n => n.type === "triangle");
-    assert.equal(notes.length, 6 * 6);
+  check("Six quest completions and one draft save play their fanfares", () => {
+    const notes = b.nodes.filter(n => n.type === "triangle" && n.frequency.value >= 392);
+    assert.equal(notes.length, 7 * 6);
     for (let i = 0; i < notes.length; i += 6) {
       const accents = notes.slice(i, i + 6).map(n => n.args[0]);
       assert.deepEqual(accents, [0, 0, 0, .16, .16, .16]);
@@ -828,6 +943,7 @@ async function main() {
     assert.equal(c.el('quest-panel').hidden,false);
     c.run('state.brief=true;player.x=spots.phone.x;player.y=spots.phone.y');
     c.fire('keydown',{code:'KeyE',key:'ㄷ',target:{tagName:'CANVAS'},preventDefault(){}});
+    c.answerPhone();
     assert.equal(c.run('talkState.name'),'수요기관 담당자');
   });
   check("Manual, arrow and auto movement all travel at 145 world pixels per second", () => {
@@ -855,6 +971,20 @@ async function main() {
         assert.equal(c.drawCalls.at(-1)[0].width,width);
       }
     }
+  });
+  check("Two deliberate direction presses sprint, key repeat and release do not", () => {
+    const c = boot();
+    c.run("state.started=true;titleVisible=false;player.x=272;player.y=240;last=0");
+    const down=(time,repeat=false)=>c.fire("keydown",{code:"ArrowRight",key:"ArrowRight",timeStamp:time,repeat,target:{tagName:"CANVAS"},preventDefault(){}});
+    down(10);down(70,true);
+    assert.equal(c.run("runKey"),null);
+    c.fire("keyup",{key:"ArrowRight"});down(180);
+    assert.equal(c.run("runKey"),"arrowright");
+    const x=c.run("player.x");c.run("frame(35)");
+    assert.ok(c.run("player.x")-x > 6);
+    c.fire("keyup",{key:"ArrowRight"});const end=c.run("player.x");c.run("frame(70)");
+    assert.equal(c.run("player.x"),end);
+    down(900);assert.equal(c.run("runKey"),null);
   });
   check("Only the distant goal keeps its name and minimap dot while nearby names appear", () => {
     const c=boot();c.run('state.stage=1;player.x=16;player.y=240;render();updateMap()');
@@ -897,7 +1027,7 @@ async function main() {
     assert.equal(c.run('guideTarget(nextTarget())'),'elevator');
   });
   check("Quest completions award XP, clean bonuses, visible progress and level-up notices", () => {
-    const c=boot();c.run('Object.assign(state,{started:true,brief:true,contact:true});actions["intake-good"]()');
+    const c=boot();c.run('Object.assign(state,{started:true,brief:true,contact:true});documentDesk();$("deadline-days").value="30";actions["intake-submit"]()');
     assert.equal(c.run('state.xp'),125);assert.equal(c.el('xp-bar').value,125);
     assert.match(c.el('modal').innerHTML,/수습 없이 완료 보너스 25 XP/);
     c.run('state.specAdvice=true;actions["spec-good"]()');
@@ -907,14 +1037,15 @@ async function main() {
     c.run('actions["spec-good"]()');assert.equal(c.run('state.xp'),250);
     c.run('actions.new()');assert.equal(c.run('state.xp'),0);
   });
-  check("Recovery removes only that quest's bonus, including after reload", () => {
+  check("Supervisor intervention awards zero XP for that quest, including after reload", () => {
     const c=boot();c.run('Object.assign(state,{started:true,brief:true,contact:true});beginRecovery("intake")');
-    const d=boot(c.store.get('jodal-master-v1'));d.run('actions.continue();finishRecovery()');
-    assert.equal(d.run('state.xp'),100);
-    d.run('state.specAdvice=true;actions["spec-good"]()');assert.equal(d.run('state.xp'),225);
+    const d=boot(c.store.get('jodal-master-v1'));d.run('actions.continue();recover()');d.finish();d.el('deadline-days').value='30';d.run('finishRecovery()');
+    assert.equal(d.run('state.xp'),0);
+    assert.equal(boot(d.store.get('jodal-master-v1')).run('state.stage'),1);
+    d.run('state.specAdvice=true;actions["spec-good"]()');assert.equal(d.run('state.xp'),125);
     const legacy=JSON.parse(c.store.get('jodal-master-v1'));delete legacy.xp;delete legacy.questMistakes;
-    const e=boot(JSON.stringify(legacy));e.run('actions.continue();finishRecovery()');
-    assert.equal(e.run('state.xp'),100);
+    const e=boot(JSON.stringify(legacy));e.run('actions.continue();recover()');e.finish();e.el('deadline-days').value='30';e.run('finishRecovery()');
+    assert.equal(e.run('state.xp'),0);
   });
   check("Pre-change version-one saves retain progress and receive base XP for completed quests", () => {
     for(let stage=0;stage<=6;stage++) {
@@ -929,7 +1060,7 @@ async function main() {
       assert.equal(boot(JSON.stringify({...old,...fields})).run('loaded'),false);
   });
   check("In-game notices keep the story clock and one accuracy note each in title help and ending", () => {
-    assert.doesNotMatch(production.replace("체험을 위해 가상으로 설정되었습니다.", ""),/축약|가상|대기 시간은 줄|심사 세부 내용과 대기/);
+    assert.doesNotMatch(production.replace("게임 체험을 위해 가상으로 설정했습니다.", ""),/축약|가상|대기 시간은 줄|심사 세부 내용과 대기/);
     assert.doesNotMatch(html,/축약|가상/);
     assert.doesNotMatch(html,/실제 업무와 다를 수 있습니다/);
     const screens = boot();
@@ -944,10 +1075,9 @@ async function main() {
     const help = boot(); help.run("actions['title-help']()");
     assert.match(help.el("modal").innerHTML, /실제 업무와 다를 수 있습니다/);
     assert.match(help.el("modal").innerHTML, /Space.*클릭 또는 방향키로 이동/);
-    const c=boot();for(let stage=0;stage<=6;stage++) {
-      c.run(`state.stage=${stage};render()`);assert.match(c.el('scene-time').textContent,/^DAY \d{2} · \d{2}:\d{2}$/);
-    }
-    c.run('state.xp=750;result()');assert.match(c.el('modal').innerHTML,/최종 Lv. 6/);
+    assert.doesNotMatch(html,/id="scene-time"|class="quest-icon"/);
+    const c = boot();
+    c.run('state.stage=6;state.xp=750;result()');assert.match(c.el('modal').innerHTML,/최종 Lv. 6/);
     assert.equal((c.el('modal').innerHTML.match(/실제 업무와 다를 수 있습니다/g)||[]).length,1);
     assert.doesNotMatch(c.el('modal').innerHTML,/채용정보로 이동합니다|외부 사이트/);
     assert.match(c.el('modal').innerHTML,/더 많은 퀘스트를 깨고 싶다면\?<\/a\s*>\s*<section class="achievements"/);
@@ -985,7 +1115,7 @@ async function main() {
     b.run("soundSettings()");
     assert.match(b.el("modal").innerHTML, /욘 대리 목소리 듣기/);
     assert.match(b.el("modal").innerHTML, /조달달 목소리 듣기/);
-    assert.match(b.el("modal").innerHTML, /실제 녹음된 목소리/);
+    assert.match(b.el("modal").innerHTML, /조달달과 욘 대리의 목소리는 직접 녹음/);
     assert.doesNotMatch(
       production,
       /voice-file|voice-role|voice-clear|importVoice|팀원 목소리 불러오기/,
@@ -1036,7 +1166,7 @@ async function main() {
     assert.equal(b.run("activeVoices.size"), 0);
     assert.ok(!music.stopped);
     toggle("effects", false);
-    b.run("chime();questFanfare()");
+    b.run("elevatorChime();questFanfare()");
     assert.equal(b.nodes.length, count);
     toggle("dialogue", true);
     b.run("playSyllable('안')");
@@ -1117,47 +1247,117 @@ async function main() {
     const c = boot(valid);
     assert.equal(c.run("state.stage"), 6);
   });
-  check("All ten agency floors have a walkable lift and a distinct collectible cabinet card", () => {
+  check("All ten physical lift buttons reach a walkable floor with its own collectible card", () => {
     const c = boot();
     c.run("actions.new();stopTalk();state.brief=true");
     assert.equal(c.run("floorOrder.map(i=>floors[i].level).join(',')"), "B1F,1F,2F,3F,4F,5F,6F,7F,8F,9F");
     for (const index of c.run("floorOrder")) {
-      c.run(`travelTo(${index});showFloorMap(${index});close()`);
-      for (const id of ["cabinet", "elevator"]) assert.ok(c.run(`routeTo('${id}').length > 0`));
-      c.run("go('cabinet');for(let i=0;i<500 && target;i++) frame(last+35)");
+      c.run("elevator()");
+      assert.doesNotMatch(c.el("modal").innerHTML, /floor-plan|floor-tabs/);
+      assert.equal((c.el("modal").innerHTML.match(/data-action="floor-/g)||[]).length, 10);
+      c.run(`actions['floor-${index}']();close()`);
+      const guide = c.run("floors[runtime.floor].guide");
+      const spot = guide ? "librarian" : "cabinet";
+      const source = c.run("floors[runtime.floor].caption") + (guide ? " · " + guide : " 자료 캐비닛");
+      for (const id of [spot, "elevator"]) assert.ok(c.run(`routeTo('${id}').length > 0`), `floor ${index} to ${id}`);
+      c.run(`go('${spot}');for(let i=0;i<500 && target;i++) frame(last+35)`);
+      if (guide) {
+        assert.equal(c.run("talkState.role"), "librarian");
+        assert.equal(c.run("spotActive('cabinet')"), false);
+        c.finish();
+      }
       assert.equal(c.run("modalKind"), "cabinet");
-      assert.match(c.el("modal").innerHTML,/용어 카드를 발견/);
-      c.run("close();interact()");
+      assert.match(c.el("modal").innerHTML,/용어 카드를 얻었다!/);
+      assert.ok(c.el("modal").innerHTML.includes(source));
+      assert.match(c.el("modal").innerHTML,/오른쪽 아래의 ‘용어 수첩’/);
+      c.run("close();interact()");if (guide) c.finish();
       assert.match(c.el("modal").innerHTML,/다시 펼친 용어 카드/);
       c.run("close()");
       const restored = boot(c.store.get("jodal-master-v1"));
       assert.equal(restored.run("floor"),index);
       assert.equal(restored.run("state.learnedTerms.length"),c.run("state.learnedTerms.length"));
+      restored.run("openGlossary()");
+      assert.ok(restored.el("modal").innerHTML.includes(source));
     }
     assert.equal(c.run("state.learnedTerms.length"),10);
     assert.equal(c.run("state.stage"),0);
   });
+  check("Discovering a cabinet note plays its cue only once and respects the effects switch", () => {
+    const c = boot();
+    c.run("unlockAudio()");
+    const before = c.nodes.length;
+    c.run("openCabinet()");
+    assert.ok(c.nodes.slice(before).some(n => n.buffer && n.buffer.duration < 0.23));
+    assert.equal(c.nodes.slice(before).filter(n => n.type === "sine").length, 3);
+    const after = c.nodes.length;
+    c.run("openCabinet();openGlossary();changeSoundSetting('effects',false);runtime.floor=1;openCabinet()");
+    assert.equal(c.nodes.length, after + 2);
+    assert.ok(c.nodes.slice(after).every(node => node.type === "sawtooth"));
+    assert.match(c.el("modal").innerHTML, /용어 카드를 얻었다!/);
+  });
+  check("The library visitor describes the current errand and receives the card after their final reply", () => {
+    const cases = [
+      [0, {}, "첫 출근", "5층"], [0, {brief:true}, "언제까지", "5층"],
+      [0, {brief:true,contact:true}, "납품기한", "5층"],
+      [1, {}, "브랜드", "5층"], [1, {specAdvice:true}, "규격서를 고치", "5층"],
+      [2, {}, "수량", "5층"], [2, {noticeChecked:true}, "초안을 다 써", "5층"],
+      [4, {}, "계약팀", "2층"], [4, {awardBrief:true}, "개찰 자료", "2층"],
+      [4, {awardBrief:true,openingChecked:true}, "심사 결과", "2층"],
+      [5, {}, "잘 도착", "5층"], [5, {deliveryIssueReported:true}, "빠졌던", "5층"],
+      [5, {inspectionChecked:true}, "대금 청구", "5층"], [6, {}, "둘러보는", "둘러보세요"],
+    ];
+    for (const [stage, progress, errand, destination] of cases) {
+      const c = boot();
+      c.run(`runtime.floor=spots.librarian.floor;Object.assign(state,${JSON.stringify({stage,...progress})});actions.librarian()`);
+      const line = (role, fragment) => {
+        assert.equal(c.run("talkState.role"), role);
+        c.run("revealLine()");
+        assert.ok(c.el("speech-text").textContent.includes(fragment));
+        assert.equal(c.run("state.learnedTerms.length"), 0);
+        c.run("nextLine()");
+      };
+      line("librarian", "여긴 어떻게 오셨어요?");
+      line("rookie", errand); line("librarian", destination); line("librarian", "용역"); line("rookie", "그렇군요!");
+      assert.equal(c.run("state.learnedTerms.join()"), "용역");
+    }
+  });
+  check("Cabinet approaches face nine distinct drawers and the meeting room and occupied desks fit their floors", () => {
+    const c = boot();
+    assert.equal(c.run("new Set(floors.filter(f=>!f.guide).map(f=>JSON.stringify(f.cabinetApproach))).size"), 9);
+    for (const floor of c.run("floors")) {
+      const cabinet = floor.furnishings.find(o => o.type === "cabinet");
+      if (cabinet) {
+        assert.equal(floor.cabinetApproach.x, (cabinet.x+.5)*32);
+        assert.equal(floor.cabinetApproach.y, (cabinet.y+1.5)*32);
+      }
+      if (floor.level === "8F") assert.ok(["conference","projection","lounge"].every(type=>floor.furnishings.some(o=>o.type===type)));
+    }
+    assert.equal(c.run("floors.flatMap(f=>f.furnishings.filter(o=>o.activity).map(o=>f.level+' '+o.activity)).join()"), "3F typing,6F sighing,9F typing");
+  });
   check("Cabinet titles count only cabinet cards and remain independent of the character evaluation", () => {
     const c=boot();
-    for (const [cards, title] of [[0,"수집 준비생"],[1,"서류 탐색가"],[4,"서류 탐색가"],[5,"청사 기록가"],[9,"청사 기록가"],[10,"캐비닛 수집왕"]]) {
+    for (const [cards, title] of [[0,"수집 준비생"],[1,"서류 탐색가"],[4,"서류 탐색가"],[5,"청사 기록가"],[8,"청사 기록가"],[9,"캐비닛 수집왕"]]) {
       for (const [mistakes, outfit] of [[0,"jeongpa"],[2,"jeongpa"],[3,"sapa"]]) {
-        c.run(`state.stage=6;state.mistakes=${mistakes};state.learnedTerms=['규격',...floors.slice(0,${cards}).map(f=>f.term)];result()`);
-        assert.match(c.el("modal").innerHTML,new RegExp(title+".*캐비닛 카드 "+cards+"/10장"));
+        c.run(`state.stage=6;state.mistakes=${mistakes};state.termSources['용역']='7층 도서실 · 문다은 자료 담당자';state.learnedTerms=['규격','용역',...floors.filter(f=>!f.guide).slice(0,${cards}).map(f=>f.term)];result()`);
+        assert.match(c.el("modal").innerHTML,new RegExp(title+".*캐비닛 카드 "+cards+"/9장"));
         assert.equal(c.run("rookieOutfit()"),outfit);
         assert.ok(c.el("modal").innerHTML.includes(c.run(`face('${outfit}')`)));
         assert.equal(c.run("sceneItems(false).at(-1).actor"),outfit);
       }
     }
     assert.notEqual(c.run("face('jeongpa')"), c.run("face('sapa')"));
+    c.run("state.termSources={};result()");
+    assert.match(c.el("modal").innerHTML,/캐비닛 수집왕.*10\/10장/);
   });
   check("The library contact has a dedicated portrait and the floor guide stays inside the map", () => {
-    const c=boot();c.run("state.brief=true;phone()");
+    const c=boot();c.run("state.brief=true;phone()");c.answerPhone();
     assert.equal(c.el("speech-portrait").innerHTML,c.run("face('contact')"));
     assert.notEqual(c.run("face('contact')"),c.run("face('supplier')"));
     c.finish();c.run("openGlossary()");
     assert.equal((c.el("modal").innerHTML.match(/href="/g)||[]).length,1);
     c.run("actions.map();actions['map-1']()");
     assert.match(c.el("modal").innerHTML,/2층 계약팀/);
+    assert.equal((c.el("modal").innerHTML.match(/data-action="close"/g) || []).length, 1);
     assert.doesNotMatch(c.el("modal").innerHTML,/https?:|data-action="floor-/);
   });
   check("Individual explanations unlock once, persist mid-dialogue and reset for a new game", () => {
@@ -1167,18 +1367,21 @@ async function main() {
     c.run("close();while(talkState.index<3){revealLine();nextLine()}");
     assert.equal(c.run("state.learnedTerms.length"), 0);
     c.run("revealLine();revealLine()");
-    assert.equal(c.el("learned-terms").innerHTML, "<li>수요기관</li>");
+    assert.equal(Number(c.el("glossary-count").textContent), 1);
+    assert.equal(c.run("state.unreadTerms.join()"), "수요기관");
     const loaded = boot(c.store.get("jodal-master-v1"));
-    assert.equal(loaded.el("learned-terms").innerHTML, "<li>수요기관</li>");
+    assert.equal(Number(loaded.el("glossary-count").textContent), 1);
+    assert.equal(loaded.run("state.unreadTerms.join()"), "수요기관");
     loaded.run("actions.new()");
-    assert.equal(loaded.el("learned-terms").innerHTML, "");
+    assert.equal(Number(loaded.el("glossary-count").textContent), 0);
     const old = JSON.parse(c.store.get("jodal-master-v1"));
-    delete old.learnedTerms;
+    delete old.learnedTerms; delete old.unreadTerms;
     old.stage = 4; old.xp = 400; old.awardBrief = false;
     const legacy = boot(JSON.stringify(old));
     legacy.run("openGlossary()");
     assert.equal((legacy.el("modal").innerHTML.match(/<summary>/g)||[]).length, 3);
-    assert.doesNotMatch(legacy.el("learned-terms").innerHTML, /예정가격/);
+    assert.equal(legacy.run("state.learnedTerms.includes('예정가격')"), false);
+    assert.equal(legacy.run("state.unreadTerms.length"), 0);
   });
   check("Glossary cites the official procedure and completed ending reviews all six lessons", () => {
     b.run("result()");
@@ -1198,11 +1401,12 @@ async function main() {
     const c = boot(null, true);
     c.run("actions.new()");
     c.finish();
-    c.run("phone()");
+    c.run("phone()");c.answerPhone();
     c.finish();
-    c.run("actions['intake-good']();actions.advance();mentor()");
+    c.run("documentDesk()");c.el("deadline-days").value="30";
+    c.run("actions['intake-submit']();actions.advance();mentor()");
     c.finish();
-    c.run("actions['spec-good']();actions.advance();terminal();actions['portal-signin']()");
+    c.run("actions['spec-good']();actions.advance();terminal();actions['portal-signin']();submitItem(0)");
     c.el("portal-quantity").value = 20;
     c.run("savePortalDraft();close();mentor()");
     c.finish();
@@ -1216,7 +1420,7 @@ async function main() {
     c.finish();
     c.run("travelTo(1);officer()");
     c.finish();
-    c.run("openingGood();contractGood();actions.advance();travelTo(0);reportDeliveryIssue()");
+    c.run("openingGood();contractGood();actions.advance();travelTo(0);reportDeliveryIssue()");c.answerPhone();
     c.finish();
     c.run("inspectDelivery();finishPayment()");
     c.finish();
@@ -1324,7 +1528,8 @@ async function main() {
       },
     });
     assert.equal(c.el("title-screen").hidden, true);
-    assert.equal(c.el("speech-name").textContent, "김주문");
+    assert.equal(c.el("speech-name").textContent, "조달달");
+    assert.equal(c.el("first-day").hidden, false);
   });
   console.log(`${checks} checks passed.`);
 }

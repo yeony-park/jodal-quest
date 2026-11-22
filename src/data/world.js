@@ -11,7 +11,7 @@ export const spots = {
   phone: { x: 80, y: 400, floor: 0 },
   terminal: { x: 464, y: 400, floor: 0 },
   supplier: { x: 272, y: 240, npcX: 304, npcY: 208, floor: 0 },
-  cabinet: { x: 112, y: 240 },
+  cabinet: {},
   elevator: { x: 16, y: 240 },
   officer: { x: 496, y: 112, npcX: 528, npcY: 96, floor: 1 },
   bidroom: { x: 432, y: 112, floor: 1 },
@@ -78,12 +78,12 @@ export const floors = [
 const tourFloors = [
   ["B1F", "기록관", ["조달청기록관", "제안서평가실"], "조달기록", ["shelf", "shelf", "shelf"], ["table", "plant", "shelf"], "#e7dae0"],
   ["1F", "전시관", ["조달전시관", "문화상품전시관"], "조달물자", ["plant", "display", "plant"], ["display", "plant", "display"], "#f9e5cb"],
-  ["3F", "가격·데이터", ["조달가격조사과", "조달데이터관리팀"], "가격조사", ["desk", "shelf", "desk"], ["desk", "plant", "shelf"], "#d9e8f4"],
+  ["3F", "가격·데이터", ["조달가격조사과", "조달데이터관리팀"], "가격조사", ["desk", "shelf", "desk"], ["desk", "plant", "shelf"], "#efe2ce"],
   ["4F", "물품관리", ["물품관리과", "해외물자과"], "물품관리", ["shelf", "shelf", "desk"], ["shelf", "table", "shelf"], "#dbe9d8"],
-  ["6F", "시설사업", ["설계예산검토과", "건축설비과"], "설계도서", ["table", "table", "desk"], ["desk", "table", "shelf"], "#e5e3f0"],
+  ["6F", "시설사업", ["설계예산검토과", "건축설비과"], "설계도서", ["table", "table", "desk"], ["desk", "table", "shelf"], "#ece1cf"],
   ["7F", "도서실", ["도서실", "서비스계약과"], "용역", ["shelf", "shelf", "shelf"], ["plant", "table", "desk"], "#e9dfcf"],
-  ["8F", "회의 공간", ["기획재정담당관실", "대회의실"], "예산", ["desk", "plant", "shelf"], ["table", "table", "table"], "#ecdfee"],
-  ["9F", "혁신조달", ["혁신조달정책과", "운영지원과"], "혁신조달", ["table", "desk", "desk"], ["shelf", "table", "plant"], "#d5eae5"],
+  ["8F", "회의 공간", ["대회의실", "기획재정담당관실"], "예산", [], [], "#ebdecf"],
+  ["9F", "혁신조달", ["혁신조달정책과", "운영지원과"], "혁신조달", ["table", "desk", "desk"], ["shelf", "table", "plant"], "#e9e4cf"],
 ];
 for (const [level, name, rooms, term, firstRoom, secondRoom, tint] of tourFloors) {
   const furnishings = [];
@@ -98,12 +98,48 @@ for (const [level, name, rooms, term, firstRoom, secondRoom, tint] of tourFloors
     partitions: [{axis: "v", at: 8, from: 0, to: 6, z: 24},
       {axis: "h", at: 9, from: 0, to: 18, doors: [3, 8, 13], z: 16}]});
 }
+const library = floors.findIndex(f => f.level === "7F");
+floors[library].guide = "문다은 자료 담당자";
+spots.librarian = {x: 112, y: 240, npcX: 112, npcY: 208, floor: library};
+
+const meetingFloor = floors.find(f => f.level === "8F");
+meetingFloor.furnishings.push(
+  {type: "projection", x: 1, y: 0, w: 6, h: 1},
+  {type: "conference", x: 1, y: 2, w: 6, h: 3},
+  {type: "plant", variety: "palm", x: 7, y: 1, w: 1, h: 1},
+  {type: "window", x: 10, y: 0, w: 7, h: 1},
+  {type: "desk", x: 11, y: 3, w: 2, h: 1},
+  {type: "shelf", x: 15, y: 1, w: 2, h: 1},
+  {type: "lounge", x: 3, y: 10, w: 4, h: 2},
+  {type: "plant", x: 7, y: 11, w: 1, h: 1},
+  {type: "coffee", x: 12, y: 10, w: 3, h: 1},
+  {type: "plant", variety: "palm", x: 16, y: 11, w: 1, h: 1},
+);
+
+const cabinetTiles = {
+  B1F: [1, 1], "1F": [15, 10], "2F": [15, 1], "3F": [6, 2], "4F": [12, 11],
+  "5F": [7, 0], "6F": [3, 11], "8F": [14, 1], "9F": [6, 10],
+};
+const occupiedDesks = { "3F": [2, 2, "typing"], "6F": [2, 10, "sighing"], "9F": [4, 2, "typing"] };
 for (const floor of floors) {
+  if (!floor.guide) {
+    const [x, y] = cabinetTiles[floor.level];
+    floor.furnishings.push({type: "cabinet", spot: "cabinet", x, y, w: 1, h: 1});
+    floor.cabinetApproach = {x: (x + .5) * TILE, y: (y + 1.5) * TILE};
+  }
+  const occupied = occupiedDesks[floor.level];
+  if (occupied) {
+    const [x, y, activity] = occupied;
+    floor.furnishings.find(o => o.type === "desk" && o.x === x && o.y === y).activity = activity;
+  }
   floor.furnishings.push(
-    {type: "cabinet", spot: "cabinet", x: 3, y: 6, w: 1, h: 1},
     {type: "plant", variety: "palm", x: 0, y: 3, w: 1, h: 1},
     {type: "plant", variety: "flowers", x: 15, y: 4, w: 1, h: 1},
   );
+}
+
+export function spotOnFloor(id, index) {
+  return id === "cabinet" ? floors[index].cabinetApproach : spots[id];
 }
 
 // The supplier uses its own office during the bid, without the agency's collection cabinet.

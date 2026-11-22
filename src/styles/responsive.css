@@ -9,9 +9,6 @@
   .map-caption {
     font-size: 10px;
   }
-  .map-note {
-    font-size: 9px;
-  }
   .top-controls {
     right: 12px;
     top: 12px;
@@ -27,9 +24,6 @@
   }
   #quest-count {
     margin-left: 4px;
-  }
-  .quest-toggle .quest-icon {
-    display: none;
   }
   .notebook {
     top: 72px;

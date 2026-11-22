@@ -25,13 +25,13 @@ export function loadGame() {
         Object.hasOwn(recoveryScenes,s.pendingRecovery) &&
         recoveryScenes[s.pendingRecovery].stage === s.stage
       )) &&
-      (s.xp === undefined || (Number.isInteger(s.xp) && s.xp >= s.stage * 100 && s.xp <= s.stage * 125 && s.xp % 25 === 0)) &&
+      (s.xp === undefined || (Number.isInteger(s.xp) && s.xp >= 0 && s.xp <= s.stage * 125 && s.xp % 25 === 0)) &&
       (s.questMistakes === undefined || (Number.isInteger(s.questMistakes) && s.questMistakes >= 0 && s.questMistakes <= s.mistakes)) &&
       Number.isInteger(s.stage) &&
       s.stage >= 0 &&
       s.stage <= LAST_STAGE &&
       (s.floor === undefined || (Number.isInteger(s.floor) && s.floor >= 0 && s.floor < floors.length)) &&
-      ["contractFarewell", "awardBrief", "openingChecked", "deliveryIssueReported", "deliverySurpriseSeen", "inspectionChecked"].every(
+      ["badgeRegistered", "contractFarewell", "awardBrief", "openingChecked", "deliveryIssueReported", "deliverySurpriseSeen", "inspectionChecked"].every(
         (k) => s[k] === undefined || typeof s[k] === "boolean",
       ) &&
       [
@@ -48,9 +48,15 @@ export function loadGame() {
       Array.isArray(s.history) &&
       s.history.every((x) => typeof x === "string")
     ) {
-      runtime.state = { ...fresh(), ...s, xp: s.xp ?? s.stage * 100, questMistakes: s.questMistakes ?? s.mistakes };
+      runtime.state = { ...fresh(), ...s, badgeRegistered: s.badgeRegistered ?? (s.noticeChecked || s.stage > 2), xp: s.xp ?? s.stage * 100, questMistakes: s.questMistakes ?? s.mistakes };
       runtime.state.learnedTerms = s.learnedTerms === undefined ? legacyLearnedTerms(s)
         : [...new Set((Array.isArray(s.learnedTerms) ? s.learnedTerms : []).filter(term => typeof term === "string" && Object.hasOwn(glossary, term)))];
+      runtime.state.termSources = Object.fromEntries(runtime.state.learnedTerms.flatMap(term => {
+        const place = s.termSources?.[term];
+        return typeof place === "string" && place.length <= 100 && !/[<>&]/.test(place) ? [[term, place]] : [];
+      }));
+      runtime.state.unreadTerms = Array.isArray(s.unreadTerms)
+        ? runtime.state.learnedTerms.filter(term => s.unreadTerms.includes(term)) : [];
       runtime.floor = s.stage === 3 ? 0 : runtime.state.floor;
       runtime.state.floor = runtime.floor;
       runtime.loaded = s.started;
@@ -67,6 +73,6 @@ export function save() {
     $("save-status").textContent = "✓ 자동 저장됨";
   } catch (e) {
     runtime.storageOK = false;
-    $("save-status").textContent = "저장 불가 · 현재 창에서만 진행 가능";
+    $("save-status").textContent = "저장 불가 · 현재 창에서만 이어서 진행할 수 있어요";
   }
 }

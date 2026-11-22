@@ -37,9 +37,9 @@ export function rookieOutfit() {
   return endingTitle(runtime.state.recoveries, runtime.state.mistakes) === "사파" ? "sapa" : "jeongpa";
 }
 
-const hair = { contact: "#685b52", sapa: "#332d40", supplier: "#49384d", mentor: "#605049", officer: "#2f3a4f" };
+const hair = { typist: "#51444d", reviewer: "#756257", librarian: "#794930", contact: "#685b52", sapa: "#332d40", supplier: "#49384d", mentor: "#605049", officer: "#2f3a4f" };
 
-const jacket = { contact: "#478786", sapa: "#4b365a", jeongpa: "#e5eedd", supplier: "#956ba5", mentor: "#c29458", officer: "#5f7f63" };
+const jacket = { typist: "#7876a3", reviewer: "#b17561", librarian: "#b56d59", contact: "#478786", sapa: "#4b365a", jeongpa: "#e5eedd", supplier: "#956ba5", mentor: "#c29458", officer: "#5f7f63" };
 
 export function pixelPalette(kind) {
   return {
@@ -65,6 +65,10 @@ export function spriteCells(kind) {
   if (kind === "supplier") {
     for (let y = 6; y < 15; y++) for (const x of [2, 3, 12, 13]) cells.push([x, y, "H"]);
     cells.push([12, 5, "A"], [13, 5, "A"], [12, 6, "A"]);
+  }
+  if (kind === "librarian") {
+    for (let y = 3; y <= 8; y++) cells.push([2,y,"H"],[13,y,"H"]);
+    cells.push([4,7,"W"],[5,7,"X"],[6,7,"W"],[9,7,"W"],[10,7,"X"],[11,7,"W"],[10,14,"W"],[11,14,"W"]);
   }
   if (kind === "contact") {
     // A pinned bun, light fringe and a library badge distinguish the caller at portrait size.

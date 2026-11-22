@@ -1,25 +1,26 @@
+import { playPaperTurn } from "../audio/sound.js";
 import { levelProgress } from "../game/progression.js";
 import { runtime } from "../core/runtime.js";
 import { $ } from "../core/dom.js";
-import { buttons, show, toast } from "./modal.js";
+import { show, toast } from "./modal.js";
 
 export const inventoryItems = [
   {
     name: "사원증",
     description:
-      "새봄지방조달청 신입 9급 주무관 조달달의 사원증. 김주문에게 첫 업무를 받은 증표입니다.",
+      "새봄지방조달청 신입 9급 주무관 조달달의 사원증. 김주문 선배에게 첫 업무를 받은 증표예요.",
     color: "#72a3ad",
   },
   {
     name: "요청서",
     description:
-      "수요기관에 확인한 납기와 장소를 보완한 요청서. 모니터 20대, 계약일로부터 30일 이내입니다.",
+      "수요기관에 확인한 납기와 장소를 채운 요청서. 모니터 20대, 계약일로부터 30일 이내 납품 조건입니다.",
     color: "#bd9f64",
   },
   {
     name: "규격서",
     description:
-      "수요기관과 협의하고 선배가 검토한 성능 중심 규격서. 24형 이상, FHD 이상, HDMI 연결입니다.",
+      "수요기관과 협의하고 선배가 검토한 성능 중심 규격서. 24형 이상, FHD 이상, HDMI 연결 조건입니다.",
     color: "#789c72",
   },
   {
@@ -29,17 +30,17 @@ export const inventoryItems = [
   },
   {
     name: "접수증",
-    description: "새봄테크의 입찰서가 접수되었습니다. 제출은 낙찰이나 계약 체결이 아닙니다.",
+    description: "새봄테크의 입찰서가 접수됐습니다. 제출만으로 낙찰이나 계약이 확정되지는 않습니다.",
     color: "#b686b7",
   },
   {
     name: "계약서",
-    description: "공고한 선정방식에 따른 심사를 마치고 권한 있는 담당자가 체결한 전자계약. 모니터 20대, 계약 후 30일 이내 납품입니다.",
+    description: "공고한 선정방식에 따른 심사를 마치고 권한 있는 담당자가 체결한 전자계약서. 모니터 20대, 계약 후 30일 이내 납품입니다.",
     color: "#c58e62",
   },
   {
     name: "완료철",
-    description: "검사·검수와 물품인수, 영수증 및 납품 서류 확인을 마치고 대금 지급까지 진행한 업무 기록입니다.",
+    description: "검사·검수와 물품인수, 영수증·납품 서류 확인을 마치고 대금 지급까지 끝낸 업무 기록입니다.",
     color: "#76a395",
   },
 ];
@@ -69,14 +70,15 @@ export function renderInventory() {
     .map(
       (item, i) =>
         /* HTML */ `<button
-          class="inventory-slot ${owned[i] ? "owned" : ""}"
+          class="inventory-slot ${owned[i] ? "owned" : ""}${runtime.pendingSubmission?.expectedItem === i ? " requested" : ""}"
           data-action="item-${i}"
+          ${runtime.pendingSubmission ? (owned[i] ? 'draggable="true" aria-pressed="false"' : 'disabled') : ""}
           aria-label="${i + 1}번 칸 · ${owned[i] ? item.name : "빈칸"}"
           title="${owned[i] ? item.name : "아직 얻지 못한 물건"}"
         >
           <span class="slot-number">${i + 1}</span
           >${owned[i] ? itemIcon(i) : '<span class="slot-empty">·</span>'}<span class="slot-name"
-            >${owned[i] ? item.name : "빈칸"}</span
+            >${owned[i] ? item.name : ""}</span
           >
         </button>`,
     )
@@ -87,7 +89,17 @@ export function renderInventory() {
   $("xp-bar").max = next;
   $("xp-bar").setAttribute("aria-valuetext", `${current} / ${next} XP · 총 ${runtime.state.xp} XP`);
   $("xp-label").textContent = `${current} / ${next} XP`;
-  $("xp-status").title = `총 ${runtime.state.xp} XP (업무 완료 100 XP / 실수 없이 완료 시 +25 XP)`;
+  $("xp-status").title = `총 ${runtime.state.xp} XP · 직접 완료 125 XP · 선배가 처리한 업무 0 XP`;
+}
+
+export function itemDescription(i) {
+  if (i === 1 && runtime.state.stage === 0) return "새봄도서관에서 보낸 모니터 20대 구매 요청서. 납기 칸은 비어 있다.";
+  if (i === 2 && runtime.state.stage === 1) return "성능 기준으로 수정할 규격서 초안. 선배에게 조건을 확인하세요.";
+  return inventoryItems[i].description;
+}
+
+export function submittedPaper(item) {
+  return `<summary>제출한 ${inventoryItems[item].name}</summary><p>${itemDescription(item)}</p>`;
 }
 
 export function inspectItem(i) {
@@ -95,11 +107,11 @@ export function inspectItem(i) {
     toast("퀘스트를 마치면 물건이 이 칸에 들어와요.");
     return;
   }
+  if (i > 0) playPaperTurn();
   show(
     inventoryItems[i].name,
     /* HTML */ `<div class="large-item">${itemIcon(i)}</div>
-      <p>${i===1 && runtime.state.stage===0 ? "수요기관에 납기와 장소를 확인해 보완할 요청서 초안. 구매 물품 : 모니터 20대." : i===2 && runtime.state.stage===1 ? "성능 기준으로 수정할 규격서 초안. 선배에게 조건을 확인하세요." : inventoryItems[i].description}</p>
-      ${buttons([["close", "가방 닫기"]])}`,
+      <p>${itemDescription(i)}</p>`,
     "item",
   );
 }
