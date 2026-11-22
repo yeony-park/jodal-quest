@@ -7,7 +7,9 @@ try {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     [System.IO.Compression.ZipFile]::CreateFromDirectory("$root/dist", $bundle)
     $compiler = "$env:WINDIR/Microsoft.NET/Framework64/v4.0.30319/csc.exe"
-    & $compiler /nologo /target:winexe /platform:x64 /optimize+ /codepage:65001 "/out:$out/JodalQuest-Windows-x64.exe" "/resource:$bundle,game.zip" /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll /reference:System.Windows.Forms.dll "$PSScriptRoot/Launcher.cs"
+    $source = Join-Path $PSScriptRoot 'Launcher.cs'
+    $exe = Join-Path $out 'JodalQuest-Windows-x64.exe'
+    & $compiler /nologo /target:winexe /platform:x64 /optimize+ /codepage:65001 "/out:$exe" "/resource:$bundle,game.zip" /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll /reference:System.Windows.Forms.dll $source
     if ($LASTEXITCODE -ne 0) { throw 'Windows launcher build failed.' }
 } finally {
     Remove-Item $bundle -ErrorAction SilentlyContinue
