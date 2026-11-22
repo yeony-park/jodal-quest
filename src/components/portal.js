@@ -9,10 +9,9 @@ import { render } from "./hud.js";
 export function portalShell(content, page) {
   const supplier = runtime.state.stage === 3;
   return /* HTML */ `<div class="monitor-chrome">
-      <span>▣ 업무용 모니터</span><span>나라장터 체험</span
+      <span>▣ 업무용 모니터</span><span>나라장터</span
       ><button data-action="close" aria-label="모니터 닫고 사무실로">×</button>
     </div>
-    <div class="training-ribbon">게임 속 모의 나라장터 · 실제 서비스와 연결되지 않습니다</div>
     <div class="g2b-top">
       <span>나라장터　 종합쇼핑몰　 조달데이터허브　 누리장터</span
       ><button data-action="portal-login">
@@ -22,7 +21,7 @@ export function portalShell(content, page) {
     <div class="g2b-brand">
       <div class="g2b-logo">
         <i></i>
-        <div>나라장터<small>국가종합전자조달 · 체험</small></div>
+        <div>나라장터<small>국가종합전자조달</small></div>
       </div>
       <div class="g2b-search">
         <input
@@ -33,7 +32,7 @@ export function portalShell(content, page) {
         /><button data-action="portal-search" aria-label="검색">⌕</button>
       </div>
     </div>
-    <nav class="g2b-nav" aria-label="모의 나라장터 메뉴">
+    <nav class="g2b-nav" aria-label="나라장터 메뉴">
       <button data-action="portal-work">발주</button><button data-action="portal-list">입찰</button
       ><button data-action="portal-guide">공통</button
       ><button data-action="portal-guide">이용자관리</button
@@ -56,7 +55,7 @@ export function openPortal(page = "home", query = "모니터") {
           <h3>나라장터 시작하기</h3>
           <p>오늘의 한 건을 차근차근 준비해 보세요.</p>
           <button class="g2b-primary" data-action="portal-login">
-            ${runtime.portalSignedIn ? "나의 업무" : "체험 로그인"}
+            ${runtime.portalSignedIn ? "나의 업무" : "로그인"}
           </button>
           <div class="g2b-small-buttons">
             <button data-action="portal-guide">이용자등록</button
@@ -82,21 +81,20 @@ export function openPortal(page = "home", query = "모니터") {
           <p class="g2b-news">모두에게 같은 정보를 공개합니다.</p>
           <div class="g2b-support">
             <b>처음이어도 괜찮아요.</b><span>김주문의 업무 노트와<br />함께 진행해 보세요.</span
-            ><button data-action="portal-guide">체험 이용 안내</button>
+            ><button data-action="portal-guide">이용 안내</button>
           </div>
         </section>
       </div>`;
   else if (page === "login")
-    content = /* HTML */ `<div class="g2b-breadcrumb">홈 / 체험 로그인</div>
-      <h3>체험 계정으로 시작</h3>
+    content = /* HTML */ `<div class="g2b-breadcrumb">홈 / 로그인</div>
+      <h3>업무 계정으로 시작</h3>
       <div class="g2b-login-card">
         <div class="large-avatar">${face(runtime.state.stage === 3 ? "supplier" : "rookie")}</div>
         <h4>
           ${runtime.state.stage === 3 ? "욘 대리 · 새봄테크" : "조달달 주무관 · 새봄지방조달청"}
         </h4>
         <p>
-          실제 아이디·비밀번호·인증서는 입력하지 않습니다.<br />미리 준비된 업무 계정으로
-          진행합니다.
+          미리 준비된 업무 계정으로 진행합니다.
         </p>
         <button class="g2b-primary" data-action="portal-signin">업무 계정으로 로그인</button>
       </div>`;
@@ -163,7 +161,7 @@ export function openPortal(page = "home", query = "모니터") {
       </div>`;
   else if (page === "bid")
     content = /* HTML */ `<div class="g2b-breadcrumb">홈 / 입찰 / 입찰서 작성</div>
-      <h3>모의 입찰서 작성</h3>
+      <h3>입찰서 작성</h3>
       <div class="g2b-form">
         <div><label>업체 / 담당자</label><span>새봄테크 / 욘 대리</span></div>
         <div>
@@ -177,21 +175,20 @@ export function openPortal(page = "home", query = "모니터") {
         참가자격과 제출서류를 확인했습니다. 새봄테크는 등록·참가 요건을 갖췄습니다.</label
       >
       <p class="g2b-caution">
-        모의 제출이며 실제 입찰로 전송되지 않습니다. 접수는 낙찰·계약 체결을 뜻하지 않습니다.
+        접수는 낙찰·계약 체결을 뜻하지 않습니다.
       </p>
       <div class="g2b-actions">
-        <button class="g2b-primary" data-action="submit-bid">모의 입찰서 제출</button
+        <button class="g2b-primary" data-action="submit-bid">입찰서 제출</button
         ><button data-action="portal-detail">공고 다시 보기</button>
       </div>`;
   else
-    content = /* HTML */ `<h3>나라장터 체험 이용 안내</h3>
+    content = /* HTML */ `<h3>나라장터 이용 안내</h3>
       <p>
-        이번 체험은 한 건만 다룹니다. 공무원은 공고 초안을 준비하고 선배에게 검토를 요청합니다. 기업
+        공무원은 공고 초안을 준비하고 선배에게 검토를 요청합니다. 기업
         담당자는 게시된 공고를 검색하고 입찰서를 제출합니다.
       </p>
-      <p>실제 이용자등록, 인증서, 보증과 세부 서류는 생략했습니다.</p>
       <button class="g2b-primary" data-action="portal-home">나라장터 첫 화면</button>`;
-  show("모의 나라장터", portalShell(content, page), "portal");
+  show("나라장터", portalShell(content, page), "portal");
   if (page === "list") $("portal-query-label").textContent = query || "전체";
 }
 

@@ -50,7 +50,7 @@ export function render() {
             ? [
                 [runtime.state.product, "공고에 맞는 제품 선택"],
                 [runtime.state.eligibility, "참가 조건 확인"],
-                [false, "모의 입찰서 제출"],
+                [false, "입찰서 제출"],
               ]
             : runtime.state.stage === 4
               ? [[runtime.state.awardBrief, "3층 계약 담당자에게 설명 듣기"], [runtime.state.openingChecked, "입찰 전 결정한 예정가격 확인"], [false, "선정방식에 따른 심사 확인 후 전자계약"]]

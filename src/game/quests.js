@@ -41,7 +41,7 @@ export function complete(title, body) {
     title,
     /* HTML */ `<div class="success">✓ ${body}</div>
       <p>
-        ${completed === 2 ? "검토·결재를 거쳐 공고가 게시됐습니다. 다음 장면에서는 기업 담당자로 전환합니다." : "퀘스트 완료! 진행 상황을 이 브라우저에 저장했습니다."}
+        ${completed === 2 ? "검토·결재를 거쳐 공고가 게시됐습니다. 이제 공고를 본 기업의 차례입니다." : "퀘스트 완료!"}
       </p>
       ${xpReward()}${lessonCard(completed)}
       ${buttons([["advance", completed === 2 ? "기업 담당자로 전환" : "다음 퀘스트"]])}`,
@@ -225,7 +225,7 @@ export function finishBid() {
     );
     return;
   }
-  runtime.state.history.push("기업 모의 입찰서 접수");
+  runtime.state.history.push("기업 입찰서 접수");
   awardQuestXP();
   runtime.state.stage = 4;
   runtime.portalSignedIn = false;
@@ -236,14 +236,14 @@ export function finishBid() {
   speak(
     "욘 대리",
     [
-      "모의 입찰서가 접수됐어요! 공고를 꼼꼼히 읽으니 제출까지 할 수 있었네요.",
+      "입찰서가 접수됐어요! 공고를 꼼꼼히 읽으니 제출까지 할 수 있었네요.",
       "접수는 낙찰이나 계약 체결이 아니에요. 다음 절차가 남아 있다는 점도 기억할게요.",
     ],
     () => {
       runtime.floor = 0;
       runtime.state.floor = 0;
       render();
-      show("모의 입찰서 접수 완료", `<div class="success">입찰서가 접수됐어요. 이어서 낙찰자 선정과 계약 절차를 배워요.</div>${xpReward()}${lessonCard(3)}${buttons([["return-rookie", "조달달로 돌아가 다음 업무 받기"]])}`, "advance", false);
+      show("입찰서 접수 완료", `<div class="success">입찰서가 접수됐어요. 이어서 낙찰자 선정과 계약 절차를 배워요.</div>${xpReward()}${lessonCard(3)}${buttons([["return-rookie", "조달달로 돌아가 다음 업무 받기"]])}`, "advance", false);
     },
     "supplier",
   );
@@ -252,7 +252,7 @@ export function finishBid() {
 export function returnRookie() {
   if (runtime.state.stage !== 4) return;
   speak("김주문", [
-    "조달달 주무관으로 돌아왔어요. 모의 입찰서는 접수됐고, 이제 낙찰자 선정과 계약 절차를 배울 차례예요.",
+    "조달달 주무관, 새봄테크의 입찰서가 접수됐어요. 이제 낙찰자 선정과 계약 절차를 배울 차례예요.",
     "복도 왼쪽 엘리베이터를 타고 3층 계약 담당자에게 가 보세요. 노트의 다음 목표 버튼도 안내해 줄 거예요.",
   ], () => {}, "mentor", "네! 엘리베이터를 타고 3층으로 가 볼게요.");
 }

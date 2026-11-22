@@ -137,7 +137,7 @@
     },
     {
       title: "이번에는 기업의 시선으로",
-      desc: "이제 공급기업 담당자입니다. 공고와 제품을 확인하고 모의 입찰서를 제출하세요.",
+      desc: "이제 공급기업 담당자입니다. 공고와 제품을 확인하고 입찰서를 제출하세요.",
       memo: "입찰서 제출은 낙찰이나 계약 체결이 아니에요. 이후 별도 심사와 절차가 이어져요.",
       dialogue: "이제 공급기업 담당자의 시선으로 볼까요? 공고에 맞는 제품인지, 참가 준비가 되었는지 확인하세요."
     },
@@ -331,7 +331,7 @@
   ];
   var glossary = [
     ["수요기관", "필요한 물품의 품명·규격·납기·예산 등을 적어 조달을 요청하는 기관이에요. 이번 수요기관은 새봄도서관이에요."],
-    ["규격", "구매할 물품의 크기·성능 등 필요한 조건이에요. 이 게임에서는 24형 이상·FHD 이상·HDMI 연결을 확인해요."],
+    ["규격", "구매할 물품의 크기·성능 등 필요한 조건이에요. 이번 구매에서는 24형 이상·FHD 이상·HDMI 연결을 확인해요."],
     ["구매결의", "수요기관명, 물품의 규격·수량, 계약방법, 낙찰자 선정방식, 예산, 입찰일시, 납품기한 등을 정리해요."],
     ["예정가격", "입찰 전에 결정하는 가격이에요. 공식 절차에서는 작성한 예비가격 중 추첨된 가격을 산술평균해 정해요."],
     ["낙찰자 선정·전자계약", "공고한 선정방식에 따른 심사를 거치고, 낙찰예정자와 전자계약을 체결해 계약이 성립해요."],
@@ -377,12 +377,12 @@
     },
     {
       name: "공고문",
-      description: "담당자 검토·결재 후 게시된 모의 공고문. 수량은 요청서와 같은 20대입니다.",
+      description: "담당자 검토·결재 후 게시된 공고문. 수량은 요청서와 같은 20대입니다.",
       color: "#728dc3"
     },
     {
       name: "접수증",
-      description: "새봄테크의 모의 입찰서가 접수되었습니다. 제출은 낙찰이나 계약 체결이 아닙니다.",
+      description: "새봄테크의 입찰서가 접수되었습니다. 제출은 낙찰이나 계약 체결이 아닙니다.",
       color: "#b686b7"
     },
     {
@@ -566,10 +566,9 @@
     return (
       /* HTML */
       `<div class="monitor-chrome">
-      <span>▣ 업무용 모니터</span><span>나라장터 체험</span
+      <span>▣ 업무용 모니터</span><span>나라장터</span
       ><button data-action="close" aria-label="모니터 닫고 사무실로">×</button>
     </div>
-    <div class="training-ribbon">게임 속 모의 나라장터 · 실제 서비스와 연결되지 않습니다</div>
     <div class="g2b-top">
       <span>나라장터　 종합쇼핑몰　 조달데이터허브　 누리장터</span
       ><button data-action="portal-login">
@@ -579,7 +578,7 @@
     <div class="g2b-brand">
       <div class="g2b-logo">
         <i></i>
-        <div>나라장터<small>국가종합전자조달 · 체험</small></div>
+        <div>나라장터<small>국가종합전자조달</small></div>
       </div>
       <div class="g2b-search">
         <input
@@ -590,7 +589,7 @@
         /><button data-action="portal-search" aria-label="검색">⌕</button>
       </div>
     </div>
-    <nav class="g2b-nav" aria-label="모의 나라장터 메뉴">
+    <nav class="g2b-nav" aria-label="나라장터 메뉴">
       <button data-action="portal-work">발주</button><button data-action="portal-list">입찰</button
       ><button data-action="portal-guide">공통</button
       ><button data-action="portal-guide">이용자관리</button
@@ -614,7 +613,7 @@
           <h3>나라장터 시작하기</h3>
           <p>오늘의 한 건을 차근차근 준비해 보세요.</p>
           <button class="g2b-primary" data-action="portal-login">
-            ${runtime.portalSignedIn ? "나의 업무" : "체험 로그인"}
+            ${runtime.portalSignedIn ? "나의 업무" : "로그인"}
           </button>
           <div class="g2b-small-buttons">
             <button data-action="portal-guide">이용자등록</button
@@ -640,22 +639,21 @@
           <p class="g2b-news">모두에게 같은 정보를 공개합니다.</p>
           <div class="g2b-support">
             <b>처음이어도 괜찮아요.</b><span>김주문의 업무 노트와<br />함께 진행해 보세요.</span
-            ><button data-action="portal-guide">체험 이용 안내</button>
+            ><button data-action="portal-guide">이용 안내</button>
           </div>
         </section>
       </div>`;
     else if (page === "login")
       content = /* HTML */
-      `<div class="g2b-breadcrumb">홈 / 체험 로그인</div>
-      <h3>체험 계정으로 시작</h3>
+      `<div class="g2b-breadcrumb">홈 / 로그인</div>
+      <h3>업무 계정으로 시작</h3>
       <div class="g2b-login-card">
         <div class="large-avatar">${face(runtime.state.stage === 3 ? "supplier" : "rookie")}</div>
         <h4>
           ${runtime.state.stage === 3 ? "욘 대리 · 새봄테크" : "조달달 주무관 · 새봄지방조달청"}
         </h4>
         <p>
-          실제 아이디·비밀번호·인증서는 입력하지 않습니다.<br />미리 준비된 업무 계정으로
-          진행합니다.
+          미리 준비된 업무 계정으로 진행합니다.
         </p>
         <button class="g2b-primary" data-action="portal-signin">업무 계정으로 로그인</button>
       </div>`;
@@ -725,7 +723,7 @@
     else if (page === "bid")
       content = /* HTML */
       `<div class="g2b-breadcrumb">홈 / 입찰 / 입찰서 작성</div>
-      <h3>모의 입찰서 작성</h3>
+      <h3>입찰서 작성</h3>
       <div class="g2b-form">
         <div><label>업체 / 담당자</label><span>새봄테크 / 욘 대리</span></div>
         <div>
@@ -739,22 +737,21 @@
         참가자격과 제출서류를 확인했습니다. 새봄테크는 등록·참가 요건을 갖췄습니다.</label
       >
       <p class="g2b-caution">
-        모의 제출이며 실제 입찰로 전송되지 않습니다. 접수는 낙찰·계약 체결을 뜻하지 않습니다.
+        접수는 낙찰·계약 체결을 뜻하지 않습니다.
       </p>
       <div class="g2b-actions">
-        <button class="g2b-primary" data-action="submit-bid">모의 입찰서 제출</button
+        <button class="g2b-primary" data-action="submit-bid">입찰서 제출</button
         ><button data-action="portal-detail">공고 다시 보기</button>
       </div>`;
     else
       content = /* HTML */
-      `<h3>나라장터 체험 이용 안내</h3>
+      `<h3>나라장터 이용 안내</h3>
       <p>
-        이번 체험은 한 건만 다룹니다. 공무원은 공고 초안을 준비하고 선배에게 검토를 요청합니다. 기업
+        공무원은 공고 초안을 준비하고 선배에게 검토를 요청합니다. 기업
         담당자는 게시된 공고를 검색하고 입찰서를 제출합니다.
       </p>
-      <p>실제 이용자등록, 인증서, 보증과 세부 서류는 생략했습니다.</p>
       <button class="g2b-primary" data-action="portal-home">나라장터 첫 화면</button>`;
-    show("모의 나라장터", portalShell(content, page), "portal");
+    show("나라장터", portalShell(content, page), "portal");
     if (page === "list") $("portal-query-label").textContent = query || "전체";
   }
   function terminal() {
@@ -881,7 +878,7 @@
       show("개찰·계약 자료", `<p>계약 담당자에게 업무 설명을 먼저 들어 주세요. 예정가격결정 → 입찰 → 낙찰자 선정·계약체결 순서로 진행해요.</p>${buttons([["close", "담당자에게 가기"]])}`);
       return;
     }
-    show("입찰 전에 정한 가격을 확인해요", `${doc("개찰 단계 학습 메모", [
+    show("입찰 전에 정한 가격을 확인해요", `${doc("개찰 단계 메모", [
       ["공식 업무 순서", "예정가격결정 → 입찰 → 낙찰자 선정 및 계약체결"],
       ["현재 확인할 것", "입찰 전에 결정해 둔 예정가격과 공고한 선정방식"],
       ["사례", "새봄도서관 모니터 20대"]
@@ -1038,7 +1035,7 @@
       if (runtime.state.stage === 2 && runtime.state.noticeChecked)
         complete(
           "검토·결재 후 공고 게시",
-          "선배의 검토와 권한 있는 담당자의 결재를 거쳐 모의 공고가 게시됐습니다."
+          "선배의 검토와 권한 있는 담당자의 결재를 거쳐 공고가 게시됐습니다."
         );
     },
     advance: () => {
@@ -1052,8 +1049,8 @@
         speak(
           "욘 대리",
           [
-            "공고가 게시됐군요! 이제 새봄테크 사무실의 욘 대리로 플레이합니다.",
-            "제품 자료를 비교한 뒤 업무용 모니터에서 공고를 검색하고 모의 입찰서를 준비해 볼게요."
+            "공고가 게시됐군요! 저는 새봄테크 영업팀의 욘 대리예요.",
+            "제품 자료를 비교한 뒤 업무용 모니터에서 공고를 검색하고 입찰서를 준비해 볼게요."
           ],
           () => {
           },
@@ -1114,8 +1111,8 @@
         "공고에 맞는 제품을 골랐어요",
         /* HTML */
         `<div class="success">새봄 M24 · 크기, 해상도, 연결 방식 및 납기 충족</div>
-        <p>모의 나라장터에서 참가 조건을 확인하고 입찰서를 제출하세요.</p>
-        ${buttons([["close", "모의 입찰 준비하기"]])}`
+        <p>나라장터에서 참가 조건을 확인하고 입찰서를 제출하세요.</p>
+        ${buttons([["close", "입찰 준비하기"]])}`
       );
     },
     "product-bad": () => wrong(
@@ -1216,7 +1213,7 @@
       /* HTML */
       `<div class="success">✓ ${body}</div>
       <p>
-        ${completed === 2 ? "검토·결재를 거쳐 공고가 게시됐습니다. 다음 장면에서는 기업 담당자로 전환합니다." : "퀘스트 완료! 진행 상황을 이 브라우저에 저장했습니다."}
+        ${completed === 2 ? "검토·결재를 거쳐 공고가 게시됐습니다. 이제 공고를 본 기업의 차례입니다." : "퀘스트 완료!"}
       </p>
       ${xpReward()}${lessonCard(completed)}
       ${buttons([["advance", completed === 2 ? "기업 담당자로 전환" : "다음 퀘스트"]])}`,
@@ -1394,7 +1391,7 @@
       );
       return;
     }
-    runtime.state.history.push("기업 모의 입찰서 접수");
+    runtime.state.history.push("기업 입찰서 접수");
     awardQuestXP();
     runtime.state.stage = 4;
     runtime.portalSignedIn = false;
@@ -1405,14 +1402,14 @@
     speak(
       "욘 대리",
       [
-        "모의 입찰서가 접수됐어요! 공고를 꼼꼼히 읽으니 제출까지 할 수 있었네요.",
+        "입찰서가 접수됐어요! 공고를 꼼꼼히 읽으니 제출까지 할 수 있었네요.",
         "접수는 낙찰이나 계약 체결이 아니에요. 다음 절차가 남아 있다는 점도 기억할게요."
       ],
       () => {
         runtime.floor = 0;
         runtime.state.floor = 0;
         render();
-        show("모의 입찰서 접수 완료", `<div class="success">입찰서가 접수됐어요. 이어서 낙찰자 선정과 계약 절차를 배워요.</div>${xpReward()}${lessonCard(3)}${buttons([["return-rookie", "조달달로 돌아가 다음 업무 받기"]])}`, "advance", false);
+        show("입찰서 접수 완료", `<div class="success">입찰서가 접수됐어요. 이어서 낙찰자 선정과 계약 절차를 배워요.</div>${xpReward()}${lessonCard(3)}${buttons([["return-rookie", "조달달로 돌아가 다음 업무 받기"]])}`, "advance", false);
       },
       "supplier"
     );
@@ -1420,7 +1417,7 @@
   function returnRookie() {
     if (runtime.state.stage !== 4) return;
     speak("김주문", [
-      "조달달 주무관으로 돌아왔어요. 모의 입찰서는 접수됐고, 이제 낙찰자 선정과 계약 절차를 배울 차례예요.",
+      "조달달 주무관, 새봄테크의 입찰서가 접수됐어요. 이제 낙찰자 선정과 계약 절차를 배울 차례예요.",
       "복도 왼쪽 엘리베이터를 타고 3층 계약 담당자에게 가 보세요. 노트의 다음 목표 버튼도 안내해 줄 거예요."
     ], () => {
     }, "mentor", "네! 엘리베이터를 타고 3층으로 가 볼게요.");
@@ -2261,7 +2258,7 @@
     ] : runtime.state.stage === 3 ? [
       [runtime.state.product, "공고에 맞는 제품 선택"],
       [runtime.state.eligibility, "참가 조건 확인"],
-      [false, "모의 입찰서 제출"]
+      [false, "입찰서 제출"]
     ] : runtime.state.stage === 4 ? [[runtime.state.awardBrief, "3층 계약 담당자에게 설명 듣기"], [runtime.state.openingChecked, "입찰 전 결정한 예정가격 확인"], [false, "선정방식에 따른 심사 확인 후 전자계약"]] : runtime.state.stage === 5 ? [[runtime.state.deliveryIssueReported, "5층에서 납품 부족분 보완 요청"], [runtime.state.inspectionChecked, "보완한 물품의 검사·검수와 인수"], [false, "영수증·납품 서류 확인 후 대금 지급"]] : [
       [true, "요청서 확인"],
       [true, "규격 수정 및 공고"],
