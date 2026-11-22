@@ -91,7 +91,7 @@ export function render() {
   $("quick-guide").textContent = $("guide-button").textContent;
   renderInventory();
   renderGlossary();
-  if (!runtime.storageOK) $("save-status").textContent = "저장 불가 · 현재 창에서만 이어서 진행할 수 있어요";
+  if (!runtime.storageOK) $("save-status").textContent = "저장할 수 없어요. 이 창에서 계속 플레이할 수 있어요.";
 }
 
 export function setNotebook(open) {

@@ -238,7 +238,7 @@
       action: "recovered-notice",
       reaction: "요청서는 20대예요. 공고에 올릴 수량부터 다시 세어 봐요.",
       consequence: "초안의 수량이 요청서 20대와 달라 검토본 저장이 멈췄어요.",
-      correction: "요청서에는 스무 대라고 적혀 있죠? 제가 초안도 20대로 고쳐서 검토본을 저장할게요. 결재는 그다음이에요.",
+      correction: "제가 수량을 요청서와 똑같이 20대로 고쳐서 저장할게요. 그다음에 결재를 올리면 돼요.",
       source: "5. 구매결의 · 수량 / 6. 입찰공고"
     },
     product: {
@@ -445,7 +445,7 @@
       $("save-status").textContent = "✓ 자동 저장됨";
     } catch (e) {
       runtime.storageOK = false;
-      $("save-status").textContent = "저장 불가 · 현재 창에서만 이어서 진행할 수 있어요";
+      $("save-status").textContent = "저장할 수 없어요. 이 창에서 계속 플레이할 수 있어요.";
     }
   }
 
@@ -1803,7 +1803,7 @@
     }[target];
     const expectedItem = submissionSteps[step].item;
     const expected = inventoryItems[expectedItem].name;
-    const verb = target === "reader" ? "사원증 대기" : atDesk ? "펼치기" : "건네기";
+    const verb = target === "reader" ? "사원증 찍기" : atDesk ? "펼치기" : "건네기";
     close();
     $("handoff-recipient").textContent = recipient;
     $("submission-hint").textContent = `아래 가방에서 ‘${expected}’ 칸을 눌러 주세요.`;
@@ -1823,8 +1823,8 @@
     }
     $("handoff-tray").setAttribute("aria-disabled", "false");
     $("handoff-paper").innerHTML = itemIcon(item);
-    $("handoff-label").textContent = pending.step === "registration" ? "사원증 대기" : inventoryItems[item].name + " " + pending.verb;
-    $("submission-hint").textContent = "오른쪽 서류 칸을 누르거나, 그곳으로 끌어 놓으세요.";
+    $("handoff-label").textContent = pending.step === "registration" ? pending.verb : inventoryItems[item].name + " " + pending.verb;
+    $("submission-hint").textContent = pending.step === "registration" ? "단말기를 누르거나 사원증을 그 위로 끌어 놓으세요." : "오른쪽 서류 칸을 누르거나, 그곳으로 끌어 놓으세요.";
     if (!dragging) $("handoff-tray").focus({ preventScroll: true });
   }
   function handOverDocument(dropped = false) {
@@ -1858,7 +1858,7 @@
     if (!pending) return false;
     if (!matchesSubmission(pending.step, item) || !ownedItems()[item]) {
       const name = inventoryItems[submissionSteps[pending.step].item].name;
-      $("submission-hint").textContent = `이번에 필요한 서류는 ${name}입니다. 가방을 다시 살펴보세요.`;
+      $("submission-hint").textContent = `가방에서 ‘${name}’ 칸을 눌러 주세요.`;
       return false;
     }
     playPaperTurn();
@@ -2998,11 +2998,11 @@
     }
     const state = runtime.state, target = nextTarget();
     const errands = [
-      { mentor: "오늘 첫 출근이라 김주문 선배님을 찾아가고 있어요.", phone: "새봄도서관에 모니터가 언제까지 필요한지 물어보러 가요.", doc: "도서관에서 알려 준 납품기한을 요청서에 적으러 가요." },
-      { mentor: "모니터 규격서에 브랜드 이름이 적혀 있어서요. 선배님께 여쭤보러 가요.", doc: "선배님과 얘기한 대로 모니터 규격서를 고치러 가요." },
-      { terminal: "공고를 올리기 전에 모니터 수량이 맞는지 확인하러 가요.", mentor: "공고 초안을 다 써서 선배님께 보여 드리러 가요." },
+      { mentor: "오늘이 첫 출근이에요. 김주문 선배님 자리를 찾고 있어요.", phone: "새봄도서관에 모니터가 언제까지 필요한지 물어보러 가요.", doc: "도서관에서 알려 준 납품기한을 요청서에 적으러 가요." },
+      { mentor: "규격서에 모니터 브랜드가 적혀 있더라고요. 그대로 둬도 되는지 선배님께 물어보려고요.", doc: "선배님하고 얘기했어요. 이제 자리로 돌아가서 규격서를 고치려고요." },
+      { terminal: "공고를 올리기 전에 모니터 수량이 맞는지 확인하러 가요.", mentor: "공고 초안을 다 썼어요. 선배님께 보여 드리려고요." },
       {},
-      { officer: state.openingChecked ? "심사 결과가 나와서 계약 담당자께 서류를 가져다드리러 가요." : "입찰서가 접수됐대요. 다음 절차를 배우러 계약팀에 가고 있어요.", bidroom: "계약팀에서 개찰 자료를 보고 예정가격을 확인하려고요." },
+      { officer: state.openingChecked ? "심사 결과가 나왔대요. 계약 담당자에게 접수증을 가져가는 길이에요." : "입찰서가 접수됐대요. 다음 절차를 배우러 계약팀에 가고 있어요.", bidroom: "계약팀에서 개찰 자료를 보고 예정가격을 확인하려고요." },
       { phone: state.deliveryIssueReported ? "지난번에 빠졌던 모니터가 도착했는지 확인하러 가요." : "도서관에 모니터가 잘 도착했는지 확인하러 가요.", terminal: "납품 확인이 끝나서 대금 청구 서류를 살펴보러 가요." },
       { result: "오늘 맡은 일은 다 끝냈어요. 어떤 곳들이 있나 둘러보는 중이에요." }
     ];
@@ -3320,7 +3320,7 @@
     $("quick-guide").textContent = $("guide-button").textContent;
     renderInventory();
     renderGlossary();
-    if (!runtime.storageOK) $("save-status").textContent = "저장 불가 · 현재 창에서만 이어서 진행할 수 있어요";
+    if (!runtime.storageOK) $("save-status").textContent = "저장할 수 없어요. 이 창에서 계속 플레이할 수 있어요.";
   }
   function setNotebook(open) {
     $("quest-panel").hidden = !open;
