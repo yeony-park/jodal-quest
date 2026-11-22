@@ -81,8 +81,8 @@ export function bidroom() {
     ["현재 확인할 것", "입찰 전에 결정해 둔 예정가격과 공고한 선정방식"],
     ["사례", "새봄도서관 모니터 20대"],
   ])}<p>예정가격은 언제 결정할까요?</p><div class="choices">
-    <button class="choice" data-action="opening-good">입찰 전에 결정해 두고, 지금 그 자료를 확인한다</button>
-    <button class="choice" data-action="opening-bad">기업의 입찰서를 받은 다음 원하는 금액으로 정한다</button></div>`, "opening");
+    <button class="choice" data-action="opening-good">입찰 전에 미리 결정해 둔 예정가격 자료를 확인한다</button>
+    <button class="choice" data-action="opening-bad">기업의 입찰서를 받은 뒤에 원하는 금액으로 정한다</button></div>`, "opening");
 }
 
 export function openingGood() {
@@ -160,7 +160,7 @@ export function payment() {
     ["영수증·납품 서류", "수요기관 영수증 발급 · 서류 하자 없음"],
     ["대금 청구", "계약상대자가 조달청에 청구"],
   ])}<p>권한 있는 담당자의 다음 업무로 알맞은 것은?</p><div class="choices">
-    <button class="choice" data-action="payment-bad">납품 서류를 생략하고 입찰서만 보고 지급한다</button>
+    <button class="choice" data-action="payment-bad">납품 서류 확인을 생략하고 입찰서만 보고 대금을 지급한다</button>
     <button class="choice" data-action="payment-good">확인한 납품 서류로 계약종결 서류를 작성하고 대금 지급 절차를 진행한다</button></div>`, "payment");
 }
 

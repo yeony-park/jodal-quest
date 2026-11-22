@@ -100,7 +100,7 @@ export function render() {
   $("quick-guide").textContent = $("guide-button").textContent;
   renderInventory();
   renderGlossary();
-  if (!runtime.storageOK) $("save-status").textContent = "저장 불가 · 현재 창에서 계속";
+  if (!runtime.storageOK) $("save-status").textContent = "저장 불가 · 현재 창에서만 진행 가능";
 }
 
 export function setNotebook(open) {

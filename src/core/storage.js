@@ -67,6 +67,6 @@ export function save() {
     $("save-status").textContent = "✓ 자동 저장됨";
   } catch (e) {
     runtime.storageOK = false;
-    $("save-status").textContent = "저장 불가 · 현재 창에서 계속";
+    $("save-status").textContent = "저장 불가 · 현재 창에서만 진행 가능";
   }
 }

@@ -126,7 +126,7 @@
   var PROCEDURE_SOURCE = "https://www.pps.go.kr/kor/content.do?key=00179";
   var lessons = [
     "조달요청에는 품명·규격·납기·예산 등이 필요해요. 빠진 정보는 수요기관에 확인해요.",
-    "정부물품 구매는 일반경쟁이 원칙이에요. 이 사례는 협의한 성능으로 규격을 고쳐 경쟁 기회를 열었어요.",
+    "정부 물품 구매는 일반경쟁이 원칙이에요. 이번 사례에서는 사전 협의된 성능 기준으로 규격을 수정해 더 많은 기업에 참여 기회를 열었답니다.",
     "구매결의에는 수량·계약방법·낙찰자 선정방식 등을 담고, 검토·결재를 거쳐 나라장터에 공고해요.",
     "기업은 공고의 규격과 참가 조건을 확인해 입찰서를 제출해요. 접수 뒤 낙찰자 선정과 계약 절차가 이어져요.",
     "예정가격은 입찰 전에 결정해요. 공고한 선정방식에 따른 심사 후 낙찰예정자와 전자계약을 체결해요.",
@@ -170,7 +170,7 @@
       title: "급한 납기 초안 수습",
       action: "intake-good",
       consequence: "7일로 적은 초안을 본 도서관 담당자가 원래 요청한 일정과 다르다며 검토를 멈췄어요.",
-      correction: "수요기관에 납기와 장소를 확인해요. 이번 의뢰의 납기는 계약 후 30일 이내, 장소는 도서관 2층 자료실이에요. 확인한 내용으로 요청서를 보완해 검토를 받아요.",
+      correction: "납품기한은 물품의 사용 목적과 기업의 공급 가능 여부에 큰 영향을 미칩니다. 수요기관과 확인 없이 임의로 정해서는 안 돼요. 수요기관에 납기와 장소를 확인해요. 이번 의뢰의 납기는 계약 후 30일 이내, 장소는 도서관 2층 자료실이에요. 확인한 내용으로 요청서를 보완해 검토를 받아요.",
       button: "확인한 납기와 장소로 요청서 보완",
       source: "2. 조달요청 · 납기 등 요청 내용 기재"
     },
@@ -302,7 +302,7 @@
     },
     {
       title: "이번에는 기업의 시선으로",
-      desc: "이제 공급기업 담당자입니다. 공고와 제품을 확인하고 모의 입찰서를 제출하세요.",
+      desc: "이제 공급기업 담당자의 입장이 되어 볼까요? 공고와 자사 제품을 확인한 뒤 모의 입찰서를 제출해 보세요.",
       memo: "입찰서 제출은 낙찰이나 계약 체결이 아니에요. 이후 별도 심사와 절차가 이어져요.",
       dialogue: "이제 공급기업 담당자의 시선으로 볼까요? 공고에 맞는 제품인지, 참가 준비가 되었는지 확인하세요."
     },
@@ -392,7 +392,7 @@
       $("save-status").textContent = "✓ 자동 저장됨";
     } catch (e) {
       runtime.storageOK = false;
-      $("save-status").textContent = "저장 불가 · 현재 창에서 계속";
+      $("save-status").textContent = "저장 불가 · 현재 창에서만 진행 가능";
     }
   }
 
@@ -535,7 +535,7 @@
     $("xp-bar").max = next;
     $("xp-bar").setAttribute("aria-valuetext", `${current} / ${next} XP · 총 ${runtime.state.xp} XP`);
     $("xp-label").textContent = `${current} / ${next} XP`;
-    $("xp-status").title = `총 ${runtime.state.xp} XP · 업무 완료 100 XP · 수습 없이 완료하면 25 XP 추가`;
+    $("xp-status").title = `총 ${runtime.state.xp} XP (업무 완료 100 XP / 실수 없이 완료 시 +25 XP)`;
   }
   function inspectItem(i) {
     if (!ownedItems()[i]) {
@@ -592,7 +592,7 @@
     const owned = ownedItems(), expected = inventoryItems[submissionSteps[step].item].name;
     show("가방에서 서류를 제출해 주세요", `<p>담당자 : 이번 업무의 ${expected}를 보여 주세요.</p>
     <p id="submission-hint" role="status">가방의 물건을 눌러 제출하세요.</p>
-    <div class="submission-bag" aria-label="제출할 가방 물건">${inventoryItems.map((item, i) => `<button class="inventory-slot ${owned[i] ? "owned" : ""}" data-action="item-${i}" ${owned[i] ? "" : "disabled"} aria-label="${owned[i] ? item.name : "아직 없는 " + item.name}">${owned[i] ? itemIcon(i) : ""}<span class="slot-name">${item.name}</span></button>`).join("")}</div>
+    <div class="submission-bag" aria-label="제출할 가방 물건">${inventoryItems.map((item, i) => `<button class="inventory-slot ${owned[i] ? "owned" : ""}" data-action="item-${i}" ${owned[i] ? "" : "disabled"} aria-label="${owned[i] ? item.name : item.name + " · 미보유"}">${owned[i] ? itemIcon(i) : ""}<span class="slot-name">${item.name}</span></button>`).join("")}</div>
     ${buttons([["close", "서류를 나중에 제출하기", true]])}`, "submission");
     runtime.pendingSubmission = { step, onSubmit };
     renderInventory();
@@ -602,7 +602,7 @@
     if (!pending || runtime.modalKind !== "submission") return false;
     if (!matchesSubmission(pending.step, item) || !ownedItems()[item]) {
       const name = inventoryItems[submissionSteps[pending.step].item].name;
-      $("submission-hint").textContent = `김주문 : 지금은 ${name}에 적힌 내용을 대조할 차례예요. 가방에서 다시 찾아봐요.`;
+      $("submission-hint").textContent = `김주문 : 지금은 ${name}의 내용을 대조해 볼 차례예요. 가방에서 해당 서류를 다시 찾아볼까요?`;
       return false;
     }
     runtime.submittedSteps.add(pending.step);
@@ -870,7 +870,7 @@
         참가자격과 제출서류를 확인했습니다. 새봄테크는 등록·참가 요건을 갖췄습니다.</label
       >
       <p class="g2b-caution">
-        모의 제출이며 실제 입찰로 전송되지 않습니다. 접수는 낙찰·계약 체결을 뜻하지 않습니다.
+        모의 입찰이므로 실제 입찰 시스템으로 전송되지 않습니다. 또한 입찰서 접수가 곧 낙찰이나 계약 체결을 의미하지는 않습니다.
       </p>
       <div class="g2b-actions">
         <button class="g2b-primary" data-action="submit-bid">입찰서 제출</button
@@ -1016,8 +1016,8 @@
       ["현재 확인할 것", "입찰 전에 결정해 둔 예정가격과 공고한 선정방식"],
       ["사례", "새봄도서관 모니터 20대"]
     ])}<p>예정가격은 언제 결정할까요?</p><div class="choices">
-    <button class="choice" data-action="opening-good">입찰 전에 결정해 두고, 지금 그 자료를 확인한다</button>
-    <button class="choice" data-action="opening-bad">기업의 입찰서를 받은 다음 원하는 금액으로 정한다</button></div>`, "opening");
+    <button class="choice" data-action="opening-good">입찰 전에 미리 결정해 둔 예정가격 자료를 확인한다</button>
+    <button class="choice" data-action="opening-bad">기업의 입찰서를 받은 뒤에 원하는 금액으로 정한다</button></div>`, "opening");
   }
   function openingGood() {
     if (runtime.state.stage !== 4 || runtime.floor !== 1 || !runtime.state.awardBrief) return;
@@ -1087,7 +1087,7 @@
       ["영수증·납품 서류", "수요기관 영수증 발급 · 서류 하자 없음"],
       ["대금 청구", "계약상대자가 조달청에 청구"]
     ])}<p>권한 있는 담당자의 다음 업무로 알맞은 것은?</p><div class="choices">
-    <button class="choice" data-action="payment-bad">납품 서류를 생략하고 입찰서만 보고 지급한다</button>
+    <button class="choice" data-action="payment-bad">납품 서류 확인을 생략하고 입찰서만 보고 대금을 지급한다</button>
     <button class="choice" data-action="payment-good">확인한 납품 서류로 계약종결 서류를 작성하고 대금 지급 절차를 진행한다</button></div>`, "payment");
   }
   function finishPayment() {
@@ -2276,9 +2276,9 @@
       <section class="achievements" aria-label="획득한 업적"><h3>획득한 업적</h3><ul>
         <li>여섯 업무 완주 · 계약부터 대금 지급까지</li>
         ${runtime.state.recoveries.length === 0 && runtime.state.mistakes === 0 ? "<li>정파 · 모든 선택을 올바른 절차로 완료</li>" : `<li>${Math.max(runtime.state.recoveries.length, runtime.state.mistakes) >= 3 ? "사파 · 수습 달인" : "수습을 배운 신입"} · ${runtime.state.recoveries.length}개 수습 완료</li>`}
-        ${runtime.state.mistakes > runtime.state.recoveries.length ? `<li>이전 선택 확인 기록 · ${runtime.state.mistakes - runtime.state.recoveries.length}회</li>` : ""}
+        ${runtime.state.mistakes > runtime.state.recoveries.length ? `<li>이전 선택지 확인 횟수 · ${runtime.state.mistakes - runtime.state.recoveries.length}회</li>` : ""}
         ${runtime.state.recoveries.map((id) => `<li>${recoveryScenes[id].title}</li>`).join("")}
-        </ul><p>칭호 기준 : 수습 0개는 정파, 1~2개는 정파 · 수습을 배운 신입, 3개 이상은 사파예요. 수습은 잘못된 초안을 고치고 공식 절차를 마친 기록이에요. 이전 저장은 기존 오답 횟수도 칭호에 반영해요.</p></section>
+        </ul><p>칭호 기준: 실수 만회(수습) 0회는 '정파', 1~2회는 '정파 · 수습을 배운 신입', 3회 이상은 '사파'가 됩니다. '수습'이란 잘못된 초안을 바로잡고 공식 절차를 마친 기록을 뜻합니다. (이전 저장 데이터의 오답 횟수도 반영됩니다.)</p></section>
       <div class="stats">
         <div class="stat"><strong>6 / 6</strong><small>퀘스트</small></div>
         <div class="stat"><strong>7 / 7</strong><small>획득한 물건</small></div>
@@ -2510,7 +2510,7 @@
     $("quick-guide").textContent = $("guide-button").textContent;
     renderInventory();
     renderGlossary();
-    if (!runtime.storageOK) $("save-status").textContent = "저장 불가 · 현재 창에서 계속";
+    if (!runtime.storageOK) $("save-status").textContent = "저장 불가 · 현재 창에서만 진행 가능";
   }
   function setNotebook(open) {
     $("quest-panel").hidden = !open;
@@ -2593,7 +2593,7 @@
         이름을 클릭·터치하면 자동으로 이동해 대화합니다.
       </p>
       <p>
-        <strong>다음 목표로 이동:</strong> 현재 해야 할 일을 바로 찾아갑니다. 다른 층의 목표는 엘리베이터로 안내해요. 용어 수첩에서 배운 말을 다시 읽어 보세요. 잘못 선택하면 결과를
+        <strong>다음 목표 안내:</strong> 현재 해야 할 일을 바로 찾아갑니다. 다른 층의 목표는 엘리베이터로 안내해요. 용어 수첩에서 배운 말을 다시 읽어 보세요. 잘못 선택하면 결과를
         확인하고 수습 업무로 올바른 절차를 배웁니다.
       </p>
       <p>
@@ -2606,7 +2606,7 @@
       </p>
       <p>
         <strong>공간:</strong> 미니맵을 눌러 층별 지도를 보세요. 5층 구매팀과 2층 계약 체험실에서 업무를 진행하고, 다른 층의 자료 캐비닛에서는 용어 카드를 찾을 수 있어요.
-        기업 단계는 별도 사무실로 전환하며 공간 배치는 체험을 위해 재사용합니다.
+        기업 체험 단계에서는 별도의 사무실로 화면이 전환됩니다. (원활한 체험을 위해 기존 사무실 구조를 활용합니다.)
       </p>
       <p>
         <strong>저장:</strong> 같은 브라우저·같은 주소에서 진행 상황이 자동 저장됩니다. 시크릿
@@ -2616,11 +2616,11 @@
         <strong>업무 범위:</strong> 요청 접수 → 규격 검토 → 공고 → 기업 입찰 참여 → 낙찰자 선정·전자계약 → 검사·검수·대금 지급을 체험해요.
       </p>
       <p>
-        원자료:
+        참고 자료:
         <a href="https://www.pps.go.kr/kor/content.do?key=00179" target="_blank" rel="noopener"
           >조달청 총액계약 업무처리절차</a
         >
-        (확인 2026-11-21). 금액·품목·납기·기업·규격은 게임용 창작입니다.
+        (2026년 11월 21일 기준) 등장하는 금액·품목·납기·기업·규격은 체험을 위해 가상으로 설정되었습니다.
       </p>
       ${buttons([["close", "게임으로 돌아가기"]])}`,
       "help"
@@ -2839,7 +2839,7 @@
       toast("캐릭터 대화소리를 켠 뒤 들어 주세요.");
       return;
     }
-    Array.from(role === "rookie" ? "이제나도조달의왕이야" : "안녕하세요입찰에참여할게요").forEach(
+    Array.from(role === "rookie" ? "이제 나도 조달의 왕이야" : "안녕하세요, 입찰에 참여할게요").forEach(
       (letter, i) => playSyllable(letter, role, i * 0.095)
     );
   }

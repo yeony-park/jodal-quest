@@ -175,7 +175,7 @@ export function openPortal(page = "home", query = "모니터") {
         참가자격과 제출서류를 확인했습니다. 새봄테크는 등록·참가 요건을 갖췄습니다.</label
       >
       <p class="g2b-caution">
-        모의 제출이며 실제 입찰로 전송되지 않습니다. 접수는 낙찰·계약 체결을 뜻하지 않습니다.
+        모의 입찰이므로 실제 입찰 시스템으로 전송되지 않습니다. 또한 입찰서 접수가 곧 낙찰이나 계약 체결을 의미하지는 않습니다.
       </p>
       <div class="g2b-actions">
         <button class="g2b-primary" data-action="submit-bid">입찰서 제출</button

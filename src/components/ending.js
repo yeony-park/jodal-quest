@@ -55,9 +55,9 @@ export function result() {
       <section class="achievements" aria-label="획득한 업적"><h3>획득한 업적</h3><ul>
         <li>여섯 업무 완주 · 계약부터 대금 지급까지</li>
         ${runtime.state.recoveries.length===0 && runtime.state.mistakes===0 ? '<li>정파 · 모든 선택을 올바른 절차로 완료</li>' : `<li>${Math.max(runtime.state.recoveries.length,runtime.state.mistakes)>=3?'사파 · 수습 달인':'수습을 배운 신입'} · ${runtime.state.recoveries.length}개 수습 완료</li>`}
-        ${runtime.state.mistakes>runtime.state.recoveries.length?`<li>이전 선택 확인 기록 · ${runtime.state.mistakes-runtime.state.recoveries.length}회</li>`:""}
+        ${runtime.state.mistakes>runtime.state.recoveries.length?`<li>이전 선택지 확인 횟수 · ${runtime.state.mistakes-runtime.state.recoveries.length}회</li>`:""}
         ${runtime.state.recoveries.map(id=>`<li>${recoveryScenes[id].title}</li>`).join('')}
-        </ul><p>칭호 기준 : 수습 0개는 정파, 1~2개는 정파 · 수습을 배운 신입, 3개 이상은 사파예요. 수습은 잘못된 초안을 고치고 공식 절차를 마친 기록이에요. 이전 저장은 기존 오답 횟수도 칭호에 반영해요.</p></section>
+        </ul><p>칭호 기준: 실수 만회(수습) 0회는 '정파', 1~2회는 '정파 · 수습을 배운 신입', 3회 이상은 '사파'가 됩니다. '수습'이란 잘못된 초안을 바로잡고 공식 절차를 마친 기록을 뜻합니다. (이전 저장 데이터의 오답 횟수도 반영됩니다.)</p></section>
       <div class="stats">
         <div class="stat"><strong>6 / 6</strong><small>퀘스트</small></div>
         <div class="stat"><strong>7 / 7</strong><small>획득한 물건</small></div>
