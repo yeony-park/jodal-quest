@@ -1,7 +1,9 @@
+import { submittedPaper } from "./inventory.js";
+import { questFanfare } from "../audio/sound.js";
 import { beginRecovery } from "../game/recovery.js";
 import { runtime } from "../core/runtime.js";
 import { face, rookieOutfit } from "../world/characters.js";
-import { show, toast } from "./modal.js";
+import { close, show, toast } from "./modal.js";
 import { $ } from "../core/dom.js";
 import { save } from "../core/storage.js";
 import { render } from "./hud.js";
@@ -35,13 +37,10 @@ export function portalShell(content, page) {
     <nav class="g2b-nav" aria-label="나라장터 메뉴">
       <button data-action="portal-work">발주</button><button data-action="portal-list">입찰</button
       ><button data-action="portal-guide">공통</button
-      ><button data-action="portal-guide">이용자관리</button
+      ><button data-action="portal-register">이용자관리</button
       ><button data-action="portal-home">홈</button>
     </nav>
-    <div class="g2b-content">${content}</div>
-    <footer class="g2b-footer">
-      ${supplier ? "새봄테크 · 기업 입찰 참여" : "새봄지방조달청 · 공고 초안 준비"}
-    </footer>`;
+    <div class="g2b-content">${content}</div>`;
 }
 
 export function openPortal(page = "home", query = "모니터") {
@@ -53,12 +52,11 @@ export function openPortal(page = "home", query = "모니터") {
       <div class="g2b-grid">
         <section class="g2b-card starter">
           <h3>나라장터 시작하기</h3>
-          <p>오늘의 한 건을 차근차근 준비해 보세요.</p>
           <button class="g2b-primary" data-action="portal-login">
             ${runtime.portalSignedIn ? "나의 업무" : "로그인"}
           </button>
           <div class="g2b-small-buttons">
-            <button data-action="portal-guide">이용자등록</button
+            <button data-action="portal-register">이용자 등록</button
             ><button data-action="portal-guide">이용 안내</button>
           </div>
           <div class="g2b-guide-note">오늘의 의뢰<br /><b>새봄도서관 모니터 20대</b></div>
@@ -80,8 +78,7 @@ export function openPortal(page = "home", query = "모니터") {
           <p>새봄지방조달청</p>
           <p class="g2b-news">모두에게 같은 정보를 공개합니다.</p>
           <div class="g2b-support">
-            <b>처음이어도 괜찮아요.</b><span>김주문의 업무 노트와<br />함께 진행해 보세요.</span
-            ><button data-action="portal-guide">이용 안내</button>
+            <button data-action="portal-guide">이용 안내</button>
           </div>
         </section>
       </div>`;
@@ -93,9 +90,6 @@ export function openPortal(page = "home", query = "모니터") {
         <h4>
           ${runtime.state.stage === 3 ? "욘 대리 · 새봄테크" : "조달달 주무관 · 새봄지방조달청"}
         </h4>
-        <p>
-          미리 준비된 업무 계정으로 진행합니다.
-        </p>
         <button class="g2b-primary" data-action="portal-signin">업무 계정으로 로그인</button>
       </div>`;
   else if (page === "draft")
@@ -186,9 +180,10 @@ export function openPortal(page = "home", query = "모니터") {
         공무원은 공고 초안을 준비해 선배에게 검토를 요청하고, 기업 담당자는 게시된 공고를 검색해 입찰서를 제출합니다.
       </p>
       <button class="g2b-primary" data-action="portal-home">나라장터 첫 화면</button>`;
-  const paper = runtime.modalKind === "portal" && $("modal").querySelectorAll(":scope > .submitted-paper")[0];
-  show("나라장터", `<div class="portal-workspace">${portalShell(content, page)}</div>`, "portal");
-  if (paper) $("modal").append(paper);
+  const supplied = runtime.state.stage === 2 && runtime.submittedSteps.has("notice") ? 2 :
+    runtime.state.stage === 3 && runtime.submittedSteps.has("bid") ? 3 : null;
+  const paper = supplied === null ? "" : `<details open class="submitted-paper">${submittedPaper(supplied)}</details>`;
+  show("나라장터", `<div class="portal-workspace">${portalShell(content, page)}</div>${paper}`, "portal");
   if (page === "list") $("portal-query-label").textContent = query || "전체";
 }
 
@@ -240,9 +235,11 @@ export function savePortalDraft() {
     beginRecovery("notice");
     return;
   }
+  const firstSave = !runtime.state.noticeChecked;
   runtime.state.noticeChecked = true;
   save();
   render();
-  openPortal("draft");
-  toast("검토본 저장 완료. 모니터를 닫고 김주문에게 검토를 요청하세요.");
+  close();
+  if (firstSave) questFanfare();
+  toast("검토본을 저장했어요. 김주문 선배에게 보여 주세요.");
 }

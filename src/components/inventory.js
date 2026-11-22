@@ -98,6 +98,10 @@ export function itemDescription(i) {
   return inventoryItems[i].description;
 }
 
+export function submittedPaper(item) {
+  return `<summary>제출한 ${inventoryItems[item].name}</summary><p>${itemDescription(item)}</p>`;
+}
+
 export function inspectItem(i) {
   if (!ownedItems()[i]) {
     toast("퀘스트를 마치면 물건이 이 칸에 들어와요.");

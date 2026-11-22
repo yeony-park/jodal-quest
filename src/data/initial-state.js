@@ -16,6 +16,7 @@ export const fresh = () => ({
   specAdvice: false,
   noticeChecked: false,
   product: false,
+  badgeRegistered: false,
   eligibility: false,
   mistakes: 0,
   recoveries: [],

@@ -4,7 +4,7 @@ import { requestSubmission, selectDocument, handOverDocument } from "./submissio
 import { floors } from "../data/world.js";
 import { showFloorMap } from "../components/floor-map.js";
 import { openCabinet, openGlossary, meetLibrarian } from "../components/learning.js";
-import { buttons, close, help, show } from "../components/modal.js";
+import { buttons, close, help, show, toast } from "../components/modal.js";
 import { startGame } from "../components/title.js";
 import { player, runtime } from "../core/runtime.js";
 import { render, setNotebook } from "../components/hud.js";
@@ -33,7 +33,7 @@ import {
 } from "../components/portal.js";
 import { save } from "../core/storage.js";
 import { elevator, travelTo, officer, contractFarewell, bidroom, openingGood, contractGood, delivery, reportDeliveryIssue, inspectDelivery, payment, finishPayment } from "./procurement.js";
-import { inventoryItems, inspectItem } from "../components/inventory.js";
+import { inventoryItems, inspectItem, ownedItems } from "../components/inventory.js";
 
 export const actions = {
   recover,
@@ -186,7 +186,23 @@ Object.assign(actions, {
   "portal-home": () => openPortal("home"),
   "portal-login": () =>
     openPortal(runtime.portalSignedIn ? (runtime.state.stage === 2 ? "draft" : "list") : "login"),
+  "portal-register": () => {
+    if (runtime.state.stage === 3 || runtime.state.badgeRegistered) {
+      openPortal("login");
+      return;
+    }
+    if (!ownedItems()[0]) { toast("첫 업무를 받고 사원증을 챙겨 오세요."); return; }
+    requestSubmission("reader", () => {
+      runtime.state.badgeRegistered = true;
+      save();
+      actions["portal-signin"]();
+    });
+  },
   "portal-signin": () => {
+    if (runtime.state.stage !== 3 && !runtime.state.badgeRegistered) {
+      actions["portal-register"]();
+      return;
+    }
     runtime.portalSignedIn = true;
     openPortal(runtime.state.stage === 2 ? "draft" : "list");
   },

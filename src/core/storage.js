@@ -31,7 +31,7 @@ export function loadGame() {
       s.stage >= 0 &&
       s.stage <= LAST_STAGE &&
       (s.floor === undefined || (Number.isInteger(s.floor) && s.floor >= 0 && s.floor < floors.length)) &&
-      ["contractFarewell", "awardBrief", "openingChecked", "deliveryIssueReported", "deliverySurpriseSeen", "inspectionChecked"].every(
+      ["badgeRegistered", "contractFarewell", "awardBrief", "openingChecked", "deliveryIssueReported", "deliverySurpriseSeen", "inspectionChecked"].every(
         (k) => s[k] === undefined || typeof s[k] === "boolean",
       ) &&
       [
@@ -48,7 +48,7 @@ export function loadGame() {
       Array.isArray(s.history) &&
       s.history.every((x) => typeof x === "string")
     ) {
-      runtime.state = { ...fresh(), ...s, xp: s.xp ?? s.stage * 100, questMistakes: s.questMistakes ?? s.mistakes };
+      runtime.state = { ...fresh(), ...s, badgeRegistered: s.badgeRegistered ?? (s.noticeChecked || s.stage > 2), xp: s.xp ?? s.stage * 100, questMistakes: s.questMistakes ?? s.mistakes };
       runtime.state.learnedTerms = s.learnedTerms === undefined ? legacyLearnedTerms(s)
         : [...new Set((Array.isArray(s.learnedTerms) ? s.learnedTerms : []).filter(term => typeof term === "string" && Object.hasOwn(glossary, term)))];
       runtime.state.termSources = Object.fromEntries(runtime.state.learnedTerms.flatMap(term => {

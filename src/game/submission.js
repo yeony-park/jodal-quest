@@ -1,10 +1,11 @@
 import { playPaperTurn } from "../audio/sound.js";
 import { runtime } from "../core/runtime.js";
-import { inventoryItems, itemDescription, itemIcon, ownedItems, renderInventory } from "../components/inventory.js";
+import { inventoryItems, submittedPaper, itemIcon, ownedItems, renderInventory } from "../components/inventory.js";
 import { close } from "../components/modal.js";
 import { $ } from "../core/dom.js";
 
 export const submissionSteps = {
+  registration: { item: 0, target: "reader" },
   intake: { item: 1, target: "doc", stage: 0 },
   specification: { item: 2, target: "doc", stage: 1 },
   notice: { item: 2, target: "terminal", stage: 2 },
@@ -20,6 +21,7 @@ export const submissionSteps = {
 
 export function submissionStep(target) {
   const s=runtime.state;
+  if (target === "reader" && s.stage !== 3 && !s.badgeRegistered) return "registration";
   if (s.stage===0 && s.brief && s.contact && target==='doc') return 'intake';
   if (s.stage===1 && s.specAdvice && target==='doc') return 'specification';
   if (s.stage===2 && target==='terminal' && !s.noticeChecked) return 'notice';
@@ -41,11 +43,11 @@ export function requestSubmission(target, onSubmit) {
   const step=submissionStep(target);
   if (!step || runtime.submittedSteps.has(step)) { onSubmit(); return; }
   const atDesk = target === "doc" || target === "terminal" || target === "bidroom";
-  const recipient = {doc: "내 책상", terminal: "업무용 모니터", bidroom: "개찰·계약 자료실",
+  const recipient = {reader: "이용자 등록 · 사원증 단말기", doc: "내 책상", terminal: "업무용 모니터", bidroom: "개찰·계약 자료실",
     mentor: "김주문", officer: "이계약 주무관", phone: "한서진 사서"}[target];
   const expectedItem = submissionSteps[step].item;
   const expected = inventoryItems[expectedItem].name;
-  const verb = atDesk ? "펼치기" : "건네기";
+  const verb = target === "reader" ? "사원증 대기" : atDesk ? "펼치기" : "건네기";
   close();
   $("handoff-recipient").textContent = recipient;
   $("submission-hint").textContent = `아래 가방에서 ‘${expected}’ 칸을 눌러 주세요.`;
@@ -67,7 +69,7 @@ export function selectDocument(item, dragging = false) {
   }
   $("handoff-tray").setAttribute("aria-disabled", "false");
   $("handoff-paper").innerHTML = itemIcon(item);
-  $("handoff-label").textContent = inventoryItems[item].name + " " + pending.verb;
+  $("handoff-label").textContent = pending.step === "registration" ? "사원증 대기" : inventoryItems[item].name + " " + pending.verb;
   $("submission-hint").textContent = "오른쪽 서류 칸을 누르거나, 그곳으로 끌어 놓으세요.";
   if (!dragging) $("handoff-tray").focus({preventScroll: true});
 }
@@ -108,16 +110,13 @@ export function submitItem(item) {
   playPaperTurn();
   runtime.submittedSteps.add(pending.step);
   close();
-  const description = itemDescription(item);
   pending.onSubmit();
   // Decisions and the intake form already display their full working documents.
-  if (runtime.talkState || runtime.modalKind === "portal") {
-    const sheet = runtime.talkState ? $("speech-paper") : document.createElement("details");
-    sheet.className = "submitted-paper";
-    sheet.innerHTML = `<summary>제출한 ${inventoryItems[item].name}</summary><p>${description}</p>`;
+  if (runtime.talkState) {
+    const sheet = $("speech-paper");
+    sheet.innerHTML = submittedPaper(item);
     sheet.hidden = false;
     sheet.open = true;
-    if (!runtime.talkState) $("modal").append(sheet);
   }
   return true;
 }
