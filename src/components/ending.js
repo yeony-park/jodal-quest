@@ -36,9 +36,9 @@ export function result() {
   const collectionTitle = collected === cabinets.length ? "캐비닛 수집왕"
     : collected >= Math.ceil(cabinets.length / 2) ? "청사 기록가" : collected > 0 ? "서류 탐색가" : "수집 준비생";
   const note = title === "사파"
-    ? "달달 주무관, 초안을 여러 번 다시 펼쳤지요? 잘못 적은 곳을 짚어 내고 끝까지 바로잡는 끈기, 그게 자네 장점이에요."
+    ? "달달 주무관, 오늘은 내가 대신 넘긴 서류가 꽤 됐죠? 다음번엔 보내기 전에 딱 한 번만 더 같이 읽어 봅시다."
     : title === "정파" ? "달달 주무관, 처음부터 끝까지 근거를 꼼꼼히 확인했네요. 다음에 어려운 의뢰가 와도 오늘처럼 차근차근 살펴봐요."
-    : "달달 주무관, 실수를 알아차리고 돌아가 고친 순간을 기억해요. 다음 의뢰에서는 그 부분부터 눈에 들어올 거예요.";
+    : "달달 주무관, 오늘 내가 대신 고친 서류 기억하죠? 다음 의뢰에서는 그 부분부터 눈에 들어올 거예요.";
   show(
     title,
     /* HTML */ `<div class="level-up-tag">업무 완료</div>
@@ -59,7 +59,7 @@ export function result() {
         ${runtime.state.recoveries.length===0 && runtime.state.mistakes===0 ? '<li>정파 · 모든 선택을 올바른 절차로 완료</li>' : `<li>${Math.max(runtime.state.recoveries.length,runtime.state.mistakes)>=3?'사파 · 수습 달인':'수습을 배운 신입'} · ${runtime.state.recoveries.length}개 수습 완료</li>`}
         ${runtime.state.mistakes>runtime.state.recoveries.length?`<li>이전 선택지 확인 횟수 · ${runtime.state.mistakes-runtime.state.recoveries.length}회</li>`:""}
         ${runtime.state.recoveries.map(id=>`<li>${recoveryScenes[id].title}</li>`).join('')}
-        </ul><p>칭호 기준 · 수습 0회는 정파, 1~2회는 정파 · 수습을 배운 신입, 3회 이상은 사파예요. 수습은 잘못된 초안을 고치고 공식 절차를 마친 기록이고, 이전 저장 데이터의 오답 횟수도 반영돼요.</p></section>
+        </ul><p>칭호 기준 · 수습 0회는 정파, 1~2회는 정파 · 수습을 배운 신입, 3회 이상은 사파예요. 수습은 선배가 대신 처리한 기록이고, 이전 저장 데이터의 오답 횟수도 반영돼요.</p></section>
       <div class="stats">
         <div class="stat"><strong>6 / 6</strong><small>퀘스트</small></div>
         <div class="stat"><strong>7 / 7</strong><small>획득한 물건</small></div>

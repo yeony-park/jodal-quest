@@ -89,7 +89,7 @@ export function renderInventory() {
   $("xp-bar").max = next;
   $("xp-bar").setAttribute("aria-valuetext", `${current} / ${next} XP · 총 ${runtime.state.xp} XP`);
   $("xp-label").textContent = `${current} / ${next} XP`;
-  $("xp-status").title = `총 ${runtime.state.xp} XP · 업무 완료 100 XP · 수습 없이 완료 시 +25 XP`;
+  $("xp-status").title = `총 ${runtime.state.xp} XP · 직접 완료 125 XP · 선배가 처리한 업무 0 XP`;
 }
 
 export function itemDescription(i) {

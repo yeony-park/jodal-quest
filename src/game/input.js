@@ -124,7 +124,6 @@ export function bindInput() {
     if (e.target.id !== "deadline-form") return;
     e.preventDefault();
     if (runtime.modalKind === "intake") actions["intake-submit"]();
-    else if (runtime.state.pendingRecovery === "intake") actions["recover-finish"]();
   });
   document.addEventListener("toggle", (e) => {
     if (e.target.open && e.target.matches?.(".decision-document")) playPaperTurn();

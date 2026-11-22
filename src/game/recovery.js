@@ -1,5 +1,3 @@
-import { $ } from "../core/dom.js";
-import { deadlineForm, deadlineHint, enteredDays } from "../components/deadline.js";
 import { face } from "../world/characters.js";
 import { recoveryScenes } from "../data/recovery.js";
 import { runtime } from "../core/runtime.js";
@@ -9,21 +7,24 @@ import { speak } from "../components/dialogue.js";
 import { learnTerm } from "../components/learning.js";
 import { actions } from "./actions.js";
 
+function supervisor(stage) {
+  if (stage === 3) return {name: "새봄테크 팀장", role: "reviewer"};
+  if (stage === 4) return {name: "이계약 주무관", role: "officer"};
+  return {name: "김주문 선배", role: "mentor"};
+}
+
 export function showRecovery(id=runtime.state.pendingRecovery) {
   const scene=recoveryScenes[id];
   if (!scene || scene.stage!==runtime.state.stage) return;
-  const supplier = scene.stage === 3;
-  const officer = scene.stage === 4;
-  const role = supplier ? "supplier" : officer ? "officer" : "mentor";
-  const name = supplier ? "욘 대리" : officer ? "이계약 주무관" : "김주문 선배";
+  const {name, role} = supervisor(scene.stage);
   const days = runtime.state.attemptedDeadline;
   const reaction = id === "intake" && Number.isInteger(days)
-    ? `${days}일이요? 사서님이 부탁한 기한과 다르잖아요. 통화할 때 적은 메모를 봐요.`
+    ? `${days}일이요? 사서님이 부탁한 기한과 다르잖아요. 이대로 보내면 도서관에서 제때 못 받아요.`
     : scene.reaction;
   show("그런 선택을..?!", `<section class="decision-scene decision-impact">
     <figure class="decision-actor">${face(role)}<figcaption>${name}</figcaption></figure>
     <div class="decision-turn"><p class="decision-thought">${reaction}</p>
-      <p>${scene.consequence}</p>${buttons([["recover", "서류 다시 살펴보기"]])}</div>
+      <p>${scene.consequence}</p>${buttons([["recover", "다음"]])}</div>
     </section>`, "recovery", false);
 }
 
@@ -39,25 +40,22 @@ export function beginRecovery(id) {
 export function recover() {
   const scene=recoveryScenes[runtime.state.pendingRecovery];
   if (!scene || scene.stage!==runtime.state.stage) return;
-  const supplier = scene.stage === 3;
-  speak(supplier ? "욘 대리" : "조달달", [supplier ? "다른 모델의 규격도 봐야겠어." : "아차, 제가 놓쳤네요. 다시 볼게요!"], () => {
+  const {name, role} = supervisor(scene.stage);
+  const address = scene.stage === 3 ? "욘 대리" : "달달 주무관";
+  speak(name, [`${address}, 실수할 수도 있죠. 그래도 다음부터는 보내기 전에 한 번 더 확인해 줘요. 이번엔 제가 할게요.`, scene.correction], () => {
     const term = { intake: "수요기관", "spec-brand": "규격", "spec-empty": "규격", notice: "구매결의",
       opening: "예정가격", contract: "낙찰자 선정·전자계약", delivery: "검사·검수", payment: "대금 청구" }[runtime.state.pendingRecovery];
     if (term) learnTerm(term);
-    show("수습 업무 · " + scene.title, `<p>${scene.correction}</p>
-      <p class="source-note">근거 : 조달청 총액계약 업무처리절차 · ${scene.source} · <a href="https://www.pps.go.kr/kor/content.do?key=00179" target="_blank" rel="noopener">원문</a></p>
-      ${runtime.state.pendingRecovery === "intake" ? deadlineForm() : buttons([["recover-finish",scene.button]])}`, "recovery", false);
-    if (runtime.state.pendingRecovery === "intake") $("deadline-days").focus({ preventScroll: true });
-  }, supplier ? "supplier" : "rookie");
+    show("선배가 처리했어요", `<p>${scene.title} · 이번 퀘스트 0 XP</p>
+      <p class="source-note"><a href="https://www.pps.go.kr/kor/content.do?key=00179" target="_blank" rel="noopener">${scene.source}</a></p>
+      ${buttons([["recover-finish","다음으로"]])}`, "recovery", false);
+  }, role);
 }
 
 export function finishRecovery() {
   const id=runtime.state.pendingRecovery, scene=recoveryScenes[id];
   if (!scene || scene.stage!==runtime.state.stage) return;
   if (id === "intake") {
-    const days = enteredDays();
-    if (days === null) return;
-    if (days !== 30) { deadlineHint("사서님이 부탁한 기한은 계약 후 30일 이내예요. 다시 적어 볼까요?"); return; }
     runtime.state.attemptedDeadline = null;
     runtime.state.brief = true;
     runtime.state.contact = true;

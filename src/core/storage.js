@@ -25,7 +25,7 @@ export function loadGame() {
         Object.hasOwn(recoveryScenes,s.pendingRecovery) &&
         recoveryScenes[s.pendingRecovery].stage === s.stage
       )) &&
-      (s.xp === undefined || (Number.isInteger(s.xp) && s.xp >= s.stage * 100 && s.xp <= s.stage * 125 && s.xp % 25 === 0)) &&
+      (s.xp === undefined || (Number.isInteger(s.xp) && s.xp >= 0 && s.xp <= s.stage * 125 && s.xp % 25 === 0)) &&
       (s.questMistakes === undefined || (Number.isInteger(s.questMistakes) && s.questMistakes >= 0 && s.questMistakes <= s.mistakes)) &&
       Number.isInteger(s.stage) &&
       s.stage >= 0 &&
