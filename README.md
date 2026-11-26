@@ -64,19 +64,13 @@
 | 05 · 계약 | 입찰 이후에는 어떤 일이 벌어질까? |
 | 06 · 납품 | 도서관의 모니터 20대를 사수하라! |
 
-## CHAPTER 03. 엘리베이터는 5층에서만 멈추지 않는다
+## CHAPTER 03. 청사 곳곳에 숨겨진 이야기를 찾아보세요
 
-![7층 도서실에서 용어 카드를 발견하는 실제 플레이 장면](docs/media/cabinet.gif)
+![청사 탐색 실제 플레이 장면](docs/media/cabinet.gif)
 
-잠시 업무에서 벗어나 청사를 둘러볼까요?
+잠시 업무에서 벗어나 엘리베이터를 타고 청사를 둘러보세요.
 
-지하 1층부터 9층까지, 총 10개 층을 자유롭게 탐험할 수 있습니다. 도서실, 대회의실, 커피 라운지까지. 평범한 사무실처럼 보이지만 곳곳에 조달 용어 카드가 숨어 있습니다.
-
-캐비닛을 열고, 사람들과 대화하고, 수첩을 채워 보세요.
-
-업무를 모두 끝내는 것과 카드 10장을 전부 모으는 것. 당신은 어느 쪽에 더 진심인가요?
-
-[캐비닛 탐색 플레이 영상 보기 (MP4)](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/cabinet.mp4)
+[청사 탐색 플레이 영상 보기 (MP4)](https://github.com/yeony-park/jodal-quest/releases/download/v0.1.0-preview.1/cabinet.mp4)
 
 ## CHAPTER 04. 정파인가, 사파인가
 
@@ -127,10 +121,11 @@
 
 2026 조달청 AI 게임·콘텐츠 공모전 AI 게임 부문 출품을 위해 제작했습니다.
 
-| 제작진 | 기여 내용 |
-| :--- | :--- |
-| [yeony-park](https://github.com/yeony-park) (Yeonjeong Park) | 초기 게임·사무실·캐릭터·퀘스트 및 코드 구조, 10개 층 청사 탐색, 캐비닛 수집, 배경음악·효과음, 시작 화면·엔딩 인물평, Windows 패키징, 플레이 영상·예고편 제작 |
-| [hyonsho](https://github.com/hyonsho) | 계약·납품 퀘스트 확장, 가방 서류 제출, 실수 수습, 조달달 녹음 기반 대화, 경험치·레벨, 모바일 조작, 플레이 테스트 및 목표 안내·나라장터 문구 개선 |
+| 박연정 | 박현석 |
+| :---: | :---: |
+| 팀장 | 팀원 |
+| 욘 대리 | 조달달 |
+| [@yeony-park](https://github.com/yeony-park) | [@hyonsho](https://github.com/hyonsho) |
 
 조달달과 욘 대리의 목소리에는 팀에서 제공한 녹음을 사용했습니다. 예고편 자막에는 [Galmuri](https://github.com/quiple/galmuri) 글꼴을 사용했습니다.
 
